@@ -11,32 +11,6 @@ beforeEach(function () {
     $this->admin->assignRole('Admin');
 });
 
-/**
- * Minimal DataTables query string. Column metadata must be present or the
- * server-side handler cannot resolve searching and ordering.
- *
- * @param  array<int, string>  $columns
- * @return array<string, mixed>
- */
-function dtParams(array $columns, array $overrides = []): array
-{
-    $params = [
-        'draw' => 1,
-        'start' => 0,
-        'length' => 10,
-        'search' => ['value' => '', 'regex' => 'false'],
-        'columns' => collect($columns)->map(fn (string $name) => [
-            'data' => $name,
-            'name' => $name,
-            'searchable' => 'true',
-            'orderable' => 'true',
-            'search' => ['value' => '', 'regex' => 'false'],
-        ])->all(),
-    ];
-
-    return array_replace_recursive($params, $overrides);
-}
-
 it('returns a datatables payload for the user listing', function () {
     User::factory()->count(5)->create();
 

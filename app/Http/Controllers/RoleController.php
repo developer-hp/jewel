@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Permission;
@@ -58,7 +59,7 @@ class RoleController extends Controller implements HasMiddleware
     public function create(): View
     {
         return view('roles.create', [
-            'role' => new Role(),
+            'role' => new Role,
             'groupedPermissions' => $this->groupedPermissions(),
             'selectedPermissions' => [],
         ]);
@@ -128,7 +129,7 @@ class RoleController extends Controller implements HasMiddleware
     /**
      * Permissions keyed by module prefix, so the form can render one card per module.
      *
-     * @return \Illuminate\Support\Collection<string, \Illuminate\Support\Collection<int, Permission>>
+     * @return Collection<string, Collection<int, Permission>>
      */
     private function groupedPermissions()
     {

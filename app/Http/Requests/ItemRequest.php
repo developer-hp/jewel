@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Purity;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
@@ -22,6 +23,7 @@ class ItemRequest extends FormRequest
     {
         return [
             'item_group_id' => ['required', 'exists:item_groups,id'],
+            'supplier_id' => ['nullable', 'exists:suppliers,id'],
             'metal_type_id' => ['required', 'exists:metal_types,id'],
             'purity_id' => ['required', 'exists:purities,id'],
             'making_charge_id' => ['nullable', 'exists:making_charges,id'],
@@ -31,10 +33,17 @@ class ItemRequest extends FormRequest
             'other_deduction' => ['nullable', 'numeric', 'min:0', 'max:99999.999'],
             'is_active' => ['boolean'],
 
+            'extra_charge_1' => ['nullable', 'numeric', 'min:0', 'max:9999999999'],
+            'extra_charge_1_label' => ['nullable', 'string', 'max:20'],
+            'extra_charge_2' => ['nullable', 'numeric', 'min:0', 'max:9999999999'],
+            'extra_charge_2_label' => ['nullable', 'string', 'max:20'],
+
             'stones' => ['array'],
             'stones.*.stone_master_id' => ['required', 'exists:stone_masters,id'],
             'stones.*.pieces' => ['nullable', 'integer', 'min:0', 'max:100000'],
+            // Either unit may be filled; the calculator converts grams back to carat.
             'stones.*.weight_carat' => ['nullable', 'numeric', 'min:0', 'max:99999.999'],
+            'stones.*.weight_grams' => ['nullable', 'numeric', 'min:0', 'max:99999.999'],
             'stones.*.rate' => ['nullable', 'numeric', 'min:0'],
             'stones.*.deduct_from_gross' => ['boolean'],
         ];
@@ -52,7 +61,7 @@ class ItemRequest extends FormRequest
 
             // The purity dropdown is filtered client-side; re-check it server-side so a
             // tampered or stale form cannot pair 22K gold with the Silver metal type.
-            $belongs = \App\Models\Purity::whereKey($purityId)
+            $belongs = Purity::whereKey($purityId)
                 ->where('metal_type_id', $metalTypeId)
                 ->exists();
 
@@ -67,6 +76,8 @@ class ItemRequest extends FormRequest
         $this->merge([
             'is_active' => $this->boolean('is_active'),
             'other_deduction' => $this->input('other_deduction') ?: 0,
+            'extra_charge_1' => $this->input('extra_charge_1') ?: 0,
+            'extra_charge_2' => $this->input('extra_charge_2') ?: 0,
             'stones' => $this->normalisedStoneRows(),
         ]);
     }
@@ -84,6 +95,7 @@ class ItemRequest extends FormRequest
                 'stone_master_id' => $row['stone_master_id'],
                 'pieces' => $row['pieces'] ?? 0,
                 'weight_carat' => $row['weight_carat'] ?? 0,
+                'weight_grams' => $row['weight_grams'] ?? 0,
                 'rate' => $row['rate'] ?? null,
                 'deduct_from_gross' => (bool) ($row['deduct_from_gross'] ?? false),
             ])

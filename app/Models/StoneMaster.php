@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[Fillable(['kind', 'name', 'code', 'shape', 'quality', 'colour', 'size', 'rate_unit', 'default_rate', 'is_active'])]
+#[Fillable(['kind', 'name', 'code', 'shape', 'quality', 'colour', 'size', 'rate_unit', 'default_rate', 'sale_rate', 'is_active'])]
 class StoneMaster extends Model
 {
     use SoftDeletes;
@@ -31,8 +31,26 @@ class StoneMaster extends Model
     {
         return [
             'default_rate' => 'decimal:2',
+            'sale_rate' => 'decimal:2',
             'is_active' => 'boolean',
         ];
+    }
+
+    /**
+     * The rate to charge a customer.
+     *
+     * A null sale_rate is a real state, not missing data: it means "track the cost
+     * rate", so raising the cost lifts the sale price with it until someone sets an
+     * explicit figure. Every read goes through here rather than the column.
+     */
+    public function effectiveSaleRate(): float
+    {
+        return (float) ($this->sale_rate ?? $this->default_rate);
+    }
+
+    public function tracksCostRate(): bool
+    {
+        return $this->sale_rate === null;
     }
 
     public function itemStones(): HasMany

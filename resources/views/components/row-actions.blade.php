@@ -1,9 +1,11 @@
 {{--
-    Standard edit/delete row actions for a master listing.
+    Standard edit/delete row actions for a master listing, as soft icon buttons
+    (theme/ui-buttons.html btn-soft-* variants + the .btn-icon size in app-custom.css).
 
     $editUrl / $deleteUrl  — route URLs (null hides that action)
     $editPermission / $deletePermission — Spatie permission names
     $confirm — the confirmation message shown before deleting
+    $before  — slot for extra buttons rendered ahead of edit (view, print, …)
 --}}
 @props([
     'editUrl' => null,
@@ -13,19 +15,22 @@
     'confirm' => 'Delete this record?',
 ])
 
-@if ($editUrl && (! $editPermission || auth()->user()->can($editPermission)))
-    <a href="{{ $editUrl }}" class="text-reset me-2" title="Edit">
-        <i class="ri-pencil-fill fs-18"></i>
-    </a>
-@endif
+<div class="row-actions">
+    {{ $before ?? '' }}
 
-@if ($deleteUrl && (! $deletePermission || auth()->user()->can($deletePermission)))
-    <form action="{{ $deleteUrl }}" method="POST" class="d-inline"
-        onsubmit="return confirm(@js($confirm));">
-        @csrf
-        @method('DELETE')
-        <button type="submit" class="btn btn-sm btn-link text-danger p-0" title="Delete">
-            <i class="ri-delete-bin-2-fill fs-18"></i>
-        </button>
-    </form>
-@endif
+    @if ($editUrl && (! $editPermission || auth()->user()->can($editPermission)))
+        <a href="{{ $editUrl }}" class="btn btn-sm btn-soft-primary btn-icon" title="Edit">
+            <i class="ri-pencil-fill"></i>
+        </a>
+    @endif
+
+    @if ($deleteUrl && (! $deletePermission || auth()->user()->can($deletePermission)))
+        <form action="{{ $deleteUrl }}" method="POST" onsubmit="return confirm(@js($confirm));">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="btn btn-sm btn-soft-danger btn-icon" title="Delete">
+                <i class="ri-delete-bin-2-fill"></i>
+            </button>
+        </form>
+    @endif
+</div>

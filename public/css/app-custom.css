@@ -1,0 +1,268 @@
+/*
+ * Project overrides on top of the Jidox theme.
+ *
+ * Loaded after the theme's app.min.css so equal-specificity rules win. Every
+ * colour here comes from the theme's own --ct-* custom properties, which already
+ * carry light and dark values, so nothing needs a [data-bs-theme=dark] block.
+ */
+
+/* ------------------------------------------------------------------ *
+ * Tables: bordered everywhere, and noticeably more compact.
+ * ------------------------------------------------------------------ */
+
+/* The theme ships .table-bordered as an opt-in class. Make it the default for
+   every table instead of hanging the class on each one, so new tables match. */
+.table:not(.table-borderless) > :not(caption) > * {
+    border-width: var(--ct-border-width) 0;
+}
+
+.table:not(.table-borderless) > :not(caption) > * > * {
+    border-width: 0 var(--ct-border-width);
+    border-color: var(--ct-border-color);
+}
+
+/* An outer frame, so a table inside a card body reads as one block. */
+.table:not(.table-borderless) {
+    border: var(--ct-border-width) solid var(--ct-border-color);
+}
+
+/* Density: the theme's default cell padding is .75rem, which wastes a lot of
+   vertical space on listings that are mostly short numeric cells. */
+.table > :not(caption) > * > * {
+    padding: 0.45rem 0.6rem;
+}
+
+.table {
+    font-size: 0.8125rem;
+}
+
+/* .table-sm is used for the small summary tables; keep it tighter still. */
+.table-sm > :not(caption) > * > * {
+    padding: 0.3rem 0.5rem;
+}
+
+/* ------------------------------------------------------------------ *
+ * Table headers.
+ * ------------------------------------------------------------------ */
+
+/*
+ * The theme's .table-light variant hardcodes light values (--ct-table-bg:#f2f2f7,
+ * --ct-table-color:#212529) and has no dark-mode override, so in dark mode it
+ * paints a white block. Override the variant's *variables* rather than the
+ * declarations they feed: cells already read --ct-table-bg / --ct-table-color, and
+ * both of these custom properties do carry dark values.
+ *
+ * `.table > thead` (0,1,1) outranks `.table-light` (0,1,0), so this covers theads
+ * with and without the class.
+ */
+.table > thead {
+    --ct-table-bg: var(--ct-tertiary-bg);
+    --ct-table-color: var(--ct-emphasis-color);
+    /* .table-light also pins a light border colour, which shows as a pale line
+       across the header in dark mode. */
+    --ct-table-border-color: var(--ct-border-color);
+}
+
+.table > thead > tr > th {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    vertical-align: middle;
+    border-bottom-width: var(--ct-border-width);
+}
+
+/* ------------------------------------------------------------------ *
+ * DataTables toolbar.
+ *
+ * The Bootstrap 5 integration renders the length menu and search box inside
+ * <label> elements with literal "Show … entries" / "Search:" text. The text is
+ * removed through the language options in appDataTable(); what is left is
+ * spacing and sizing, handled here.
+ * ------------------------------------------------------------------ */
+
+.dt-toolbar {
+    margin-bottom: 0.75rem;
+}
+
+.dt-footer {
+    margin-top: 0.75rem;
+}
+
+.dataTables_length,
+.dataTables_filter {
+    margin: 0;
+}
+
+.dataTables_length label,
+.dataTables_filter label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--ct-secondary-color);
+    white-space: nowrap;
+}
+
+.dataTables_length select {
+    width: auto;
+    min-width: 4.25rem;
+    padding: 0.28rem 1.6rem 0.28rem 0.5rem;
+    font-size: 0.8125rem;
+}
+
+/* Search sits at the right-hand end of the toolbar and is capped so it does not
+   stretch across a wide screen. */
+.dataTables_filter {
+    text-align: right;
+}
+
+.dataTables_filter label {
+    justify-content: flex-end;
+}
+
+.dataTables_filter input {
+    width: 100%;
+    max-width: 16rem;
+    margin: 0;
+    padding: 0.28rem 0.6rem;
+    font-size: 0.8125rem;
+}
+
+/* ------------------------------------------------------------------ *
+ * DataTables footer: record count and pagination.
+ * ------------------------------------------------------------------ */
+
+.dataTables_info {
+    padding-top: 0;
+    font-size: 0.8125rem;
+    color: var(--ct-secondary-color);
+}
+
+.dataTables_paginate {
+    text-align: right;
+}
+
+.dataTables_paginate ul.pagination {
+    margin: 0;
+    justify-content: flex-end;
+}
+
+.dataTables_paginate .page-link {
+    padding: 0.25rem 0.55rem;
+    font-size: 0.8125rem;
+}
+
+/* ------------------------------------------------------------------ *
+ * Sort indicators.
+ *
+ * The Bootstrap 5 integration draws TWO carets per header — a ":before" up arrow
+ * and an ":after" down arrow, absolutely positioned, and reserves 30px of
+ * padding for them. At this header size they collide with the label. Both are
+ * switched off and replaced with a single caret.
+ * ------------------------------------------------------------------ */
+
+table.dataTable > thead .sorting:before,
+table.dataTable > thead .sorting:after,
+table.dataTable > thead .sorting_asc:before,
+table.dataTable > thead .sorting_asc:after,
+table.dataTable > thead .sorting_desc:before,
+table.dataTable > thead .sorting_desc:after,
+table.dataTable > thead .sorting_asc_disabled:before,
+table.dataTable > thead .sorting_asc_disabled:after,
+table.dataTable > thead .sorting_desc_disabled:before,
+table.dataTable > thead .sorting_desc_disabled:after {
+    content: none;
+}
+
+table.dataTable > thead > tr > th:not(.sorting_disabled),
+table.dataTable > thead > tr > td:not(.sorting_disabled) {
+    padding-right: 1.35rem;
+}
+
+table.dataTable > thead .sorting,
+table.dataTable > thead .sorting_asc,
+table.dataTable > thead .sorting_desc {
+    position: relative;
+    cursor: pointer;
+}
+
+table.dataTable > thead .sorting::after,
+table.dataTable > thead .sorting_asc::after,
+table.dataTable > thead .sorting_desc::after {
+    position: absolute;
+    right: 0.4rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.7rem;
+    line-height: 1;
+    opacity: 0.4;
+    content: "\2195"; /* sortable, not currently sorted */
+}
+
+table.dataTable > thead .sorting_asc::after {
+    content: "\2191";
+    opacity: 1;
+}
+
+table.dataTable > thead .sorting_desc::after {
+    content: "\2193";
+    opacity: 1;
+}
+
+/* ------------------------------------------------------------------ *
+ * Misc.
+ * ------------------------------------------------------------------ */
+
+/* ------------------------------------------------------------------ *
+ * Icon buttons.
+ *
+ * The theme has btn-soft-* colour variants (see theme/ui-buttons.html) but no
+ * square icon button, which is what a table row action wants. Sized so a row of
+ * them stays inside the compact cell padding.
+ * ------------------------------------------------------------------ */
+
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    line-height: 1;
+}
+
+.btn-icon > i {
+    font-size: 0.95rem;
+    line-height: 1;
+}
+
+.btn-icon.btn-sm {
+    width: 1.6rem;
+    height: 1.6rem;
+}
+
+.btn-icon.btn-sm > i {
+    font-size: 0.85rem;
+}
+
+/* Row actions sit as one right-aligned group; the delete/toggle controls are
+   each wrapped in their own form, which would otherwise break the flex row. */
+.row-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.row-actions form {
+    display: inline-flex;
+    margin: 0;
+}
+
+/* Keep the processing overlay from shifting the table height. */
+.dataTables_processing {
+    box-shadow: none;
+    background: transparent;
+}

@@ -46,6 +46,8 @@ class StoneMasterRequest extends FormRequest
             'size' => ['nullable', 'string', 'max:50'],
             'rate_unit' => ['required', Rule::in(array_keys(StoneMaster::RATE_UNITS))],
             'default_rate' => ['required', 'numeric', 'min:0'],
+            // Blank means "charge the cost rate"; the model fills it in on save.
+            'sale_rate' => ['nullable', 'numeric', 'min:0'],
             'is_active' => ['boolean'],
         ];
     }
@@ -55,6 +57,7 @@ class StoneMasterRequest extends FormRequest
         $this->merge([
             'is_active' => $this->boolean('is_active'),
             'code' => $this->input('code') ?: null,
+            'sale_rate' => $this->filled('sale_rate') ? $this->input('sale_rate') : null,
         ]);
     }
 }

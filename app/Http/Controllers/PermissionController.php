@@ -74,7 +74,7 @@ class PermissionController extends Controller implements HasMiddleware
 
     public function create(): View
     {
-        return view('permissions.create', ['permission' => new Permission()]);
+        return view('permissions.create', ['permission' => new Permission]);
     }
 
     public function store(PermissionRequest $request): RedirectResponse

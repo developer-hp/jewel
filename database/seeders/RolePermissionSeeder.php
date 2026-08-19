@@ -27,7 +27,10 @@ class RolePermissionSeeder extends Seeder
         'item_group' => ['view', 'create', 'edit', 'delete'],
         'stone' => ['view', 'create', 'edit', 'delete'],
         'making_charge' => ['view', 'create', 'edit', 'delete'],
-        'item' => ['view', 'create', 'edit', 'delete'],
+        'supplier' => ['view', 'create', 'edit', 'delete'],
+        'label_setting' => ['view', 'edit'],
+        'app_setting' => ['view', 'edit'],
+        'item' => ['view', 'create', 'edit', 'delete', 'print'],
         'stock' => ['view', 'adjust', 'report'],
         'customer' => ['view', 'create', 'edit', 'delete'],
         'quotation' => ['view', 'create', 'edit', 'delete', 'approve', 'print'],
@@ -43,6 +46,7 @@ class RolePermissionSeeder extends Seeder
      */
     private const MASTER_MODULES = [
         'metal_type', 'purity', 'metal_rate', 'item_group', 'stone', 'making_charge',
+        'supplier', 'label_setting', 'app_setting',
     ];
 
     public function run(): void
@@ -76,7 +80,8 @@ class RolePermissionSeeder extends Seeder
         ));
 
         $this->syncRole('Sales', array_merge(
-            ['item.view', 'stock.view'],
+            // Counter staff print tags but do not resize them.
+            ['item.view', 'item.print', 'stock.view'],
             // Sales reads the masters so quotation screens can resolve rates and names.
             array_map(fn (string $module) => "{$module}.view", self::MASTER_MODULES),
             $this->modulePermissions('customer'),

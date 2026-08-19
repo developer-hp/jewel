@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>@yield('title', 'Dashboard') | {{ config('app.name') }}</title>
+    <title>@yield('title', 'Dashboard') | {{ $appSettings->app_name }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
@@ -15,7 +15,25 @@
     <link href="{{ asset('theme/assets/css/app.min.css') }}" rel="stylesheet" type="text/css" id="app-style" />
     <link href="{{ asset('theme/assets/css/icons.min.css') }}" rel="stylesheet" type="text/css" />
 
+
+    {{-- Branding: the theme paints the sidebar user panel with a photo, so this
+         has to override background-image, not just the colour. --}}
+    <style>
+        .leftbar-user {
+            {!! $appSettings->sidebarUserCss() !!}
+        }
+
+        .leftbar-user .text-reset,
+        .leftbar-user span {
+            color: {{ $appSettings->sidebar_user_text_color }} !important;
+        }
+    </style>
+
     @stack('css')
+
+    {{-- Project overrides load last so they beat both the theme and the vendor
+         DataTables stylesheet, which are equal in specificity. --}}
+    <link href="{{ asset('css/app-custom.css') }}" rel="stylesheet" type="text/css" />
 </head>
 
 <body>

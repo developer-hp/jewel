@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Item;
 use App\Models\ItemStone;
 use App\Models\StoneMaster;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -20,7 +21,7 @@ class ItemCalculator
      * change what this item is worth.
      *
      * @param  array<int, array<string, mixed>>  $rows
-     * @param  \Illuminate\Support\Collection<int, StoneMaster>  $masters  keyed by id
+     * @param  Collection<int, StoneMaster>  $masters  keyed by id
      * @return array<int, array<string, mixed>>
      */
     public function buildStoneRows(array $rows, $masters): array
@@ -35,7 +36,16 @@ class ItemCalculator
             }
 
             $pieces = (int) ($row['pieces'] ?? 0);
+
+            // Weight may be entered in either unit. Carat is the stored source of
+            // truth, so a grams-only entry is converted back before anything else.
             $carat = round((float) ($row['weight_carat'] ?? 0), 3);
+            $submittedGrams = (float) ($row['weight_grams'] ?? 0);
+
+            if ($carat <= 0 && $submittedGrams > 0) {
+                $carat = round($submittedGrams / Item::CARAT_TO_GRAM, 3);
+            }
+
             $grams = round($carat * Item::CARAT_TO_GRAM, 4);
 
             // The rate may be overridden per row; fall back to the master's default.
@@ -116,7 +126,7 @@ class ItemCalculator
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<int, ItemStone>  $rows
+     * @param  Collection<int, ItemStone>  $rows
      */
     private function deductibleGrams($rows, string $kind): float
     {

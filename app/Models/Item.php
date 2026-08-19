@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * One unique physical piece: its own code, its own weights, quantity always 1.
@@ -17,8 +18,10 @@ use Illuminate\Support\Carbon;
  * and are deliberately left out of the fillable list.
  */
 #[Fillable([
-    'item_group_id', 'metal_type_id', 'purity_id', 'making_charge_id',
+    'item_group_id', 'supplier_id', 'metal_type_id', 'purity_id', 'making_charge_id',
     'name', 'description', 'gross_weight', 'other_deduction', 'is_active',
+    'extra_charge_1', 'extra_charge_1_label',
+    'extra_charge_2', 'extra_charge_2_label',
 ])]
 class Item extends Model
 {
@@ -35,6 +38,8 @@ class Item extends Model
             'diamond_weight_grams' => 'decimal:3',
             'other_deduction' => 'decimal:3',
             'net_weight' => 'decimal:3',
+            'extra_charge_1' => 'decimal:2',
+            'extra_charge_2' => 'decimal:2',
             'is_active' => 'boolean',
         ];
     }
@@ -42,6 +47,11 @@ class Item extends Model
     public function itemGroup(): BelongsTo
     {
         return $this->belongsTo(ItemGroup::class);
+    }
+
+    public function supplier(): BelongsTo
+    {
+        return $this->belongsTo(Supplier::class);
     }
 
     public function metalType(): BelongsTo
@@ -92,6 +102,106 @@ class Item extends Model
     public function stoneValue(): float
     {
         return (float) $this->itemStones->sum('amount');
+    }
+
+    public function hasPhoto(): bool
+    {
+        return filled($this->photo_path);
+    }
+
+    /**
+     * Public URL for the item photo, resolved against the disk it was written to
+     * rather than the current setting — photos survive a local to S3 switch.
+     */
+    public function photoUrl(): ?string
+    {
+        if (! $this->hasPhoto()) {
+            return null;
+        }
+
+        $disk = $this->photo_disk ?: 'public';
+
+        if (! config("filesystems.disks.{$disk}")) {
+            return null;
+        }
+
+        return Storage::disk($disk)->url($this->photo_path);
+    }
+
+    /**
+     * Stone rows collapsed into one bucket for the printed tag.
+     *
+     * A 110 x 18 mm tag cannot carry a line per stone category, so the rows are
+     * totalled. Carat and pieces are kept apart because a piece-rate stone and a
+     * carat-rate stone cannot be added together.
+     *
+     * @return array{pieces: int, carat: float, grams: float, amount: float}
+     */
+    public function stoneSummary(): array
+    {
+        return $this->summariseStones(StoneMaster::KIND_STONE);
+    }
+
+    /**
+     * @return array{pieces: int, carat: float, grams: float, amount: float}
+     */
+    public function diamondSummary(): array
+    {
+        return $this->summariseStones(StoneMaster::KIND_DIAMOND);
+    }
+
+    /**
+     * @return array{pieces: int, carat: float, grams: float, amount: float}
+     */
+    private function summariseStones(string $kind): array
+    {
+        $rows = $this->itemStones->where('kind', $kind);
+
+        return [
+            'pieces' => (int) $rows->sum('pieces'),
+            'carat' => round((float) $rows->sum('weight_carat'), 3),
+            'grams' => round((float) $rows->sum('weight_grams'), 3),
+            'amount' => round((float) $rows->sum('amount'), 2),
+        ];
+    }
+
+    /**
+     * The extra charges that carry a value, with their captions. Slots left at
+     * zero are omitted so the tag stays sparse.
+     *
+     * @return array<int, array{label: string, amount: float}>
+     */
+    public function extraChargeLines(): array
+    {
+        $lines = [];
+
+        foreach ([1, 2] as $slot) {
+            $amount = (float) $this->{"extra_charge_{$slot}"};
+
+            if ($amount <= 0) {
+                continue;
+            }
+
+            $lines[] = [
+                'label' => trim((string) $this->{"extra_charge_{$slot}_label"}) ?: "E{$slot}",
+                'amount' => round($amount, 2),
+            ];
+        }
+
+        return $lines;
+    }
+
+    public function extraChargeTotal(): float
+    {
+        return round((float) $this->extra_charge_1 + (float) $this->extra_charge_2, 2);
+    }
+
+    /**
+     * Every stone and diamond charge combined — the tag's single STAMT line.
+     */
+    public function totalStoneCharge(): float
+    {
+        return round($this->stoneValue(), 2);
     }
 
     public function scopeActive(Builder $query): void

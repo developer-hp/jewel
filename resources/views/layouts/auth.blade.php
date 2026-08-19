@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>@yield('title', 'Log In') | {{ config('app.name') }}</title>
+    <title>@yield('title', 'Log In') | {{ $appSettings->app_name }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <link rel="shortcut icon" href="{{ asset('theme/assets/images/favicon.ico') }}">
@@ -55,12 +55,12 @@
                         <div class="card-header pt-4 text-center">
                             <div class="auth-brand mb-0">
                                 <a href="{{ url('/') }}" class="logo-dark">
-                                    <span><img src="{{ asset('theme/assets/images/logo-dark.png') }}" alt="dark logo"
-                                            height="28"></span>
+                                    <span><img src="{{ $appSettings->logoUrl('logo_dark_path') }}"
+                                            alt="{{ $appSettings->app_name }}" height="28"></span>
                                 </a>
                                 <a href="{{ url('/') }}" class="logo-light">
-                                    <span><img src="{{ asset('theme/assets/images/logo.png') }}" alt="logo"
-                                            height="28"></span>
+                                    <span><img src="{{ $appSettings->logoUrl('logo_path') }}"
+                                            alt="{{ $appSettings->app_name }}" height="28"></span>
                                 </a>
                             </div>
                         </div>
@@ -75,7 +75,7 @@
     </div>
 
     <footer class="footer footer-alt">
-        <span class="text-white-50">{{ date('Y') }} &copy; {{ config('app.name') }}</span>
+        <span class="text-white-50">{{ date('Y') }} &copy; {{ $appSettings->app_name }}</span>
     </footer>
 
     <script src="{{ asset('theme/assets/js/vendor.min.js') }}"></script>

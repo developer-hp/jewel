@@ -9,6 +9,7 @@ use App\Models\MakingCharge;
 use App\Models\MetalType;
 use App\Models\Purity;
 use App\Models\StoneMaster;
+use App\Models\Supplier;
 use App\Services\ItemCalculator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -42,6 +43,8 @@ class ItemController extends Controller implements HasMiddleware
         return view('items.index', [
             'groups' => ItemGroup::ordered()->pluck('name', 'id'),
             'metalTypes' => MetalType::ordered()->pluck('name', 'id'),
+            'suppliers' => Supplier::ordered()->get()
+                ->mapWithKeys(fn (Supplier $s) => [$s->id => $s->label()]),
         ]);
     }
 
@@ -49,23 +52,30 @@ class ItemController extends Controller implements HasMiddleware
     {
         $query = Item::query()
             ->select('items.*')
-            ->with(['itemGroup', 'metalType', 'purity', 'makingCharge'])
+            ->with(['itemGroup', 'metalType', 'purity', 'makingCharge', 'supplier'])
             ->when($request->filled('item_group_id'), fn ($q) => $q->where('item_group_id', $request->integer('item_group_id')))
+            ->when($request->filled('supplier_id'), fn ($q) => $q->where('supplier_id', $request->integer('supplier_id')))
             ->when($request->filled('metal_type_id'), fn ($q) => $q->where('metal_type_id', $request->integer('metal_type_id')))
             ->when($request->filled('status'), fn ($q) => $q->where('is_active', $request->string('status')->toString() === 'active'));
 
         return DataTables::eloquent($query)
+            ->addColumn('photo', fn (Item $item) => view('items.partials.photo-thumb', compact('item'))->render())
             ->editColumn('code', fn (Item $item) => '<code>'.e($item->code).'</code>')
             ->addColumn('group', fn (Item $item) => e($item->itemGroup?->name ?? '—'))
+            ->addColumn('supplier', fn (Item $item) => e($item->supplier?->short_name ?: ($item->supplier?->name ?? '—')))
             ->addColumn('metal', fn (Item $item) => view('items.partials.metal-cell', compact('item'))->render())
             ->addColumn('weights', fn (Item $item) => view('items.partials.weights-cell', compact('item'))->render())
             ->addColumn('making', fn (Item $item) => e($item->makingCharge?->code ?? '—'))
             ->addColumn('status', fn (Item $item) => view('components.status-badge', ['active' => $item->is_active])->render())
             ->addColumn('action', fn (Item $item) => view('items.partials.actions', compact('item'))->render())
             ->filterColumn('group', fn ($q, $keyword) => $q->whereRelation('itemGroup', 'name', 'like', "%{$keyword}%"))
+            ->filterColumn('supplier', function ($q, $keyword) {
+                $q->whereHas('supplier', fn ($sub) => $sub->where('name', 'like', "%{$keyword}%")
+                    ->orWhere('short_name', 'like', "%{$keyword}%"));
+            })
             ->orderColumn('weights', 'net_weight $1')
             ->orderColumn('status', 'is_active $1')
-            ->rawColumns(['code', 'metal', 'weights', 'status', 'action'])
+            ->rawColumns(['photo', 'code', 'metal', 'weights', 'status', 'action'])
             ->toJson();
     }
 
@@ -105,7 +115,7 @@ class ItemController extends Controller implements HasMiddleware
     public function show(Item $item): View
     {
         return view('items.show', [
-            'item' => $item->load(['itemGroup', 'metalType', 'purity.metalType', 'makingCharge', 'itemStones.stoneMaster']),
+            'item' => $item->load(['itemGroup', 'supplier', 'metalType', 'purity.metalType', 'makingCharge', 'itemStones.stoneMaster']),
         ]);
     }
 
@@ -176,11 +186,16 @@ class ItemController extends Controller implements HasMiddleware
     {
         return [
             'groups' => ItemGroup::active()->ordered()->get(),
+            'suppliers' => Supplier::active()->ordered()->get(),
             'metalTypes' => MetalType::active()->ordered()->get(),
             // Grouped by metal type so the form can filter the purity dropdown client-side.
             'puritiesByMetal' => Purity::active()->ordered()->get()
                 ->groupBy('metal_type_id')
                 ->map(fn ($group) => $group->map(fn (Purity $p) => ['id' => $p->id, 'name' => $p->name])->values()),
+            // Today's per-gram rate per purity, so the form's live summary can price
+            // the piece without another round trip.
+            'purityRates' => Purity::active()->get()
+                ->mapWithKeys(fn (Purity $p) => [$p->id => (float) ($p->ratePerGramOn() ?? 0)]),
             'makingCharges' => MakingCharge::active()->orderBy('code')->get(),
             'stoneMasters' => StoneMaster::active()->kind(StoneMaster::KIND_STONE)->orderBy('name')->get(),
             'diamondMasters' => StoneMaster::active()->kind(StoneMaster::KIND_DIAMOND)->orderBy('name')->get(),

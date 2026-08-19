@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Role;
 use Yajra\DataTables\Facades\DataTables;
@@ -177,7 +178,7 @@ class UserController extends Controller implements HasMiddleware
     /**
      * Only a Super Admin may hand out the Super Admin role.
      */
-    private function assignableRoles(): \Illuminate\Support\Collection
+    private function assignableRoles(): Collection
     {
         return Role::orderBy('name')
             ->when(! request()->user()->hasRole('Super Admin'), fn ($q) => $q->where('name', '!=', 'Super Admin'))

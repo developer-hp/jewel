@@ -9,19 +9,19 @@
             <div class="logo-topbar">
                 <a href="{{ route('dashboard') }}" class="logo-light">
                     <span class="logo-lg">
-                        <img src="{{ asset('theme/assets/images/logo.png') }}" alt="logo">
+                        <img src="{{ $appSettings->logoUrl('logo_path') }}" alt="logo">
                     </span>
                     <span class="logo-sm">
-                        <img src="{{ asset('theme/assets/images/logo-sm.png') }}" alt="small logo">
+                        <img src="{{ $appSettings->logoUrl('logo_small_path') }}" alt="small logo">
                     </span>
                 </a>
 
                 <a href="{{ route('dashboard') }}" class="logo-dark">
                     <span class="logo-lg">
-                        <img src="{{ asset('theme/assets/images/logo-dark.png') }}" alt="dark logo">
+                        <img src="{{ $appSettings->logoUrl('logo_dark_path') }}" alt="dark logo">
                     </span>
                     <span class="logo-sm">
-                        <img src="{{ asset('theme/assets/images/logo-sm.png') }}" alt="small logo">
+                        <img src="{{ $appSettings->logoUrl('logo_small_path') }}" alt="small logo">
                     </span>
                 </a>
             </div>

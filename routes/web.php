@@ -1,9 +1,13 @@
 <?php
 
+use App\Http\Controllers\AppSettingController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\ItemGroupController;
+use App\Http\Controllers\ItemLabelController;
+use App\Http\Controllers\ItemPhotoController;
+use App\Http\Controllers\LabelSettingController;
 use App\Http\Controllers\MakingChargeController;
 use App\Http\Controllers\MetalRateController;
 use App\Http\Controllers\MetalTypeController;
@@ -12,6 +16,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PurityController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\StoneMasterController;
+use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -61,5 +66,19 @@ Route::middleware('auth')->group(function () {
     Route::resource('making-charges', MakingChargeController::class)->except('show')
         ->parameters(['making-charges' => 'making_charge']);
 
+    Route::resource('suppliers', SupplierController::class)->except('show');
+
+    Route::get('app-settings', [AppSettingController::class, 'edit'])->name('app-settings.edit');
+    Route::put('app-settings', [AppSettingController::class, 'update'])->name('app-settings.update');
+
+    Route::get('label-settings', [LabelSettingController::class, 'edit'])->name('label-settings.edit');
+    Route::put('label-settings', [LabelSettingController::class, 'update'])->name('label-settings.update');
+
+    // All above the resource so these are not swallowed by `items/{item}`.
+    Route::get('items/{item}/label', ItemLabelController::class)->name('items.label');
+    Route::get('items-photos/bulk', [ItemPhotoController::class, 'bulk'])->name('items.photos.bulk');
+    Route::post('items-photos/bulk', [ItemPhotoController::class, 'bulkStore'])->name('items.photos.bulk.store');
+    Route::post('items/{item}/photo', [ItemPhotoController::class, 'store'])->name('items.photo.store');
+    Route::delete('items/{item}/photo', [ItemPhotoController::class, 'destroy'])->name('items.photo.destroy');
     Route::resource('items', ItemController::class);
 });
