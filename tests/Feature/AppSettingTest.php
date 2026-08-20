@@ -25,6 +25,11 @@ function appSettingPayload(array $overrides = []): array
     return array_merge([
         'app_name' => 'Shree Jewellers',
         'media_disk' => 'public',
+        // Every required field on the settings form has to be here: the screen posts
+        // them all, so omitting one fails the whole update.
+        'angadiya_columns' => 3,
+        'angadiya_slip_height_mm' => 45,
+        'hallmark_next_lot_no' => 1,
         'sidebar_user_bg_from' => '#ff6600',
         'sidebar_user_bg_to' => '#993300',
         'sidebar_user_text_color' => '#ffffff',

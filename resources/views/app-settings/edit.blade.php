@@ -154,6 +154,19 @@
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="hallmark_next_lot_no" class="form-label">Next hallmark lot no</label>
+                                <input type="number" min="1" id="hallmark_next_lot_no" name="hallmark_next_lot_no"
+                                    class="form-control @error('hallmark_next_lot_no') is-invalid @enderror"
+                                    value="{{ old('hallmark_next_lot_no', $settings->hallmark_next_lot_no) }}">
+                                <small class="text-muted">
+                                    Lot numbers are issued automatically from here. Set it to continue
+                                    your existing numbering before the first entry.
+                                </small>
+                                @error('hallmark_next_lot_no')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -207,6 +220,69 @@
             </div>
 
             <div class="col-lg-5">
+                <div class="card">
+                    <div class="card-header py-2">
+                        <h5 class="mb-0">Table Header</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted fs-13">
+                            Applies to every table in the app. Two colours because a header
+                            that reads well in light mode is usually wrong in dark mode. Header
+                            text switches between black and white automatically.
+                        </p>
+
+                        @foreach ([['light', 'Light mode', '#f2f2f7'], ['dark', 'Dark mode', '#404954']] as [$mode, $label, $sample])
+                            @php($current = $settings->{"table_header_bg_{$mode}"})
+                            <div class="mb-3">
+                                <label for="table_header_bg_{{ $mode }}" class="form-label">{{ $label }}</label>
+
+                                <div class="input-group">
+                                    <input type="color" class="form-control form-control-color"
+                                        id="table_header_bg_{{ $mode }}_picker"
+                                        value="{{ old("table_header_bg_{$mode}", $current) ?: $sample }}">
+                                    <input type="text" name="table_header_bg_{{ $mode }}"
+                                        id="table_header_bg_{{ $mode }}"
+                                        class="form-control thead-colour @error("table_header_bg_{$mode}") is-invalid @enderror"
+                                        value="{{ old("table_header_bg_{$mode}", $current) }}" maxlength="7"
+                                        data-mode="{{ $mode }}" placeholder="theme default">
+                                </div>
+
+                                <div class="form-check mt-1">
+                                    <input class="form-check-input thead-default" type="checkbox"
+                                        id="table_header_default_{{ $mode }}"
+                                        name="table_header_default_{{ $mode }}" value="1"
+                                        data-mode="{{ $mode }}" @checked(! $current)>
+                                    <label class="form-check-label fs-13" for="table_header_default_{{ $mode }}">
+                                        Use the theme default
+                                    </label>
+                                </div>
+
+                                @error("table_header_bg_{$mode}")
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+
+                                {{-- Preview drawn with the same markup a real table header uses. --}}
+                                <table class="table table-sm mt-2 mb-0" style="pointer-events: none;">
+                                    <thead>
+                                        <tr id="thead-preview-{{ $mode }}">
+                                            <th>Code</th>
+                                            <th>Name</th>
+                                            <th class="text-end">Weight</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>RNG0001</td>
+                                            <td>Ring</td>
+                                            <td class="text-end">10.250</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
                 <div class="card">
                     <div class="card-header py-2">
                         <h5 class="mb-0">Sidebar User Panel</h5>
@@ -330,6 +406,60 @@
                     }
                     refresh();
                 });
+            });
+
+            // --- table header preview -----------------------------------------
+            // Mirrors AppSetting::readableTextOn(): the WCAG luminance weighting,
+            // so the preview agrees with what the server will store.
+            function readableTextOn(hex) {
+                const r = parseInt(hex.substr(1, 2), 16);
+                const g = parseInt(hex.substr(3, 2), 16);
+                const b = parseInt(hex.substr(5, 2), 16);
+
+                return ((0.2126 * r + 0.7152 * g + 0.0722 * b) / 255) > 0.55 ? '#212529' : '#ffffff';
+            }
+
+            function refreshThead(mode) {
+                const useDefault = $('#table_header_default_' + mode).is(':checked');
+                const value = $('#table_header_bg_' + mode).val();
+                const $row = $('#thead-preview-' + mode).find('th');
+
+                if (useDefault || ! /^#[0-9a-fA-F]{6}$/.test(value)) {
+                    $row.css({ 'background-color': '', 'color': '' });
+                    return;
+                }
+
+                $row.css({ 'background-color': value, 'color': readableTextOn(value) });
+            }
+
+            ['light', 'dark'].forEach(function (mode) {
+                const $text = $('#table_header_bg_' + mode);
+                const $picker = $('#table_header_bg_' + mode + '_picker');
+                const $default = $('#table_header_default_' + mode);
+
+                $picker.on('input', function () {
+                    $text.val($(this).val());
+                    // Choosing a colour is an explicit choice, so stop using the default.
+                    $default.prop('checked', false);
+                    refreshThead(mode);
+                });
+
+                $text.on('input', function () {
+                    if (/^#[0-9a-fA-F]{6}$/.test($(this).val())) {
+                        $picker.val($(this).val());
+                        $default.prop('checked', false);
+                    }
+                    refreshThead(mode);
+                });
+
+                $default.on('change', function () {
+                    if (this.checked) {
+                        $text.val('');
+                    }
+                    refreshThead(mode);
+                });
+
+                refreshThead(mode);
             });
 
             $('#reset-colours').on('click', function () {

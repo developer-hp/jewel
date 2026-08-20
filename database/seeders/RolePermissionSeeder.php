@@ -32,6 +32,7 @@ class RolePermissionSeeder extends Seeder
         'app_setting' => ['view', 'edit'],
         'item_lot' => ['view', 'create', 'edit', 'delete'],
         'angadiya' => ['view', 'create', 'edit', 'delete', 'print'],
+        'hallmark' => ['view', 'create', 'edit', 'delete', 'print'],
         'item' => ['view', 'create', 'edit', 'delete', 'print'],
         'stock' => ['view', 'adjust', 'report'],
         'customer' => ['view', 'create', 'edit', 'delete'],
@@ -77,7 +78,7 @@ class RolePermissionSeeder extends Seeder
         $this->syncRole('Manager', array_merge(
             ['user.view'],
             $this->modulePermissions(...self::MASTER_MODULES),
-            $this->modulePermissions('item_lot', 'angadiya', 'item', 'stock', 'customer'),
+            $this->modulePermissions('item_lot', 'angadiya', 'hallmark', 'item', 'stock', 'customer'),
             ['quotation.view', 'quotation.create', 'quotation.edit', 'quotation.approve', 'quotation.print'],
         ));
 
@@ -85,7 +86,8 @@ class RolePermissionSeeder extends Seeder
             // Counter staff print tags but do not resize them.
             // Dispatch is counter work, so Sales writes and prints slips.
             ['item.view', 'item.print', 'item_lot.view', 'stock.view',
-                'angadiya.view', 'angadiya.create', 'angadiya.print'],
+                'angadiya.view', 'angadiya.create', 'angadiya.print',
+                'hallmark.view', 'hallmark.print'],
             // Sales reads the masters so quotation screens can resolve rates and names.
             array_map(fn (string $module) => "{$module}.view", self::MASTER_MODULES),
             $this->modulePermissions('customer'),

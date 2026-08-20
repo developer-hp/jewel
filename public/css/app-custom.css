@@ -56,11 +56,18 @@
  * with and without the class.
  */
 .table > thead {
-    --ct-table-bg: var(--ct-tertiary-bg);
-    --ct-table-color: var(--ct-emphasis-color);
+    /* --app-thead-* come from Appearance settings, written onto :root by the
+       layout. Undefined means "not configured", so the theme grey is used. */
+    --ct-table-bg: var(--app-thead-bg-light, var(--ct-tertiary-bg));
+    --ct-table-color: var(--app-thead-color-light, var(--ct-emphasis-color));
     /* .table-light also pins a light border colour, which shows as a pale line
        across the header in dark mode. */
     --ct-table-border-color: var(--ct-border-color);
+}
+
+[data-bs-theme="dark"] .table > thead {
+    --ct-table-bg: var(--app-thead-bg-dark, var(--ct-tertiary-bg));
+    --ct-table-color: var(--app-thead-color-dark, var(--ct-emphasis-color));
 }
 
 .table > thead > tr > th {
@@ -265,4 +272,124 @@ table.dataTable > thead .sorting_desc::after {
 .dataTables_processing {
     box-shadow: none;
     background: transparent;
+}
+
+/* ------------------------------------------------------------------ *
+ * select2.
+ *
+ * The theme carries its own select2 rules in app.min.css, but the vendor
+ * stylesheet is pushed onto @stack('css') and therefore loads AFTER them. At equal
+ * specificity the later sheet wins, so vendor's `height: 28px`, `border: 1px solid
+ * #aaa`, `border-radius: 4px` and hardcoded white backgrounds were beating the
+ * theme — a short, square, always-light control next to Bootstrap inputs.
+ *
+ * This file loads last, so the corrections belong here. Values mirror .form-control
+ * and use the theme's own --ct-* custom properties, which already carry dark values.
+ * ------------------------------------------------------------------ */
+
+.select2-container .select2-selection--single,
+.select2-container--default .select2-selection--single {
+    height: calc(1.5em + 0.9rem + calc(var(--ct-border-width) * 2));
+    padding: 0;
+    border: var(--ct-border-width) solid var(--ct-border-color);
+    border-radius: var(--ct-border-radius);
+    background-color: var(--ct-secondary-bg);
+    outline: 0;
+}
+
+.select2-container .select2-selection--single .select2-selection__rendered {
+    /* Matches .form-control's .45rem/.9rem padding and .875rem/1.5 type. */
+    line-height: calc(1.5em + 0.9rem);
+    padding-left: 0.9rem;
+    padding-right: 2.25rem;
+    font-size: 0.875rem;
+    color: var(--ct-body-color);
+}
+
+.select2-container--default .select2-selection--single .select2-selection__placeholder {
+    color: var(--ct-secondary-color);
+}
+
+.select2-container .select2-selection--single .select2-selection__arrow {
+    height: calc(1.5em + 0.9rem);
+    width: 2rem;
+    right: 3px;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow b {
+    border-color: var(--ct-border-color) transparent transparent transparent;
+    border-width: 5px 5px 0 5px;
+    margin-left: -5px;
+}
+
+.select2-container--default.select2-container--open .select2-selection--single .select2-selection__arrow b {
+    border-color: transparent transparent var(--ct-border-color) transparent;
+    border-width: 0 5px 5px 5px;
+}
+
+/* Focus ring, so an open select2 reads like a focused input. */
+.select2-container--open .select2-selection--single,
+.select2-container--open .select2-selection--multiple {
+    border-color: var(--ct-primary);
+}
+
+.select2-container--default.select2-container--disabled .select2-selection--single {
+    background-color: var(--ct-tertiary-bg);
+}
+
+/* --- dropdown ------------------------------------------------------ */
+
+.select2-dropdown,
+.select2-container--default .select2-dropdown {
+    background-color: var(--ct-secondary-bg);
+    border: var(--ct-border-width) solid var(--ct-border-color);
+    border-radius: var(--ct-border-radius);
+    color: var(--ct-body-color);
+}
+
+.select2-container--default .select2-results__option {
+    color: var(--ct-body-color);
+}
+
+.select2-container--default .select2-results__option--selected {
+    background-color: var(--ct-tertiary-bg);
+}
+
+.select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
+    background-color: var(--ct-primary);
+    color: #fff;
+}
+
+.select2-container--default .select2-results__option--disabled {
+    color: var(--ct-secondary-color);
+}
+
+.select2-container--default .select2-search--dropdown .select2-search__field {
+    border: var(--ct-border-width) solid var(--ct-border-color);
+    border-radius: var(--ct-border-radius);
+    background-color: var(--ct-secondary-bg);
+    color: var(--ct-body-color);
+    padding: 0.35rem 0.6rem;
+}
+
+/* --- multiple ------------------------------------------------------ */
+
+.select2-container .select2-selection--multiple,
+.select2-container--default .select2-selection--multiple {
+    min-height: calc(1.5em + 0.9rem + calc(var(--ct-border-width) * 2));
+    border: var(--ct-border-width) solid var(--ct-border-color);
+    border-radius: var(--ct-border-radius);
+    background-color: var(--ct-secondary-bg);
+}
+
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+    background-color: var(--ct-primary);
+    border: none;
+    border-radius: var(--ct-border-radius);
+    color: #fff;
+}
+
+.select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+    color: #fff;
+    border-right: none;
 }

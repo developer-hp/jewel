@@ -5,6 +5,8 @@ use App\Http\Controllers\AngadiyaPrintController;
 use App\Http\Controllers\AppSettingController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\HallmarkController;
+use App\Http\Controllers\HallmarkPrintController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\ItemGroupController;
 use App\Http\Controllers\ItemLabelController;
@@ -87,6 +89,9 @@ Route::middleware('auth')->group(function () {
 
     Route::get('label-settings', [LabelSettingController::class, 'edit'])->name('label-settings.edit');
     Route::put('label-settings', [LabelSettingController::class, 'update'])->name('label-settings.update');
+
+    Route::get('hallmarks/{hallmark}/print', HallmarkPrintController::class)->name('hallmarks.print');
+    Route::resource('hallmarks', HallmarkController::class)->except('show');
 
     // Print sits above the resource so `angadiyas/print` is not read as a slip id.
     Route::post('angadiyas/print', AngadiyaPrintController::class)->name('angadiyas.print');

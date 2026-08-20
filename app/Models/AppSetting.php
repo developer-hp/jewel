@@ -13,10 +13,11 @@ use Illuminate\Support\Facades\Storage;
 #[Fillable([
     'app_name', 'media_disk',
     'firm_name', 'firm_city', 'firm_phone',
-    'angadiya_columns', 'angadiya_slip_height_mm',
+    'angadiya_columns', 'angadiya_slip_height_mm', 'hallmark_next_lot_no',
     'single_device_login', 'idle_timeout_minutes', 'idle_warning_seconds',
     'logo_path', 'logo_dark_path', 'logo_small_path',
     'sidebar_user_bg_from', 'sidebar_user_bg_to', 'sidebar_user_text_color',
+    'table_header_bg_light', 'table_header_bg_dark',
 ])]
 class AppSetting extends Model
 {
@@ -39,6 +40,7 @@ class AppSetting extends Model
         'media_disk' => 'public',
         'angadiya_columns' => 3,
         'angadiya_slip_height_mm' => 45,
+        'hallmark_next_lot_no' => 1,
         'single_device_login' => false,
         'idle_timeout_minutes' => 0,
         'idle_warning_seconds' => 60,
@@ -60,6 +62,7 @@ class AppSetting extends Model
     {
         return [
             'angadiya_columns' => 'integer',
+            'hallmark_next_lot_no' => 'integer',
             'angadiya_slip_height_mm' => 'decimal:2',
             'single_device_login' => 'boolean',
             'idle_timeout_minutes' => 'integer',
@@ -132,6 +135,56 @@ class AppSetting extends Model
         $disk = $this->media_disk ?: 'public';
 
         return config("filesystems.disks.{$disk}") ? $disk : 'public';
+    }
+
+    /**
+     * Custom properties the layout writes onto :root, consumed by app-custom.css.
+     *
+     * Declared as variables rather than as rules because the dynamic <style> block
+     * sits above the app-custom.css link — a plain `.table > thead {...}` here would
+     * be overridden by the stylesheet. Custom property lookup does not care about
+     * source order, so this cascades correctly whatever the link order.
+     *
+     * @return array<string, string>
+     */
+    public function cssVariables(): array
+    {
+        $vars = [];
+
+        foreach (['light' => 'table_header_bg_light', 'dark' => 'table_header_bg_dark'] as $mode => $column) {
+            $colour = $this->{$column};
+
+            if (! self::isHexColour($colour)) {
+                continue;
+            }
+
+            $vars["--app-thead-bg-{$mode}"] = $colour;
+            // Readability is not left to the user: the text flips with the
+            // background's brightness.
+            $vars["--app-thead-color-{$mode}"] = self::readableTextOn($colour);
+        }
+
+        return $vars;
+    }
+
+    public static function isHexColour(?string $value): bool
+    {
+        return is_string($value) && preg_match('/^#[0-9a-fA-F]{6}$/', $value) === 1;
+    }
+
+    /**
+     * Black or white, whichever reads better on the given background.
+     *
+     * Uses the WCAG relative-luminance weighting rather than a plain average, so a
+     * saturated green is correctly treated as light and a saturated blue as dark.
+     */
+    public static function readableTextOn(string $hex): string
+    {
+        [$r, $g, $b] = sscanf($hex, '#%02x%02x%02x');
+
+        $luminance = (0.2126 * $r + 0.7152 * $g + 0.0722 * $b) / 255;
+
+        return $luminance > 0.55 ? '#212529' : '#ffffff';
     }
 
     /**

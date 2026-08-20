@@ -55,6 +55,13 @@ return [
                 'can' => 'angadiya.view',
             ],
             [
+                'label' => 'Hallmark',
+                'icon' => 'ri-award-fill',
+                'route' => 'hallmarks.index',
+                'active' => 'hallmarks.*',
+                'can' => 'hallmark.view',
+            ],
+            [
                 'label' => 'Item Lots',
                 'icon' => 'ri-inbox-archive-fill',
                 'route' => 'lots.index',

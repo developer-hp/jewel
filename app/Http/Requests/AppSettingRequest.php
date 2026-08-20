@@ -31,6 +31,8 @@ class AppSettingRequest extends FormRequest
             'angadiya_columns' => ['required', 'integer', 'min:1', 'max:6'],
             'angadiya_slip_height_mm' => ['required', 'numeric', 'min:20', 'max:200'],
 
+            'hallmark_next_lot_no' => ['required', 'integer', 'min:1', 'max:99999999'],
+
             'logo' => $image,
             'logo_dark' => $image,
             'logo_small' => $image,
@@ -42,6 +44,10 @@ class AppSettingRequest extends FormRequest
             'sidebar_user_bg_from' => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'sidebar_user_bg_to' => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'sidebar_user_text_color' => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
+
+            // Nullable: blank means "leave the table header to the theme".
+            'table_header_bg_light' => ['nullable', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'table_header_bg_dark' => ['nullable', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
         ];
     }
 
@@ -54,6 +60,8 @@ class AppSettingRequest extends FormRequest
             'sidebar_user_bg_from.regex' => 'Pick a colour in #rrggbb form.',
             'sidebar_user_bg_to.regex' => 'Pick a colour in #rrggbb form.',
             'sidebar_user_text_color.regex' => 'Pick a colour in #rrggbb form.',
+            'table_header_bg_light.regex' => 'Pick a colour in #rrggbb form.',
+            'table_header_bg_dark.regex' => 'Pick a colour in #rrggbb form.',
             'logo.max' => 'The logo may not be larger than 1 MB.',
             'logo_dark.max' => 'The logo may not be larger than 1 MB.',
             'logo_small.max' => 'The logo may not be larger than 1 MB.',
@@ -79,6 +87,13 @@ class AppSettingRequest extends FormRequest
     {
         foreach (['remove_logo', 'remove_logo_dark', 'remove_logo_small'] as $flag) {
             $this->merge([$flag => $this->boolean($flag)]);
+        }
+
+        // Ticking "use the theme default" clears the colour rather than storing one.
+        foreach (['light', 'dark'] as $mode) {
+            if ($this->boolean("table_header_default_{$mode}")) {
+                $this->merge(["table_header_bg_{$mode}" => null]);
+            }
         }
     }
 }

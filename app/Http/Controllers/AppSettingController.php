@@ -44,9 +44,12 @@ class AppSettingController extends Controller implements HasMiddleware
             'firm_phone',
             'angadiya_columns',
             'angadiya_slip_height_mm',
+            'hallmark_next_lot_no',
             'sidebar_user_bg_from',
             'sidebar_user_bg_to',
             'sidebar_user_text_color',
+            'table_header_bg_light',
+            'table_header_bg_dark',
         ]));
 
         foreach (self::LOGO_SLOTS as $field => $column) {

@@ -19,6 +19,15 @@
     {{-- Branding: the theme paints the sidebar user panel with a photo, so this
          has to override background-image, not just the colour. --}}
     <style>
+        {{-- Written as custom properties, not rules: this block sits above the
+             app-custom.css link, so a plain rule here would lose to it. Variable
+             lookup ignores source order. Values are validated hex. --}}
+        :root {
+            @foreach ($appSettings->cssVariables() as $name => $value)
+                {{ $name }}: {{ $value }};
+            @endforeach
+        }
+
         .leftbar-user {
             {!! $appSettings->sidebarUserCss() !!}
         }
