@@ -11,7 +11,11 @@
 
 <tr class="stone-row">
     <td>
-        <select name="stones[{{ $index }}][stone_master_id]" class="form-select form-select-sm stone-master" required>
+        {{-- Deliberately not `required`. These rows live inside a closed modal, and a
+             browser refuses to submit a form holding an empty required control it
+             cannot focus — an unfilled row would block saving with no visible error.
+             ItemRequest::normalisedStoneRows() drops blank rows server-side instead. --}}
+        <select name="stones[{{ $index }}][stone_master_id]" class="form-select form-select-sm stone-master">
             <option value="">Select {{ $section }}…</option>
             @foreach ($masters as $master)
                 <option value="{{ $master->id }}" data-unit="{{ $master->rate_unit }}"

@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 #[Fillable([
     'shop_name',
     'tag_width_mm', 'tag_height_mm', 'margin_mm', 'font_size_pt',
-    'show_gross', 'show_net', 'show_purity', 'show_stone', 'show_diamond',
+    'show_gross', 'show_net', 'show_purity', 'show_huid', 'show_stone', 'show_diamond',
     'show_extra_charges', 'show_shop_name',
     'qr_enabled', 'qr_content', 'qr_size_mm',
 ])]
@@ -60,6 +60,7 @@ class LabelSetting extends Model
             'show_gross' => 'boolean',
             'show_net' => 'boolean',
             'show_purity' => 'boolean',
+            'show_huid' => 'boolean',
             'show_stone' => 'boolean',
             'show_diamond' => 'boolean',
             'show_extra_charges' => 'boolean',

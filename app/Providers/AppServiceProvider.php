@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Models\AppSetting;
+use App\Models\Item;
+use App\Observers\ItemObserver;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
@@ -23,6 +25,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Keeps an item lot's status in step with the items created against it.
+        Item::observe(ItemObserver::class);
+
         // Super Admin bypasses every permission check.
         Gate::before(fn ($user) => $user->hasRole('Super Admin') ? true : null);
 

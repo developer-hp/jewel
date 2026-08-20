@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasPhoto;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -9,7 +10,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * One unique physical piece: its own code, its own weights, quantity always 1.
@@ -18,14 +18,15 @@ use Illuminate\Support\Facades\Storage;
  * and are deliberately left out of the fillable list.
  */
 #[Fillable([
-    'item_group_id', 'supplier_id', 'metal_type_id', 'purity_id', 'making_charge_id',
+    'item_group_id', 'item_lot_id', 'supplier_id', 'metal_type_id', 'purity_id', 'making_charge_id',
+    'huid',
     'name', 'description', 'gross_weight', 'other_deduction', 'is_active',
     'extra_charge_1', 'extra_charge_1_label',
     'extra_charge_2', 'extra_charge_2_label',
 ])]
 class Item extends Model
 {
-    use SoftDeletes;
+    use HasPhoto, SoftDeletes;
 
     /** One carat is a fifth of a gram. */
     public const CARAT_TO_GRAM = 0.2;
@@ -42,6 +43,16 @@ class Item extends Model
             'extra_charge_2' => 'decimal:2',
             'is_active' => 'boolean',
         ];
+    }
+
+    public function photoDirectory(): string
+    {
+        return 'items';
+    }
+
+    public function itemLot(): BelongsTo
+    {
+        return $this->belongsTo(ItemLot::class);
     }
 
     public function itemGroup(): BelongsTo
@@ -102,30 +113,6 @@ class Item extends Model
     public function stoneValue(): float
     {
         return (float) $this->itemStones->sum('amount');
-    }
-
-    public function hasPhoto(): bool
-    {
-        return filled($this->photo_path);
-    }
-
-    /**
-     * Public URL for the item photo, resolved against the disk it was written to
-     * rather than the current setting — photos survive a local to S3 switch.
-     */
-    public function photoUrl(): ?string
-    {
-        if (! $this->hasPhoto()) {
-            return null;
-        }
-
-        $disk = $this->photo_disk ?: 'public';
-
-        if (! config("filesystems.disks.{$disk}")) {
-            return null;
-        }
-
-        return Storage::disk($disk)->url($this->photo_path);
     }
 
     /**

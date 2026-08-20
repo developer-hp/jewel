@@ -30,6 +30,7 @@ class LabelSettingRequest extends FormRequest
             'show_gross' => ['boolean'],
             'show_net' => ['boolean'],
             'show_purity' => ['boolean'],
+            'show_huid' => ['boolean'],
             'show_stone' => ['boolean'],
             'show_diamond' => ['boolean'],
             'show_extra_charges' => ['boolean'],
@@ -64,7 +65,7 @@ class LabelSettingRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         foreach ([
-            'show_gross', 'show_net', 'show_purity', 'show_stone', 'show_diamond',
+            'show_gross', 'show_net', 'show_purity', 'show_huid', 'show_stone', 'show_diamond',
             'show_extra_charges', 'show_shop_name', 'qr_enabled',
         ] as $flag) {
             $this->merge([$flag => $this->boolean($flag)]);

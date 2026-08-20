@@ -62,6 +62,7 @@ class ItemController extends Controller implements HasMiddleware
             ->addColumn('photo', fn (Item $item) => view('items.partials.photo-thumb', compact('item'))->render())
             ->editColumn('code', fn (Item $item) => '<code>'.e($item->code).'</code>')
             ->addColumn('group', fn (Item $item) => e($item->itemGroup?->name ?? '—'))
+            ->editColumn('huid', fn (Item $item) => $item->huid ? '<code>'.e($item->huid).'</code>' : '<span class="text-muted">—</span>')
             ->addColumn('supplier', fn (Item $item) => e($item->supplier?->short_name ?: ($item->supplier?->name ?? '—')))
             ->addColumn('metal', fn (Item $item) => view('items.partials.metal-cell', compact('item'))->render())
             ->addColumn('weights', fn (Item $item) => view('items.partials.weights-cell', compact('item'))->render())
@@ -75,7 +76,7 @@ class ItemController extends Controller implements HasMiddleware
             })
             ->orderColumn('weights', 'net_weight $1')
             ->orderColumn('status', 'is_active $1')
-            ->rawColumns(['photo', 'code', 'metal', 'weights', 'status', 'action'])
+            ->rawColumns(['photo', 'code', 'huid', 'metal', 'weights', 'status', 'action'])
             ->toJson();
     }
 

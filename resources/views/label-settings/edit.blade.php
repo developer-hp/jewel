@@ -7,6 +7,7 @@
         'show_gross' => 'Gross weight (GW)',
         'show_net' => 'Net weight (NW)',
         'show_purity' => 'Purity (PUR)',
+        'show_huid' => 'HUID',
         'show_stone' => 'Stone total (ST)',
         'show_diamond' => 'Diamond total (DI)',
         'show_extra_charges' => 'Extra charges',

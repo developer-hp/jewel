@@ -10,14 +10,18 @@
             </div>
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-3 mb-3">
                         <label for="item_group_id" class="form-label">Item Group <span class="text-danger">*</span></label>
                         <select id="item_group_id" name="item_group_id"
                             class="form-select @error('item_group_id') is-invalid @enderror" required
                             @disabled($item->exists)>
                             <option value="">Select…</option>
                             @foreach ($groups as $group)
+                                {{-- data-name carries the bare group name; the visible
+                                     text also has the prefix, which must not reach the
+                                     item name. --}}
                                 <option value="{{ $group->id }}" data-next="{{ $group->previewNextCode() }}"
+                                    data-name="{{ $group->name }}"
                                     @selected(old('item_group_id', $item->item_group_id) == $group->id)>
                                     {{ $group->name }} ({{ $group->prefix }})
                                 </option>
@@ -38,13 +42,23 @@
                         @enderror
                     </div>
 
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-3 mb-3">
                         <label class="form-label">Item Code</label>
                         <input type="text" class="form-control"
                             value="{{ $item->code ?? 'Auto-generated on save' }}" disabled>
                     </div>
 
-                    <div class="col-md-8 mb-3">
+                    <div class="col-md-3 mb-3">
+                        <label for="huid" class="form-label">HUID</label>
+                        <input type="text" id="huid" name="huid"
+                            class="form-control text-uppercase @error('huid') is-invalid @enderror"
+                            value="{{ old('huid', $item->huid) }}" maxlength="20" placeholder="Hallmark code">
+                        @error('huid')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="col-md-6 mb-3">
                         <label for="name" class="form-label">Item Name <span class="text-danger">*</span></label>
                         <input type="text" id="name" name="name" class="form-control @error('name') is-invalid @enderror"
                             value="{{ old('name', $item->name) }}" placeholder="Antique Jadtar Necklace" required>
@@ -113,7 +127,7 @@
                         <small class="text-muted">Applied when the item is quoted.</small>
                     </div>
 
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-3 mb-3">
                         <label for="gross_weight" class="form-label">Gross Weight (g) <span class="text-danger">*</span></label>
                         <input type="number" step="0.001" min="0.001" id="gross_weight" name="gross_weight"
                             class="form-control @error('gross_weight') is-invalid @enderror"
@@ -123,7 +137,7 @@
                         @enderror
                     </div>
 
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-3 mb-3">
                         <label for="other_deduction" class="form-label">Other Deduction (g)</label>
                         <input type="number" step="0.001" min="0" id="other_deduction" name="other_deduction"
                             class="form-control @error('other_deduction') is-invalid @enderror"
@@ -134,46 +148,7 @@
                         @enderror
                     </div>
 
-                    <div class="col-12">
-                        <hr class="mt-0">
-                        <h5 class="fs-14 mb-1">Extra Charges</h5>
-                        <p class="text-muted fs-13">
-                            One-off costs such as polish or certification. Stored on the item and
-                            applied at quotation time; the caption prints on the tag.
-                        </p>
-                    </div>
-
-                    @foreach ([1, 2] as $slot)
-                        <div class="col-md-3 mb-3">
-                            <label for="extra_charge_{{ $slot }}_label" class="form-label">Charge {{ $slot }} Caption</label>
-                            <input type="text" id="extra_charge_{{ $slot }}_label"
-                                name="extra_charge_{{ $slot }}_label"
-                                class="form-control @error("extra_charge_{$slot}_label") is-invalid @enderror"
-                                value="{{ old("extra_charge_{$slot}_label", $item->{"extra_charge_{$slot}_label"}) }}"
-                                maxlength="20" placeholder="E{{ $slot }}">
-                            @error("extra_charge_{$slot}_label")
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="col-md-3 mb-3">
-                            <label for="extra_charge_{{ $slot }}" class="form-label">Charge {{ $slot }} Amount</label>
-                            <input type="number" step="0.01" min="0" id="extra_charge_{{ $slot }}"
-                                name="extra_charge_{{ $slot }}"
-                                class="form-control extra-charge @error("extra_charge_{$slot}") is-invalid @enderror"
-                                value="{{ old("extra_charge_{$slot}", $item->{"extra_charge_{$slot}"} ?? 0) }}">
-                            @error("extra_charge_{$slot}")
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    @endforeach
-
-                    <div class="col-12 mb-3">
-                        <label for="description" class="form-label">Description</label>
-                        <textarea id="description" name="description" rows="2" class="form-control">{{ old('description', $item->description) }}</textarea>
-                    </div>
-
-                    <div class="col-12">
+                    <div class="col-12 d-none">
                         <div class="form-check form-switch">
                             <input type="hidden" name="is_active" value="0">
                             <input class="form-check-input" type="checkbox" id="is_active" name="is_active" value="1"
@@ -244,8 +219,29 @@
                 </p>
             </div>
         </div>
+    </div>
+</div>
 
-        @include('items.partials.photo-card')
+{{-- Stones and diamonds live in popups; these buttons open them and report what is
+     inside, so a piece with no stones costs nothing but a glance. --}}
+<div class="card">
+    <div class="card-header py-2">
+        <h5 class="mb-0">Stones &amp; Diamonds</h5>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            @foreach ([['stone', 'Stones', 'ri-shining-2-fill'], ['diamond', 'Diamonds', 'ri-vip-diamond-fill']] as [$section, $label, $icon])
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center gap-3">
+                        <button type="button" class="btn btn-soft-primary" data-bs-toggle="modal"
+                            data-bs-target="#{{ $section }}-modal">
+                            <i class="{{ $icon }}"></i> {{ $label }}
+                        </button>
+                        <div class="text-muted fs-13" id="{{ $section }}-trigger-summary">No {{ strtolower($label) }} added</div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
     </div>
 </div>
 
@@ -264,6 +260,51 @@
     'rows' => $diamondRows,
     'offset' => 1000,
 ])
+
+<div class="card">
+    <div class="card-header py-2">
+        <h5 class="mb-0">Extra Charges</h5>
+    </div>
+    <div class="card-body">
+        <p class="text-muted fs-13">
+            One-off costs such as polish or certification. Stored on the item and
+            applied at quotation time; the caption prints on the tag.
+        </p>
+
+        <div class="row">
+            @foreach ([1, 2] as $slot)
+                <div class="col-md-3 mb-3">
+                    <label for="extra_charge_{{ $slot }}_label" class="form-label">Charge {{ $slot }} Caption</label>
+                    <input type="text" id="extra_charge_{{ $slot }}_label"
+                        name="extra_charge_{{ $slot }}_label"
+                        class="form-control @error("extra_charge_{$slot}_label") is-invalid @enderror"
+                        value="{{ old("extra_charge_{$slot}_label", $item->{"extra_charge_{$slot}_label"}) }}"
+                        maxlength="20" placeholder="E{{ $slot }}">
+                    @error("extra_charge_{$slot}_label")
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label for="extra_charge_{{ $slot }}" class="form-label">Charge {{ $slot }} Amount</label>
+                    <input type="number" step="0.01" min="0" id="extra_charge_{{ $slot }}"
+                        name="extra_charge_{{ $slot }}"
+                        class="form-control extra-charge @error("extra_charge_{$slot}") is-invalid @enderror"
+                        value="{{ old("extra_charge_{$slot}", $item->{"extra_charge_{$slot}"} ?? 0) }}">
+                    @error("extra_charge_{$slot}")
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+            @endforeach
+            <div class="col-12 mb-3">
+                <label for="description" class="form-label">Description</label>
+                <textarea id="description" name="description" rows="2" class="form-control">{{ old('description', $item->description) }}</textarea>
+            </div>
+
+        </div>
+        
+    </div>
+</div>
 
 <div class="mb-4 d-flex gap-2">
     <button type="submit" class="btn btn-primary">
@@ -330,6 +371,7 @@
 
                 return {
                     grams: grams,
+                    carat: carat,
                     amount: amount,
                     deduct: $row.find('.stone-deduct').is(':checked'),
                 };
@@ -337,17 +379,31 @@
 
             function refreshSection(section) {
                 const $table = $('table[data-section="' + section + '"]');
-                let grams = 0, amount = 0, deducted = 0;
+                let grams = 0, amount = 0, deducted = 0, carat = 0, rows = 0;
 
                 $table.find('.stone-row').each(function () {
                     const result = refreshRow($(this));
                     grams += result.grams;
                     amount += result.amount;
+                    carat += result.carat;
+                    rows += 1;
                     if (result.deduct) deducted += result.grams;
                 });
 
                 $table.find('.section-grams').text(grams.toFixed(4));
                 $table.find('.section-amount').text(amount.toFixed(2));
+
+                // The rows are behind a popup, so say what is in there.
+                const $summary = $('#' + section + '-trigger-summary');
+                if (rows === 0) {
+                    $summary.text('No ' + section + 's added');
+                } else {
+                    $summary.html(
+                        '<strong>' + rows + '</strong> row' + (rows === 1 ? '' : 's') +
+                        ' · ' + carat.toFixed(3) + ' ct' +
+                        ' · ₹' + amount.toFixed(2)
+                    );
+                }
 
                 return { deducted: deducted, amount: amount };
             }
@@ -410,7 +466,8 @@
                 const html = $('#' + section + '-row-template').html().replace(/__INDEX__/g, nextIndex[section]++);
 
                 $('table[data-section="' + section + '"] .stone-rows').append(html);
-                $(this).closest('.card').find('.empty-hint').remove();
+                // The sections now sit in a modal, not a card.
+                $(this).closest('.modal-content').find('.empty-hint').remove();
                 refreshTotals();
             });
 
@@ -420,8 +477,22 @@
             });
 
             $('#item_group_id').on('change', function () {
-                const next = $(this).find('option:selected').data('next');
-                $('#code-preview').text(next || 'auto-generated on save');
+                const $option = $(this).find('option:selected');
+
+                $('#code-preview').text($option.data('next') || 'auto-generated on save');
+
+                // Item name follows the group. Overwrites whatever is there, by design.
+                const groupName = $option.data('name');
+                if (groupName) {
+                    $('#name').val(groupName);
+                }
+            });
+
+            // Enter inside a popup row would submit the whole item; keep it in the row.
+            $(document).on('keydown', '.modal input', function (event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                }
             });
 
             populatePurities(true);

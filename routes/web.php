@@ -6,8 +6,10 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\ItemGroupController;
 use App\Http\Controllers\ItemLabelController;
+use App\Http\Controllers\ItemLotController;
 use App\Http\Controllers\ItemPhotoController;
 use App\Http\Controllers\LabelSettingController;
+use App\Http\Controllers\LotItemEntryController;
 use App\Http\Controllers\MakingChargeController;
 use App\Http\Controllers\MetalRateController;
 use App\Http\Controllers\MetalTypeController;
@@ -83,6 +85,11 @@ Route::middleware('auth')->group(function () {
 
     Route::get('label-settings', [LabelSettingController::class, 'edit'])->name('label-settings.edit');
     Route::put('label-settings', [LabelSettingController::class, 'update'])->name('label-settings.update');
+
+    // Entry screen sits above the resource so `lots/{lot}/items` is not a lot route.
+    Route::get('lots/{lot}/items/create', [LotItemEntryController::class, 'create'])->name('lots.items.create');
+    Route::post('lots/{lot}/items', [LotItemEntryController::class, 'store'])->name('lots.items.store');
+    Route::resource('lots', ItemLotController::class)->parameters(['lots' => 'lot']);
 
     // All above the resource so these are not swallowed by `items/{item}`.
     Route::get('items/{item}/label', ItemLabelController::class)->name('items.label');

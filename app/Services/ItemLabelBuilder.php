@@ -61,6 +61,11 @@ class ItemLabelBuilder
             $rows[] = ['label' => 'PUR', 'value' => $item->purity->name];
         }
 
+        // Omitted when blank, like every other optional row.
+        if ($settings->show_huid && filled($item->huid)) {
+            $rows[] = ['label' => 'HUID', 'value' => $item->huid];
+        }
+
         if ($settings->show_stone) {
             $rows = array_merge($rows, $this->stoneRows('ST', $item->stoneSummary()));
         }

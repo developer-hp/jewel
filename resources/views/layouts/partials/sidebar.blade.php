@@ -60,6 +60,16 @@
                 </li>
             @endcan
 
+            @can('item_lot.view')
+                <li class="side-nav-item {{ request()->routeIs('lots.*') ? 'menuitem-active' : '' }}">
+                    <a href="{{ route('lots.index') }}"
+                        class="side-nav-link {{ request()->routeIs('lots.*') ? 'active' : '' }}">
+                        <i class="ri-inbox-archive-fill"></i>
+                        <span> Item Lots </span>
+                    </a>
+                </li>
+            @endcan
+
             @canany(['metal_type.view', 'purity.view', 'metal_rate.view', 'item_group.view', 'stone.view', 'making_charge.view', 'supplier.view', 'label_setting.view', 'app_setting.view'])
                 <li class="side-nav-title mt-1">Masters</li>
 

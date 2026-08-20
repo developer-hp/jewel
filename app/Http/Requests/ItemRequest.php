@@ -24,6 +24,8 @@ class ItemRequest extends FormRequest
         return [
             'item_group_id' => ['required', 'exists:item_groups,id'],
             'supplier_id' => ['nullable', 'exists:suppliers,id'],
+            // Free text by decision: no uniqueness rule and no 6-character format.
+            'huid' => ['nullable', 'string', 'max:20'],
             'metal_type_id' => ['required', 'exists:metal_types,id'],
             'purity_id' => ['required', 'exists:purities,id'],
             'making_charge_id' => ['nullable', 'exists:making_charges,id'],

@@ -34,7 +34,11 @@
                     <table class="table table-sm mb-0">
                         <tbody>
                             <tr>
-                                <th style="width: 40%">Item Group</th>
+                                <th style="width: 40%">HUID</th>
+                                <td>{{ $item->huid ?: '—' }}</td>
+                            </tr>
+                            <tr>
+                                <th>Item Group</th>
                                 <td>{{ $item->itemGroup?->name ?? '—' }}</td>
                             </tr>
                             <tr>

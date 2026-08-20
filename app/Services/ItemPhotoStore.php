@@ -3,18 +3,18 @@
 namespace App\Services;
 
 use App\Models\AppSetting;
-use App\Models\Item;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * Owns where item photos live. Everything that writes or removes a photo goes
- * through here so the disk choice is honoured in exactly one place.
+ * Owns where photos live. Everything that writes or removes one goes through here
+ * so the disk choice is honoured in exactly one place.
+ *
+ * Accepts any model using App\Models\Concerns\HasPhoto — items and item lots both do.
  */
 class ItemPhotoStore
 {
-    public const DIRECTORY = 'items';
-
     /** Extensions accepted by the bulk uploader and the single upload. */
     public const EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp'];
 
@@ -26,18 +26,18 @@ class ItemPhotoStore
     /**
      * Store a photo against an item, removing whatever it replaces.
      */
-    public function put(Item $item, UploadedFile $file): void
+    public function put(Model $model, UploadedFile $file): void
     {
-        $previousPath = $item->photo_path;
-        $previousDisk = $item->photo_disk;
+        $previousPath = $model->photo_path;
+        $previousDisk = $model->photo_disk;
 
         $disk = $this->disk();
 
-        $item->forceFill([
+        $model->forceFill([
             // Named after the code so a file pulled off S3 is still identifiable.
             'photo_path' => $file->storeAs(
-                self::DIRECTORY,
-                $item->code.'-'.uniqid().'.'.$file->getClientOriginalExtension(),
+                $model->photoDirectory(),
+                $model->code.'-'.uniqid().'.'.$file->getClientOriginalExtension(),
                 ['disk' => $disk]
             ),
             'photo_disk' => $disk,
@@ -47,13 +47,13 @@ class ItemPhotoStore
     }
 
     /**
-     * Detach and delete an item's photo.
+     * Detach and delete a model's photo.
      */
-    public function remove(Item $item): void
+    public function remove(Model $model): void
     {
-        $this->deleteFile($item->photo_disk, $item->photo_path);
+        $this->deleteFile($model->photo_disk, $model->photo_path);
 
-        $item->forceFill(['photo_path' => null, 'photo_disk' => null])->save();
+        $model->forceFill(['photo_path' => null, 'photo_disk' => null])->save();
     }
 
     private function deleteFile(?string $disk, ?string $path): void

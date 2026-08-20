@@ -69,6 +69,7 @@
                             <tr>
                                 <th style="width: 48px;"></th>
                                 <th>Code</th>
+                                <th>HUID</th>
                                 <th>Name</th>
                                 <th>Group</th>
                                 <th>Supplier</th>
@@ -104,6 +105,7 @@
                 columns: [
                     { data: 'photo', name: 'photo', orderable: false, searchable: false, className: 'text-center' },
                     { data: 'code', name: 'code' },
+                    { data: 'huid', name: 'huid' },
                     { data: 'name', name: 'name' },
                     { data: 'group', name: 'group' },
                     { data: 'supplier', name: 'supplier', orderable: false },
