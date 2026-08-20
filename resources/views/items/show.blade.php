@@ -6,7 +6,7 @@
     <x-page-title :title="'Item — ' . $item->code">
         <x-slot:actions>
             @can('item.print')
-                <a href="{{ route('items.label', $item) }}" target="_blank" class="btn btn-soft-primary">
+                <a href="{{ route('items.label', $item) }}" target="_blank" class="btn btn-primary">
                     <i class="ri-price-tag-3-line"></i> Print Tag
                 </a>
             @endcan

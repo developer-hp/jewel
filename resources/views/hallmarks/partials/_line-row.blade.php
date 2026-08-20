@@ -58,7 +58,7 @@
         </select>
     </td>
     <td class="text-end">
-        <button type="button" class="btn btn-sm btn-soft-danger btn-icon hm-remove" title="Remove">
+        <button type="button" class="btn btn-sm btn-danger btn-icon hm-remove" title="Remove">
             <i class="ri-close-line"></i>
         </button>
     </td>

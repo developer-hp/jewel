@@ -3,7 +3,7 @@
     :confirm="'Delete the slip for ' . $angadiya->name . '?'">
     <x-slot:before>
         @can('angadiya.print')
-            <button type="button" class="btn btn-sm btn-soft-info btn-icon print-one" data-id="{{ $angadiya->id }}"
+            <button type="button" class="btn btn-sm btn-info btn-icon print-one" data-id="{{ $angadiya->id }}"
                 title="Print this slip">
                 <i class="ri-printer-fill"></i>
             </button>

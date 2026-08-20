@@ -150,7 +150,7 @@
 
     @can('hallmark.print')
         @unless ($hallmark->exists)
-            <button type="submit" name="print_after_save" value="1" class="btn btn-soft-primary">
+            <button type="submit" name="print_after_save" value="1" class="btn btn-primary">
                 <i class="ri-printer-line"></i> Create &amp; Print
             </button>
         @endunless

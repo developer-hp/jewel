@@ -8,7 +8,7 @@
     <x-page-title title="Items">
         <x-slot:actions>
             @can('item.edit')
-                <a href="{{ route('items.photos.bulk') }}" class="btn btn-soft-primary">
+                <a href="{{ route('items.photos.bulk') }}" class="btn btn-primary">
                     <i class="ri-image-add-line"></i> Bulk Photos
                 </a>
             @endcan
@@ -50,7 +50,7 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-1">
                             <select id="filter-status" class="form-select">
                                 <option value="">All statuses</option>
                                 <option value="active">Active</option>
@@ -58,7 +58,7 @@
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <button type="button" id="filter-reset" class="btn btn-light w-100">
+                            <button type="button" id="filter-reset" class="btn btn-danger">
                                 <i class="ri-refresh-line"></i> Reset
                             </button>
                         </div>

@@ -151,20 +151,92 @@ class AppSetting extends Model
     {
         $vars = [];
 
-        foreach (['light' => 'table_header_bg_light', 'dark' => 'table_header_bg_dark'] as $mode => $column) {
-            $colour = $this->{$column};
+        foreach (['light', 'dark'] as $mode) {
+            $pair = $this->tableHeaderColours($mode);
 
-            if (! self::isHexColour($colour)) {
+            if ($pair === null) {
                 continue;
             }
 
-            $vars["--app-thead-bg-{$mode}"] = $colour;
-            // Readability is not left to the user: the text flips with the
-            // background's brightness.
-            $vars["--app-thead-color-{$mode}"] = self::readableTextOn($colour);
+            $vars["--app-thead-bg-{$mode}"] = $pair['bg'];
+
+            // Omitted when a named default gives nothing to contrast against; the
+            // stylesheet then falls back to the theme's text colour.
+            if ($pair['text'] !== null) {
+                $vars["--app-thead-color-{$mode}"] = $pair['text'];
+            }
         }
 
         return $vars;
+    }
+
+    /**
+     * The background and text colour for one mode's table header.
+     *
+     * A colour chosen on the Appearance screen wins and has its text contrast worked
+     * out automatically. Otherwise the shipped default from config/appearance.php is
+     * used, where the text colour is stated rather than derived. Null means neither
+     * is set, so the theme's own grey stands.
+     *
+     * @return array{bg: string, text: string|null}|null
+     */
+    public function tableHeaderColours(string $mode): ?array
+    {
+        $chosen = $this->{"table_header_bg_{$mode}"};
+
+        if (self::isHexColour($chosen)) {
+            return ['bg' => $chosen, 'text' => self::readableTextOn($chosen)];
+        }
+
+        return self::defaultTableHeaderColours($mode);
+    }
+
+    /**
+     * The configured default for one mode, or null when config leaves it to the theme.
+     *
+     * @return array{bg: string, text: string|null}|null
+     */
+    public static function defaultTableHeaderColours(string $mode): ?array
+    {
+        // Config is written by a developer, not posted by a user, so any CSS colour
+        // is fair game here — `red`, `rgb(…)`, `var(--ct-primary)` — not just hex.
+        $bg = self::cssColour(config("appearance.table_header.{$mode}.bg"));
+
+        if ($bg === null) {
+            return null;
+        }
+
+        $text = self::cssColour(config("appearance.table_header.{$mode}.text"));
+
+        // Auto-contrast can only be computed from a hex value. With a named colour
+        // and no `text` configured, leave it out and let the theme's own text
+        // colour stand rather than guessing.
+        if ($text === null && self::isHexColour($bg)) {
+            $text = self::readableTextOn($bg);
+        }
+
+        return ['bg' => $bg, 'text' => $text];
+    }
+
+    /**
+     * A CSS colour from config, or null if unusable.
+     *
+     * These land inside a <style> block, so anything that could close the
+     * declaration is rejected outright.
+     */
+    public static function cssColour(mixed $value): ?string
+    {
+        if (! is_string($value)) {
+            return null;
+        }
+
+        $value = trim($value);
+
+        if ($value === '' || mb_strlen($value) > 64) {
+            return null;
+        }
+
+        return preg_match('/[;{}<>@]/', $value) === 1 ? null : $value;
     }
 
     public static function isHexColour(?string $value): bool

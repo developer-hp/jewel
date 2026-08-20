@@ -211,7 +211,7 @@
                                             @endcan
                                             @can('item.print')
                                                 <a href="{{ route('items.label', $item) }}" target="_blank"
-                                                    class="btn btn-sm btn-soft-info btn-icon" title="Print tag">
+                                                    class="btn btn-sm btn-info btn-icon" title="Print tag">
                                                     <i class="ri-price-tag-3-fill"></i>
                                                 </a>
                                             @endcan

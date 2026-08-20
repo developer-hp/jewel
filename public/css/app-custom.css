@@ -21,19 +21,11 @@
     border-color: var(--ct-border-color);
 }
 
-/* An outer frame, so a table inside a card body reads as one block. */
-.table:not(.table-borderless) {
-    border: var(--ct-border-width) solid var(--ct-border-color);
-}
 
 /* Density: the theme's default cell padding is .75rem, which wastes a lot of
    vertical space on listings that are mostly short numeric cells. */
 .table > :not(caption) > * > * {
     padding: 0.45rem 0.6rem;
-}
-
-.table {
-    font-size: 0.8125rem;
 }
 
 /* .table-sm is used for the small summary tables; keep it tighter still. */
@@ -70,15 +62,6 @@
     --ct-table-color: var(--app-thead-color-dark, var(--ct-emphasis-color));
 }
 
-.table > thead > tr > th {
-    font-size: 0.6875rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    white-space: nowrap;
-    vertical-align: middle;
-    border-bottom-width: var(--ct-border-width);
-}
 
 /* ------------------------------------------------------------------ *
  * DataTables toolbar.
@@ -88,22 +71,11 @@
  * removed through the language options in appDataTable(); what is left is
  * spacing and sizing, handled here.
  * ------------------------------------------------------------------ */
-
-.dt-toolbar {
-    margin-bottom: 0.75rem;
-}
-
 .dt-footer {
     margin-top: 0.75rem;
 }
 
-.dataTables_length,
-.dataTables_filter {
-    margin: 0;
-}
-
-.dataTables_length label,
-.dataTables_filter label {
+.dataTables_length label {
     display: flex;
     align-items: center;
     gap: 0.4rem;
@@ -122,21 +94,7 @@
 
 /* Search sits at the right-hand end of the toolbar and is capped so it does not
    stretch across a wide screen. */
-.dataTables_filter {
-    text-align: right;
-}
 
-.dataTables_filter label {
-    justify-content: flex-end;
-}
-
-.dataTables_filter input {
-    width: 100%;
-    max-width: 16rem;
-    margin: 0;
-    padding: 0.28rem 0.6rem;
-    font-size: 0.8125rem;
-}
 
 /* ------------------------------------------------------------------ *
  * DataTables footer: record count and pagination.
@@ -392,4 +350,158 @@ table.dataTable > thead .sorting_desc::after {
 .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
     color: #fff;
     border-right: none;
+}
+
+/* ------------------------------------------------------------------ *
+ * Focus highlight.
+ *
+ * The theme deliberately switches Bootstrap's focus ring off — every
+ * `.form-control:focus`, `.form-select:focus` and `.form-check-input:focus` rule in
+ * app.min.css sets `box-shadow: none` with a border colour barely different from
+ * the resting one, so a focused field looks identical to an idle one. This file
+ * loads last, so the ring is put back here.
+ *
+ * :focus rather than :focus-visible on the text controls: clicking into a field
+ * should show where you are, not only tabbing to it.
+ * ------------------------------------------------------------------ */
+
+.form-control:focus,
+.form-select:focus,
+.form-control-color:focus,
+textarea.form-control:focus,
+.select2-container--open .select2-selection--single,
+.select2-container--open .select2-selection--multiple,
+.select2-container--default .select2-search--dropdown .select2-search__field:focus {
+    border-color: var(--ct-primary);
+    outline: 0;
+    box-shadow: 0 0 0 0.15rem rgba(var(--ct-primary-rgb), 0.25);
+}
+
+/* Checkboxes and radios get the same ring, sized down to suit them. */
+.form-check-input:focus {
+    border-color: var(--ct-primary);
+    outline: 0;
+    box-shadow: 0 0 0 0.15rem rgba(var(--ct-primary-rgb), 0.25);
+}
+
+/* A focused control inside an input group must sit above its neighbours, or the
+   ring is clipped by the addon next to it. */
+.input-group > .form-control:focus,
+.input-group > .form-select:focus,
+.input-group > .form-control-color:focus {
+    z-index: 3;
+}
+
+/* Keep the red ring on a field that failed validation — turning it primary on
+   focus would hide the fact that it is still wrong. */
+.form-control.is-invalid:focus,
+.form-select.is-invalid:focus,
+.was-validated .form-control:invalid:focus {
+    border-color: var(--ct-danger);
+    box-shadow: 0 0 0 0.15rem rgba(var(--ct-danger-rgb), 0.25);
+}
+
+/* Read-only and disabled fields still take focus, but a full ring implies they can
+   be edited. A plain border is enough to show where the cursor is. */
+.form-control[readonly]:focus,
+.form-control:disabled:focus,
+.form-select:disabled:focus {
+    border-color: var(--ct-border-color);
+    box-shadow: none;
+}
+
+
+
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+
+.roboto-thin {
+  font-family: "Roboto", sans-serif;
+  font-weight: 100;
+  font-style: normal;
+}
+
+.roboto-light {
+  font-family: "Roboto", sans-serif;
+  font-weight: 300;
+  font-style: normal;
+}
+
+.roboto-regular {
+  font-family: "Roboto", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.roboto-medium {
+  font-family: "Roboto", sans-serif;
+  font-weight: 500;
+  font-style: normal;
+}
+
+.roboto-bold {
+  font-family: "Roboto", sans-serif;
+  font-weight: 700;
+  font-style: normal;
+}
+
+.roboto-black {
+  font-family: "Roboto", sans-serif;
+  font-weight: 900;
+  font-style: normal;
+}
+
+.roboto-thin-italic {
+  font-family: "Roboto", sans-serif;
+  font-weight: 100;
+  font-style: italic;
+}
+
+.roboto-light-italic {
+  font-family: "Roboto", sans-serif;
+  font-weight: 300;
+  font-style: italic;
+}
+
+.roboto-regular-italic {
+  font-family: "Roboto", sans-serif;
+  font-weight: 400;
+  font-style: italic;
+}
+
+.roboto-medium-italic {
+  font-family: "Roboto", sans-serif;
+  font-weight: 500;
+  font-style: italic;
+}
+
+.roboto-bold-italic {
+  font-family: "Roboto", sans-serif;
+  font-weight: 700;
+  font-style: italic;
+}
+
+.roboto-black-italic {
+  font-family: "Roboto", sans-serif;
+  font-weight: 900;
+  font-style: italic;
+}
+
+body {
+  font-family: 'Roboto', sans-serif !important;
+}
+
+html[data-bs-theme=dark] .nav-link:focus, html[data-bs-theme=dark] .nav-link:hover{
+    color: #FFFFFF;
+}
+html[data-bs-theme=light] .card-body,
+html[data-bs-theme=light] table td{
+    color: #1f2225;
+}
+html[data-bs-theme=dark] .card-body,
+html[data-bs-theme=dark] table td{
+    color: rgb(255, 249, 250);
+}
+code {
+    font-size: 1rem;
+    font-weight: bold;
 }

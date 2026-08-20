@@ -38,7 +38,7 @@
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <button type="button" id="filter-reset" class="btn btn-light w-100">
+                            <button type="button" id="filter-reset" class="btn btn-danger">
                                 <i class="ri-refresh-line"></i> Reset
                             </button>
                         </div>

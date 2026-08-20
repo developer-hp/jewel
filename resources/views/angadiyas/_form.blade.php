@@ -91,7 +91,7 @@
 
                     @can('angadiya.print')
                         @unless ($angadiya->exists)
-                            <button type="submit" name="print_after_save" value="1" class="btn btn-soft-primary">
+                            <button type="submit" name="print_after_save" value="1" class="btn btn-primary">
                                 <i class="ri-printer-line"></i> Save &amp; Print
                             </button>
                         @endunless

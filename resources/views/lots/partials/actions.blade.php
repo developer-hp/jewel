@@ -10,7 +10,7 @@
 
         @can('item.create')
             @if ($lot->remainingTags() > 0)
-                <a href="{{ route('lots.items.create', $lot) }}" class="btn btn-sm btn-soft-success btn-icon"
+                <a href="{{ route('lots.items.create', $lot) }}" class="btn btn-sm btn-success btn-icon"
                     title="Add items">
                     <i class="ri-add-box-fill"></i>
                 </a>

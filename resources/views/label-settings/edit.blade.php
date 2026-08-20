@@ -20,7 +20,7 @@
         <x-slot:actions>
             @can('item.print')
                 @if ($previewItem)
-                    <a href="{{ route('items.label', $previewItem) }}" target="_blank" class="btn btn-soft-primary">
+                    <a href="{{ route('items.label', $previewItem) }}" target="_blank" class="btn btn-primary">
                         <i class="ri-eye-line"></i> Preview ({{ $previewItem->code }})
                     </a>
                 @endif

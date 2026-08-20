@@ -21,7 +21,7 @@
                 @foreach ([['stone', 'Stones'], ['diamond', 'Diamonds']] as [$kind, $label])
                     <div class="d-flex justify-content-between align-items-center mb-1">
                         <h6 class="mb-0">{{ $label }}</h6>
-                        <button type="button" class="btn btn-sm btn-soft-primary ms-add" data-kind="{{ $kind }}">
+                        <button type="button" class="btn btn-sm btn-primary ms-add" data-kind="{{ $kind }}">
                             <i class="ri-add-line"></i> Add {{ Str::singular($label) }}
                         </button>
                     </div>

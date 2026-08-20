@@ -198,3 +198,144 @@ it('gates the appearance screen by permission', function () {
     $nobody = User::factory()->create();
     $this->actingAs($nobody)->get(route('app-settings.edit'))->assertForbidden();
 });
+
+// --- table header colour ------------------------------------------------------
+
+it('falls back to the configured default when no colour is set', function () {
+    // Config is set here rather than read from the file, so editing the shipped
+    // defaults cannot break the suite.
+    config(['appearance.table_header' => [
+        'light' => ['bg' => '#f2f2f7', 'text' => '#212529'],
+        'dark' => ['bg' => '#404954', 'text' => '#f8f9fa'],
+    ]]);
+
+    expect(AppSetting::current()->cssVariables())->toBe([
+        '--app-thead-bg-light' => '#f2f2f7',
+        '--app-thead-color-light' => '#212529',
+        '--app-thead-bg-dark' => '#404954',
+        '--app-thead-color-dark' => '#f8f9fa',
+    ]);
+});
+
+it('leaves the header to the theme when config sets no colour', function () {
+    config(['appearance.table_header' => ['light' => ['bg' => null], 'dark' => ['bg' => null]]]);
+
+    expect(AppSetting::current()->cssVariables())->toBe([]);
+
+    $this->actingAs($this->admin)->get(route('dashboard'))
+        ->assertOk()
+        ->assertDontSee('--app-thead-bg-light', false);
+});
+
+it('accepts any css colour from config, not just hex', function () {
+    // Config is developer-authored, so named colours and functions are fair game.
+    config(['appearance.table_header' => [
+        'light' => ['bg' => 'red', 'text' => 'white'],
+        'dark' => ['bg' => 'rgb(64, 73, 84)', 'text' => null],
+    ]]);
+
+    $vars = AppSetting::current()->cssVariables();
+
+    expect($vars['--app-thead-bg-light'])->toBe('red')
+        ->and($vars['--app-thead-color-light'])->toBe('white')
+        ->and($vars['--app-thead-bg-dark'])->toBe('rgb(64, 73, 84)')
+        // Nothing to contrast against and no text configured, so it is omitted and
+        // the stylesheet falls back to the theme's colour.
+        ->and($vars)->not->toHaveKey('--app-thead-color-dark');
+});
+
+it('refuses a config colour that could break out of the style block', function () {
+    config(['appearance.table_header' => [
+        'light' => ['bg' => 'red; } body { display:none'],
+        'dark' => ['bg' => null],
+    ]]);
+
+    expect(AppSetting::current()->cssVariables())->toBe([])
+        ->and(AppSetting::cssColour('red; }'))->toBeNull()
+        ->and(AppSetting::cssColour('  #fff  '))->toBe('#fff')
+        ->and(AppSetting::cssColour(''))->toBeNull()
+        ->and(AppSetting::cssColour(null))->toBeNull();
+});
+
+it('lets a chosen colour override the configured default for that mode only', function () {
+    config(['appearance.table_header' => [
+        'light' => ['bg' => '#f2f2f7', 'text' => '#212529'],
+        'dark' => ['bg' => '#404954', 'text' => '#f8f9fa'],
+    ]]);
+
+    AppSetting::current()->update(['table_header_bg_light' => '#1f2d3d']);
+
+    $vars = AppSetting::current()->cssVariables();
+
+    expect($vars['--app-thead-bg-light'])->toBe('#1f2d3d')
+        // A chosen colour still gets its contrast worked out automatically.
+        ->and($vars['--app-thead-color-light'])->toBe('#ffffff')
+        // Dark was left alone, so it keeps the configured default.
+        ->and($vars['--app-thead-bg-dark'])->toBe('#404954')
+        ->and($vars['--app-thead-color-dark'])->toBe('#f8f9fa');
+});
+
+it('picks a readable text colour for the header', function () {
+    // WCAG luminance, so a saturated green counts as light and a blue as dark.
+    expect(AppSetting::readableTextOn('#ffffff'))->toBe('#212529')
+        ->and(AppSetting::readableTextOn('#f2f2f7'))->toBe('#212529')
+        ->and(AppSetting::readableTextOn('#0acf97'))->toBe('#212529')
+        ->and(AppSetting::readableTextOn('#1f2d3d'))->toBe('#ffffff')
+        ->and(AppSetting::readableTextOn('#0d6efd'))->toBe('#ffffff');
+});
+
+it('emits the matching text colour alongside each background', function () {
+    config(['appearance.table_header' => ['light' => ['bg' => null], 'dark' => ['bg' => null]]]);
+
+    AppSetting::current()->update([
+        'table_header_bg_light' => '#f2f2f7',
+        'table_header_bg_dark' => '#404954',
+    ]);
+
+    expect(AppSetting::current()->cssVariables())->toBe([
+        '--app-thead-bg-light' => '#f2f2f7',
+        '--app-thead-color-light' => '#212529',
+        '--app-thead-bg-dark' => '#404954',
+        '--app-thead-color-dark' => '#ffffff',
+    ]);
+});
+
+it('clears a colour when the theme default is ticked', function () {
+    AppSetting::current()->update(['table_header_bg_light' => '#1f2d3d', 'table_header_bg_dark' => '#0b5ed7']);
+
+    $this->actingAs($this->admin)->put(route('app-settings.update'), appSettingPayload([
+        'table_header_bg_light' => '#1f2d3d',
+        'table_header_default_light' => '1',
+        'table_header_bg_dark' => '#0b5ed7',
+    ]))->assertRedirect();
+
+    $settings = AppSetting::current();
+
+    // Only the light one falls back to the configured default; dark keeps its colour.
+    expect($settings->table_header_bg_light)->toBeNull()
+        ->and($settings->table_header_bg_dark)->toBe('#0b5ed7')
+        ->and($settings->cssVariables()['--app-thead-bg-light'])
+            ->toBe(config('appearance.table_header.light.bg'))
+        ->and($settings->cssVariables()['--app-thead-bg-dark'])->toBe('#0b5ed7');
+});
+
+it('rejects a header colour that is not a hex triplet', function () {
+    $this->actingAs($this->admin)
+        ->put(route('app-settings.update'), appSettingPayload(['table_header_bg_light' => 'notacolour']))
+        ->assertSessionHasErrors('table_header_bg_light');
+
+    $this->actingAs($this->admin)
+        ->put(route('app-settings.update'), appSettingPayload(['table_header_bg_dark' => '#fff']))
+        ->assertSessionHasErrors('table_header_bg_dark');
+
+    expect(AppSetting::current()->table_header_bg_light)->toBeNull();
+});
+
+it('offers both pickers on the appearance screen', function () {
+    $this->actingAs($this->admin)->get(route('app-settings.edit'))
+        ->assertOk()
+        ->assertSee('Table Header')
+        ->assertSee('table_header_bg_light', false)
+        ->assertSee('table_header_bg_dark', false)
+        ->assertSee('table_header_default_light', false);
+});

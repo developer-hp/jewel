@@ -56,7 +56,7 @@
             $table.closest('.dataTables_wrapper')
                 .find('.dataTables_filter input')
                 .attr('placeholder', (options && options.searchPlaceholder) || 'Search…')
-                .addClass('form-control form-control-sm');
+                .addClass('form-control');
 
             return table;
         };

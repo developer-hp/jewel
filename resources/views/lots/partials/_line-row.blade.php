@@ -28,7 +28,7 @@
             name="lines[{{ $index }}][tags]" value="{{ $line['tags'] ?? 1 }}">
     </td>
     <td class="text-end">
-        <button type="button" class="btn btn-sm btn-soft-danger btn-icon remove-line" title="Remove">
+        <button type="button" class="btn btn-sm btn-danger btn-icon remove-line" title="Remove">
             <i class="ri-delete-bin-2-fill"></i>
         </button>
     </td>

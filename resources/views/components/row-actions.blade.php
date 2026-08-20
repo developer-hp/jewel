@@ -19,7 +19,7 @@
     {{ $before ?? '' }}
 
     @if ($editUrl && (! $editPermission || auth()->user()->can($editPermission)))
-        <a href="{{ $editUrl }}" class="btn btn-sm btn-soft-primary btn-icon" title="Edit">
+        <a href="{{ $editUrl }}" class="btn btn-sm btn-primary btn-icon" title="Edit">
             <i class="ri-pencil-fill"></i>
         </a>
     @endif
@@ -28,7 +28,7 @@
         <form action="{{ $deleteUrl }}" method="POST" onsubmit="return confirm(@js($confirm));">
             @csrf
             @method('DELETE')
-            <button type="submit" class="btn btn-sm btn-soft-danger btn-icon" title="Delete">
+            <button type="submit" class="btn btn-sm btn-danger btn-icon" title="Delete">
                 <i class="ri-delete-bin-2-fill"></i>
             </button>
         </form>

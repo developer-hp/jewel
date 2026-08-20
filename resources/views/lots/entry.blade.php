@@ -157,7 +157,7 @@
                             readonly tabindex="-1">
                     </div>
                     <div class="col-md-1 d-flex gap-1">
-                        <button type="button" class="btn btn-sm btn-soft-info flex-grow-1" id="open-stones"
+                        <button type="button" class="btn btn-sm btn-info flex-grow-1" id="open-stones"
                             title="Stones and diamonds (F4)">
                             <i class="ri-shining-2-fill"></i> <span id="stone-count-badge">0</span>
                         </button>
@@ -357,7 +357,7 @@
                             ),
                             $('<td>').addClass('text-end fw-semibold').text(n.toFixed(3)),
                             $('<td>').addClass('text-end').append(
-                                $('<button type="button" class="btn btn-sm btn-soft-danger btn-icon remove-queued">')
+                                $('<button type="button" class="btn btn-sm btn-danger btn-icon remove-queued">')
                                     .attr('data-index', i).attr('title', 'Remove')
                                     .append('<i class="ri-delete-bin-2-fill"></i>')
                             )
@@ -495,7 +495,7 @@
                     '<td><input type="number" min="0" step="0.01" class="form-control form-control-sm ms-rate" value="' + (stone && stone.rate !== null ? stone.rate : '') + '" placeholder="master"></td>' +
                     '<td class="text-end"><span class="ms-amount fw-semibold">0.00</span></td>' +
                     '<td class="text-center"><input type="checkbox" class="form-check-input ms-deduct"' + (! stone || stone.deduct_from_gross ? ' checked' : '') + '></td>' +
-                    '<td class="text-end"><button type="button" class="btn btn-sm btn-soft-danger btn-icon ms-remove"><i class="ri-delete-bin-2-fill"></i></button></td>' +
+                    '<td class="text-end"><button type="button" class="btn btn-sm btn-danger btn-icon ms-remove"><i class="ri-delete-bin-2-fill"></i></button></td>' +
                     '</tr>';
             }
 

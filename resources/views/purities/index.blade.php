@@ -8,7 +8,7 @@
     <x-page-title title="Purities">
         <x-slot:actions>
             @can('metal_rate.view')
-                <a href="{{ route('rates.today') }}" class="btn btn-soft-primary">
+                <a href="{{ route('rates.today') }}" class="btn btn-primary">
                     <i class="ri-calendar-check-line"></i> Today's Rates
                 </a>
             @endcan

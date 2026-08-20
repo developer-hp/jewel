@@ -4,7 +4,7 @@
     <x-slot:before>
         @can('hallmark.print')
             <a href="{{ route('hallmarks.print', $hallmark) }}" target="_blank"
-                class="btn btn-sm btn-soft-info btn-icon" title="Print docket">
+                class="btn btn-sm btn-info btn-icon" title="Print docket">
                 <i class="ri-printer-fill"></i>
             </a>
         @endcan

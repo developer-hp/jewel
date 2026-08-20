@@ -88,7 +88,7 @@
                                 <input type="text" id="firm_name" name="firm_name"
                                     class="form-control @error('firm_name') is-invalid @enderror"
                                     value="{{ old('firm_name', $settings->firm_name) }}" maxlength="100"
-                                    placeholder="KRSONS">
+                                    placeholder="Firm Name">
                                 @error('firm_name')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -231,8 +231,10 @@
                             text switches between black and white automatically.
                         </p>
 
-                        @foreach ([['light', 'Light mode', '#f2f2f7'], ['dark', 'Dark mode', '#404954']] as [$mode, $label, $sample])
+                        @foreach ([['light', 'Light mode'], ['dark', 'Dark mode']] as [$mode, $label])
                             @php($current = $settings->{"table_header_bg_{$mode}"})
+                            @php($default = \App\Models\AppSetting::defaultTableHeaderColours($mode))
+                            @php($sample = $default['bg'] ?? '#f2f2f7')
                             <div class="mb-3">
                                 <label for="table_header_bg_{{ $mode }}" class="form-label">{{ $label }}</label>
 
@@ -253,7 +255,15 @@
                                         name="table_header_default_{{ $mode }}" value="1"
                                         data-mode="{{ $mode }}" @checked(! $current)>
                                     <label class="form-check-label fs-13" for="table_header_default_{{ $mode }}">
-                                        Use the theme default
+                                        Use the app default
+                                        @if ($default)
+                                            <span class="badge ms-1"
+                                                style="background-color: {{ $default['bg'] }};@if ($default['text']) color: {{ $default['text'] }};@endif">
+                                                {{ $default['bg'] }}
+                                            </span>
+                                        @else
+                                            <span class="text-muted">(theme grey)</span>
+                                        @endif
                                     </label>
                                 </div>
 
@@ -419,13 +429,25 @@
                 return ((0.2126 * r + 0.7152 * g + 0.0722 * b) / 255) > 0.55 ? '#212529' : '#ffffff';
             }
 
+            // The shipped defaults from config/appearance.php, so the preview shows
+            // what "use the app default" actually looks like.
+            const theadDefaults = @js([
+                'light' => \App\Models\AppSetting::defaultTableHeaderColours('light'),
+                'dark' => \App\Models\AppSetting::defaultTableHeaderColours('dark'),
+            ]);
+
             function refreshThead(mode) {
                 const useDefault = $('#table_header_default_' + mode).is(':checked');
                 const value = $('#table_header_bg_' + mode).val();
                 const $row = $('#thead-preview-' + mode).find('th');
 
                 if (useDefault || ! /^#[0-9a-fA-F]{6}$/.test(value)) {
-                    $row.css({ 'background-color': '', 'color': '' });
+                    const fallback = theadDefaults[mode];
+
+                    $row.css(fallback
+                        ? { 'background-color': fallback.bg, 'color': fallback.text || '' }
+                        : { 'background-color': '', 'color': '' });
+
                     return;
                 }
 

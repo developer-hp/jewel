@@ -150,7 +150,7 @@
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <h5 class="mb-0">Groups Received</h5>
-        <button type="button" class="btn btn-sm btn-soft-primary" id="add-line">
+        <button type="button" class="btn btn-sm btn-primary" id="add-line">
             <i class="ri-add-line"></i> Add Group
         </button>
     </div>

@@ -40,7 +40,7 @@
                         onsubmit="return confirm('Remove the photo from {{ $item->code }}?');">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="btn btn-sm btn-soft-danger w-100">
+                        <button type="submit" class="btn btn-sm btn-danger w-100">
                             <i class="ri-delete-bin-2-line"></i> Remove Photo
                         </button>
                     </form>

@@ -6,7 +6,7 @@
             <form action="{{ route('users.toggle-status', $user) }}" method="POST">
                 @csrf
                 <button type="submit"
-                    class="btn btn-sm btn-icon {{ $user->is_active ? 'btn-soft-success' : 'btn-soft-secondary' }}"
+                    class="btn btn-sm btn-icon {{ $user->is_active ? 'btn-success' : 'btn-soft-secondary' }}"
                     title="{{ $user->is_active ? 'Deactivate' : 'Activate' }}">
                     <i class="{{ $user->is_active ? 'ri-toggle-fill' : 'ri-toggle-line' }}"></i>
                 </button>

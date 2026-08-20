@@ -19,7 +19,7 @@
             <div class="modal-header py-2">
                 <h5 class="modal-title" id="{{ $section }}-modal-title">{{ $title }}</h5>
                 <div class="ms-auto d-flex align-items-center gap-2">
-                    <button type="button" class="btn btn-sm btn-soft-primary add-stone-row"
+                    <button type="button" class="btn btn-sm btn-primary add-stone-row"
                         data-section="{{ $section }}">
                         <i class="ri-add-line"></i> Add Row
                     </button>

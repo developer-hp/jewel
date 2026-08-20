@@ -233,7 +233,7 @@
             @foreach ([['stone', 'Stones', 'ri-shining-2-fill'], ['diamond', 'Diamonds', 'ri-vip-diamond-fill']] as [$section, $label, $icon])
                 <div class="col-md-6">
                     <div class="d-flex align-items-center gap-3">
-                        <button type="button" class="btn btn-soft-primary" data-bs-toggle="modal"
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
                             data-bs-target="#{{ $section }}-modal">
                             <i class="{{ $icon }}"></i> {{ $label }}
                         </button>

@@ -13,7 +13,7 @@
                 </a>
             @endcan
             @can('metal_rate.create')
-                <a href="{{ route('rates.create') }}" class="btn btn-soft-primary">
+                <a href="{{ route('rates.create') }}" class="btn btn-primary">
                     <i class="ri-add-line"></i> Single Rate
                 </a>
             @endcan
@@ -41,7 +41,7 @@
                             <input type="date" id="filter-to" class="form-control" placeholder="To">
                         </div>
                         <div class="col-md-2">
-                            <button type="button" id="filter-reset" class="btn btn-light w-100">
+                            <button type="button" id="filter-reset" class="btn btn-danger">
                                 <i class="ri-refresh-line"></i> Reset
                             </button>
                         </div>
