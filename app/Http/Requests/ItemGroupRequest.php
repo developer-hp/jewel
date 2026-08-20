@@ -24,6 +24,7 @@ class ItemGroupRequest extends FormRequest
             'prefix' => ['required', 'string', 'alpha_num', 'max:10', Rule::unique('item_groups', 'prefix')->ignore($group?->id)->withoutTrashed()],
             'code_padding' => ['required', 'integer', 'min:1', 'max:10'],
             'metal_type_id' => ['nullable', 'exists:metal_types,id'],
+            'stock_group_id' => ['nullable', 'exists:stock_groups,id'],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
             'is_active' => ['boolean'],
         ];

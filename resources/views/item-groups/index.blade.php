@@ -31,6 +31,7 @@
                                 <th>Prefix</th>
                                 <th>Next Code</th>
                                 <th>Metal Type</th>
+                                <th>Stock Group</th>
                                 <th>Items</th>
                                 <th>Status</th>
                                 <th class="text-end">Action</th>
@@ -54,6 +55,7 @@
                     { data: 'prefix', name: 'prefix' },
                     { data: 'next_code', name: 'next_code', orderable: false, searchable: false },
                     { data: 'metal_type', name: 'metal_type', searchable: false },
+                    { data: 'stock_group', name: 'stock_group' },
                     { data: 'items_count', name: 'items_count', searchable: false },
                     { data: 'status', name: 'status', searchable: false },
                     { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-end' }

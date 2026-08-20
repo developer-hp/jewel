@@ -97,6 +97,12 @@ return [
                         'can' => 'item_group.view',
                     ],
                     [
+                        'label' => 'Stock Groups',
+                        'route' => 'stock-groups.index',
+                        'active' => 'stock-groups.*',
+                        'can' => 'stock_group.view',
+                    ],
+                    [
                         // Stones and diamonds are one table behind two screens, so
                         // they share the single `stone` permission module.
                         'label' => 'Stones',

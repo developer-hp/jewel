@@ -25,6 +25,7 @@ class RolePermissionSeeder extends Seeder
         'purity' => ['view', 'create', 'edit', 'delete'],
         'metal_rate' => ['view', 'create', 'edit', 'delete'],
         'item_group' => ['view', 'create', 'edit', 'delete'],
+        'stock_group' => ['view', 'create', 'edit', 'delete'],
         'stone' => ['view', 'create', 'edit', 'delete'],
         'making_charge' => ['view', 'create', 'edit', 'delete'],
         'supplier' => ['view', 'create', 'edit', 'delete'],
@@ -48,7 +49,7 @@ class RolePermissionSeeder extends Seeder
      * Master modules a Manager runs day to day and Sales only reads.
      */
     private const MASTER_MODULES = [
-        'metal_type', 'purity', 'metal_rate', 'item_group', 'stone', 'making_charge',
+        'metal_type', 'purity', 'metal_rate', 'item_group', 'stock_group', 'stone', 'making_charge',
         'supplier', 'label_setting', 'app_setting',
     ];
 

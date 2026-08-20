@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ItemGroupRequest;
 use App\Models\ItemGroup;
 use App\Models\MetalType;
+use App\Models\StockGroup;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -36,15 +37,17 @@ class ItemGroupController extends Controller implements HasMiddleware
 
     private function data(): JsonResponse
     {
-        $query = ItemGroup::query()->select('item_groups.*')->with('metalType')->withCount('items');
+        $query = ItemGroup::query()->select('item_groups.*')->with(['metalType', 'stockGroup'])->withCount('items');
 
         return DataTables::eloquent($query)
             ->editColumn('prefix', fn (ItemGroup $group) => '<code>'.e($group->prefix).'</code>')
             ->addColumn('next_code', fn (ItemGroup $group) => '<span class="text-muted">'.e($group->previewNextCode()).'</span>')
             ->addColumn('metal_type', fn (ItemGroup $group) => e($group->metalType?->name ?? 'Any'))
+            ->addColumn('stock_group', fn (ItemGroup $group) => e($group->stockGroup?->name ?? '—'))
             ->addColumn('status', fn (ItemGroup $group) => view('components.status-badge', ['active' => $group->is_active])->render())
             ->addColumn('action', fn (ItemGroup $group) => view('item-groups.partials.actions', ['group' => $group])->render())
             ->orderColumn('status', 'is_active $1')
+            ->filterColumn('stock_group', fn ($q, $keyword) => $q->whereRelation('stockGroup', 'name', 'like', "%{$keyword}%"))
             ->rawColumns(['prefix', 'next_code', 'status', 'action'])
             ->toJson();
     }
@@ -54,6 +57,7 @@ class ItemGroupController extends Controller implements HasMiddleware
         return view('item-groups.create', [
             'group' => new ItemGroup(['is_active' => true, 'code_padding' => 4, 'sort_order' => 0]),
             'metalTypes' => MetalType::active()->ordered()->pluck('name', 'id'),
+            'stockGroups' => StockGroup::active()->ordered()->pluck('name', 'id'),
         ]);
     }
 
@@ -70,6 +74,7 @@ class ItemGroupController extends Controller implements HasMiddleware
         return view('item-groups.edit', [
             'group' => $itemGroup,
             'metalTypes' => MetalType::active()->ordered()->pluck('name', 'id'),
+            'stockGroups' => StockGroup::active()->ordered()->pluck('name', 'id'),
         ]);
     }
 

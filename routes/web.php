@@ -23,6 +23,7 @@ use App\Http\Controllers\PurityController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SecuritySettingController;
 use App\Http\Controllers\SessionHeartbeatController;
+use App\Http\Controllers\StockGroupController;
 use App\Http\Controllers\StoneMasterController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserController;
@@ -65,6 +66,9 @@ Route::middleware('auth')->group(function () {
     Route::post('rates/today', [MetalRateController::class, 'storeToday'])->name('rates.today.store');
     Route::resource('rates', MetalRateController::class)->except('show')
         ->parameters(['rates' => 'rate']);
+
+    Route::resource('stock-groups', StockGroupController::class)->except('show')
+        ->parameters(['stock-groups' => 'stock_group']);
 
     Route::resource('item-groups', ItemGroupController::class)->except('show')
         ->parameters(['item-groups' => 'item_group']);

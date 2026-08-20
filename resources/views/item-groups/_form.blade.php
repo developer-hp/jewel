@@ -54,6 +54,21 @@
     </div>
 
     <div class="col-md-6 mb-3">
+        <label for="stock_group_id" class="form-label">Stock Group</label>
+        <select id="stock_group_id" name="stock_group_id"
+            class="form-select @error('stock_group_id') is-invalid @enderror">
+            <option value="">None</option>
+            @foreach ($stockGroups as $id => $name)
+                <option value="{{ $id }}" @selected(old('stock_group_id', $group->stock_group_id) == $id)>{{ $name }}</option>
+            @endforeach
+        </select>
+        <small class="text-muted">Buckets this group for stock reporting.</small>
+        @error('stock_group_id')
+            <div class="invalid-feedback">{{ $message }}</div>
+        @enderror
+    </div>
+
+    <div class="col-md-6 mb-3">
         <label for="sort_order" class="form-label">Sort Order</label>
         <input type="number" id="sort_order" name="sort_order" class="form-control"
             value="{{ old('sort_order', $group->sort_order ?? 0) }}" min="0">

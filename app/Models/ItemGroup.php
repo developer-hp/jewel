@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[Fillable(['name', 'prefix', 'code_padding', 'next_sequence', 'metal_type_id', 'sort_order', 'is_active'])]
+#[Fillable(['name', 'prefix', 'code_padding', 'next_sequence', 'metal_type_id', 'stock_group_id', 'sort_order', 'is_active'])]
 class ItemGroup extends Model
 {
     use SoftDeletes;
@@ -27,6 +27,14 @@ class ItemGroup extends Model
     public function metalType(): BelongsTo
     {
         return $this->belongsTo(MetalType::class);
+    }
+
+    /**
+     * The reporting bucket this group rolls up into.
+     */
+    public function stockGroup(): BelongsTo
+    {
+        return $this->belongsTo(StockGroup::class);
     }
 
     public function items(): HasMany

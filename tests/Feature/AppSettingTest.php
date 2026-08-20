@@ -315,7 +315,7 @@ it('clears a colour when the theme default is ticked', function () {
     expect($settings->table_header_bg_light)->toBeNull()
         ->and($settings->table_header_bg_dark)->toBe('#0b5ed7')
         ->and($settings->cssVariables()['--app-thead-bg-light'])
-            ->toBe(config('appearance.table_header.light.bg'))
+        ->toBe(config('appearance.table_header.light.bg'))
         ->and($settings->cssVariables()['--app-thead-bg-dark'])->toBe('#0b5ed7');
 });
 
