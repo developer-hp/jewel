@@ -75,6 +75,91 @@
 
                 <div class="card">
                     <div class="card-header py-2">
+                        <h5 class="mb-0">Firm Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted fs-13">
+                            Your own name and number. Prints as the FROM block on an angadiya slip.
+                        </p>
+
+                        <div class="row">
+                            <div class="col-md-5 mb-3">
+                                <label for="firm_name" class="form-label">Firm Name</label>
+                                <input type="text" id="firm_name" name="firm_name"
+                                    class="form-control @error('firm_name') is-invalid @enderror"
+                                    value="{{ old('firm_name', $settings->firm_name) }}" maxlength="100"
+                                    placeholder="KRSONS">
+                                @error('firm_name')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-3 mb-3">
+                                <label for="firm_city" class="form-label">City</label>
+                                <input type="text" id="firm_city" name="firm_city"
+                                    class="form-control @error('firm_city') is-invalid @enderror"
+                                    value="{{ old('firm_city', $settings->firm_city) }}" maxlength="100"
+                                    placeholder="AHD">
+                                @error('firm_city')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label for="firm_phone" class="form-label">Phone</label>
+                                <input type="text" id="firm_phone" name="firm_phone"
+                                    class="form-control @error('firm_phone') is-invalid @enderror"
+                                    value="{{ old('firm_phone', $settings->firm_phone) }}" maxlength="30"
+                                    placeholder="079 26925755">
+                                @error('firm_phone')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-12">
+                                <div class="alert alert-light border mb-0 fs-13">
+                                    Prints as:
+                                    <strong>FROM / {{ trim(($settings->firm_name ?? '') . ' ' . ($settings->firm_city ?? '')) ?: 'not set' }}
+                                        / {{ $settings->firm_phone ?: 'no phone' }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header py-2">
+                        <h5 class="mb-0">Angadiya Slip Sheet</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="angadiya_columns" class="form-label">Slips per row</label>
+                                <input type="number" min="1" max="6" id="angadiya_columns" name="angadiya_columns"
+                                    class="form-control @error('angadiya_columns') is-invalid @enderror"
+                                    value="{{ old('angadiya_columns', $settings->angadiya_columns) }}">
+                                <small class="text-muted">Across an A4 portrait page.</small>
+                                @error('angadiya_columns')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="angadiya_slip_height_mm" class="form-label">Slip height (mm)</label>
+                                <input type="number" step="0.01" min="20" max="200" id="angadiya_slip_height_mm"
+                                    name="angadiya_slip_height_mm"
+                                    class="form-control @error('angadiya_slip_height_mm') is-invalid @enderror"
+                                    value="{{ old('angadiya_slip_height_mm', $settings->angadiya_slip_height_mm) }}">
+                                @error('angadiya_slip_height_mm')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header py-2">
                         <h5 class="mb-0">Logos</h5>
                     </div>
                     <div class="card-body">

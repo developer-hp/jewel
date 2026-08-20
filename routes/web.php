@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\AngadiyaController;
+use App\Http\Controllers\AngadiyaPrintController;
 use App\Http\Controllers\AppSettingController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
@@ -85,6 +87,10 @@ Route::middleware('auth')->group(function () {
 
     Route::get('label-settings', [LabelSettingController::class, 'edit'])->name('label-settings.edit');
     Route::put('label-settings', [LabelSettingController::class, 'update'])->name('label-settings.update');
+
+    // Print sits above the resource so `angadiyas/print` is not read as a slip id.
+    Route::post('angadiyas/print', AngadiyaPrintController::class)->name('angadiyas.print');
+    Route::resource('angadiyas', AngadiyaController::class)->except('show');
 
     // Entry screen sits above the resource so `lots/{lot}/items` is not a lot route.
     Route::get('lots/{lot}/items/create', [LotItemEntryController::class, 'create'])->name('lots.items.create');

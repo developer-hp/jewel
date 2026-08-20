@@ -48,6 +48,13 @@ return [
                 'can' => 'item.view',
             ],
             [
+                'label' => 'Angadiya',
+                'icon' => 'ri-send-plane-fill',
+                'route' => 'angadiyas.index',
+                'active' => 'angadiyas.*',
+                'can' => 'angadiya.view',
+            ],
+            [
                 'label' => 'Item Lots',
                 'icon' => 'ri-inbox-archive-fill',
                 'route' => 'lots.index',

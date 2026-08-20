@@ -39,6 +39,11 @@ class AppSettingController extends Controller implements HasMiddleware
         $settings->fill($request->safe()->only([
             'app_name',
             'media_disk',
+            'firm_name',
+            'firm_city',
+            'firm_phone',
+            'angadiya_columns',
+            'angadiya_slip_height_mm',
             'sidebar_user_bg_from',
             'sidebar_user_bg_to',
             'sidebar_user_text_color',

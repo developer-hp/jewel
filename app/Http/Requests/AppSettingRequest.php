@@ -24,6 +24,13 @@ class AppSettingRequest extends FormRequest
             'app_name' => ['required', 'string', 'max:60'],
             'media_disk' => ['required', Rule::in(array_keys(AppSetting::MEDIA_DISKS))],
 
+            'firm_name' => ['nullable', 'string', 'max:100'],
+            'firm_city' => ['nullable', 'string', 'max:100'],
+            'firm_phone' => ['nullable', 'string', 'max:30'],
+
+            'angadiya_columns' => ['required', 'integer', 'min:1', 'max:6'],
+            'angadiya_slip_height_mm' => ['required', 'numeric', 'min:20', 'max:200'],
+
             'logo' => $image,
             'logo_dark' => $image,
             'logo_small' => $image,

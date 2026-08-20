@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Storage;
  */
 #[Fillable([
     'app_name', 'media_disk',
+    'firm_name', 'firm_city', 'firm_phone',
+    'angadiya_columns', 'angadiya_slip_height_mm',
     'single_device_login', 'idle_timeout_minutes', 'idle_warning_seconds',
     'logo_path', 'logo_dark_path', 'logo_small_path',
     'sidebar_user_bg_from', 'sidebar_user_bg_to', 'sidebar_user_text_color',
@@ -35,6 +37,8 @@ class AppSetting extends Model
     protected $attributes = [
         'app_name' => 'Jewel',
         'media_disk' => 'public',
+        'angadiya_columns' => 3,
+        'angadiya_slip_height_mm' => 45,
         'single_device_login' => false,
         'idle_timeout_minutes' => 0,
         'idle_warning_seconds' => 60,
@@ -55,6 +59,8 @@ class AppSetting extends Model
     protected function casts(): array
     {
         return [
+            'angadiya_columns' => 'integer',
+            'angadiya_slip_height_mm' => 'decimal:2',
             'single_device_login' => 'boolean',
             'idle_timeout_minutes' => 'integer',
             'idle_warning_seconds' => 'integer',
