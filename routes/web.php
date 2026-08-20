@@ -26,6 +26,9 @@ use App\Http\Controllers\SessionHeartbeatController;
 use App\Http\Controllers\StockGroupController;
 use App\Http\Controllers\StoneMasterController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\SupplierHisabController;
+use App\Http\Controllers\SupplierHisabPaymentController;
+use App\Http\Controllers\SupplierHisabPrintController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -96,6 +99,17 @@ Route::middleware('auth')->group(function () {
 
     Route::get('hallmarks/{hallmark}/print', HallmarkPrintController::class)->name('hallmarks.print');
     Route::resource('hallmarks', HallmarkController::class)->except('show');
+
+    // Rate, print and summary sit above the resource so `supplier-hisabs/print` is
+    // not read as an entry id.
+    Route::post('supplier-hisabs/rate', [SupplierHisabController::class, 'storeRate'])->name('supplier-hisabs.rate');
+    Route::post('supplier-hisabs/print', [SupplierHisabPrintController::class, 'slips'])->name('supplier-hisabs.print');
+    Route::get('supplier-hisabs/summary', [SupplierHisabPrintController::class, 'summary'])->name('supplier-hisabs.summary');
+    Route::get('supplier-hisabs/{hisab}/settle', [SupplierHisabPaymentController::class, 'edit'])->name('supplier-hisabs.settle');
+    Route::put('supplier-hisabs/{hisab}/settle', [SupplierHisabPaymentController::class, 'update'])->name('supplier-hisabs.settle.update');
+    Route::resource('supplier-hisabs', SupplierHisabController::class)
+        ->only(['index', 'store', 'update', 'destroy'])
+        ->parameters(['supplier-hisabs' => 'hisab']);
 
     // Print sits above the resource so `angadiyas/print` is not read as a slip id.
     Route::post('angadiyas/print', AngadiyaPrintController::class)->name('angadiyas.print');

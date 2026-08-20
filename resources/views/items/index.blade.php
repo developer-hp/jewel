@@ -50,14 +50,14 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-1">
+                        <div class="col-md-2">
                             <select id="filter-status" class="form-select">
                                 <option value="">All statuses</option>
                                 <option value="active">Active</option>
                                 <option value="inactive">Inactive</option>
                             </select>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-1">
                             <button type="button" id="filter-reset" class="btn btn-danger">
                                 <i class="ri-refresh-line"></i> Reset
                             </button>

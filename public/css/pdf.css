@@ -1,0 +1,112 @@
+th,td{
+    border: 1px solid;
+}
+
+.no-border th,.no-border td{
+    border: 0px solid;
+}
+.no-border{
+    border: none !important;
+}
+th{
+background: #cdcdcd;
+}
+
+.no-border th{
+    background: none !important;
+}
+
+.pdf-table{
+    border-collapse: collapse !important;
+}
+.pdf-table.pd1 td,
+.pdf-table.pd1 th{
+	padding: 1px;
+}
+.pdf-table.pd2 td,
+.pdf-table.pd2 th{
+	padding: 2px;
+}
+.pdf-table.pd3 td,
+.pdf-table.pd3 th{
+	padding: 3px;
+}
+.pdf-table.pd4 td,
+.pdf-table.pd4 th{
+	padding: 4px;
+}
+.pdf-table.pd5 td,
+.pdf-table.pd5 th{
+	padding: 5px;
+}
+
+table .no-border{
+	border: none !important;
+}
+
+.text-center{
+    text-align: center;
+}
+.text-right{
+    text-align: right;
+}
+.text-left{
+    text-align: left;
+}
+.light-font{
+    font-weight: normal;
+}
+.background-light{
+	background: #eeeeee;
+}
+.text-bold{
+    font-weight: bold;
+}
+.font10{
+	font-size: 10px;
+}
+.font11{
+	font-size: 11px;
+}
+.font12{
+	font-size: 12px;
+}
+.font13{
+	font-size: 13px;
+}
+.font14{
+	font-size: 14px;
+}
+.font15{
+	font-size: 15px;
+}
+.font16{
+	font-size: 16px;
+}
+.font17{
+	font-size: 17px;
+}
+.font18{
+	font-size: 18px;
+}
+.font19{
+	font-size: 19px;
+}
+.font20{
+	font-size: 20px;
+}
+.font21{
+	font-size: 21px;
+}
+.font22{
+	font-size: 22px;
+}
+.font23{
+	font-size: 23px;
+}
+.font24{
+	font-size: 24px;
+}
+@page {
+    margin: 10mm;
+}

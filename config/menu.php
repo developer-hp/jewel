@@ -62,6 +62,13 @@ return [
                 'can' => 'hallmark.view',
             ],
             [
+                'label' => 'Supplier Hisab',
+                'icon' => 'ri-hand-coin-fill',
+                'route' => 'supplier-hisabs.index',
+                'active' => 'supplier-hisabs.*',
+                'can' => 'supplier_hisab.view',
+            ],
+            [
                 'label' => 'Item Lots',
                 'icon' => 'ri-inbox-archive-fill',
                 'route' => 'lots.index',
