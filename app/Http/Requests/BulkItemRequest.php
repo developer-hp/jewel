@@ -114,14 +114,21 @@ class BulkItemRequest extends FormRequest
                 ->filter(fn ($stone) => (bool) ($stone['deduct_from_gross'] ?? false))
                 ->sum(fn ($stone) => $this->stoneGrams($stone));
 
-            $net = $gross - $deducted - (float) ($row['other_deduction'] ?? 0);
+            $less = (float) ($row['other_deduction'] ?? 0);
+            $net = $gross - $deducted - $less;
 
-            if ($net <= 0) {
-                $validator->errors()->add(
-                    "rows.{$index}.gross_weight",
-                    sprintf('Net weight would be %s g — deductions exceed the gross weight.', number_format($net, 3))
-                );
+            if ($net > 0) {
+                continue;
             }
+
+            // Point at whichever field is actually at fault: the manual deduction on
+            // its own, or the combination once stones are counted.
+            $field = $less >= $gross ? 'other_deduction' : 'gross_weight';
+
+            $validator->errors()->add(
+                "rows.{$index}.{$field}",
+                sprintf('Net weight would be %s g — deductions exceed the gross weight.', number_format($net, 3))
+            );
         }
     }
 

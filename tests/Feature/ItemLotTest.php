@@ -3,6 +3,7 @@
 use App\Models\Item;
 use App\Models\ItemGroup;
 use App\Models\ItemLot;
+use App\Models\MakingCharge;
 use App\Models\Purity;
 use App\Models\StoneMaster;
 use App\Models\User;
@@ -319,7 +320,7 @@ it('gates lots by permission', function () {
 it('lets each row carry its own metal, purity and making charge', function () {
     $lot = makeLot();
     $gold18 = Purity::whereRelation('metalType', 'code', 'GOLD')->where('name', '18K')->firstOrFail();
-    $charge = App\Models\MakingCharge::where('code', 'MC-PG350')->firstOrFail();
+    $charge = MakingCharge::where('code', 'MC-PG350')->firstOrFail();
 
     $this->actingAs($this->admin)->post(route('lots.items.store', $lot), entryPayload([
         ringRow(['making_charge_id' => $charge->id]),
@@ -334,7 +335,7 @@ it('lets each row carry its own metal, purity and making charge', function () {
         ->and($items[1]->making_charge_id)->toBeNull();
 });
 
-it('rejects a purity that does not belong to the row's metal type', function () {
+it('rejects a purity that does not match the metal type on that row', function () {
     $lot = makeLot();
     $silver = Purity::whereRelation('metalType', 'code', 'SILV')->firstOrFail();
 
