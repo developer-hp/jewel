@@ -142,6 +142,16 @@
                 @endcan
 
                 @can('app_setting.view')
+                    <li class="side-nav-item {{ request()->routeIs('security-settings.*') ? 'menuitem-active' : '' }}">
+                        <a href="{{ route('security-settings.edit') }}"
+                            class="side-nav-link {{ request()->routeIs('security-settings.*') ? 'active' : '' }}">
+                            <i class="ri-shield-keyhole-fill"></i>
+                            <span> Security </span>
+                        </a>
+                    </li>
+                @endcan
+
+                @can('app_setting.view')
                     <li class="side-nav-item {{ request()->routeIs('app-settings.*') ? 'menuitem-active' : '' }}">
                         <a href="{{ route('app-settings.edit') }}"
                             class="side-nav-link {{ request()->routeIs('app-settings.*') ? 'active' : '' }}">

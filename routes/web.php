@@ -15,6 +15,8 @@ use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PurityController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SecuritySettingController;
+use App\Http\Controllers\SessionHeartbeatController;
 use App\Http\Controllers\StoneMasterController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserController;
@@ -25,10 +27,15 @@ Route::get('/', fn () => redirect()->route(auth()->check() ? 'dashboard' : 'logi
 Route::middleware('guest')->group(function () {
     Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('login', [LoginController::class, 'login']);
+
+    // Shown when the password checked out but the account is signed in elsewhere.
+    Route::get('login/conflict', [LoginController::class, 'showConflict'])->name('login.conflict');
+    Route::post('login/conflict', [LoginController::class, 'resolveConflict'])->name('login.conflict.resolve');
 });
 
 Route::middleware('auth')->group(function () {
     Route::post('logout', [LoginController::class, 'logout'])->name('logout');
+    Route::post('session/heartbeat', SessionHeartbeatController::class)->name('session.heartbeat');
 
     Route::get('dashboard', DashboardController::class)->name('dashboard');
 
@@ -67,6 +74,9 @@ Route::middleware('auth')->group(function () {
         ->parameters(['making-charges' => 'making_charge']);
 
     Route::resource('suppliers', SupplierController::class)->except('show');
+
+    Route::get('security-settings', [SecuritySettingController::class, 'edit'])->name('security-settings.edit');
+    Route::put('security-settings', [SecuritySettingController::class, 'update'])->name('security-settings.update');
 
     Route::get('app-settings', [AppSettingController::class, 'edit'])->name('app-settings.edit');
     Route::put('app-settings', [AppSettingController::class, 'update'])->name('app-settings.update');

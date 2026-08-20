@@ -54,6 +54,10 @@
             </div>
 
             @include('layouts.partials.footer')
+
+        @if ($appSettings->idleTimeoutEnabled())
+            @include('layouts.partials.idle-timeout')
+        @endif
         </div>
     </div>
 

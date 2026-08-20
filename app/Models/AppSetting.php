@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Storage;
  */
 #[Fillable([
     'app_name', 'media_disk',
+    'single_device_login', 'idle_timeout_minutes', 'idle_warning_seconds',
     'logo_path', 'logo_dark_path', 'logo_small_path',
     'sidebar_user_bg_from', 'sidebar_user_bg_to', 'sidebar_user_text_color',
 ])]
@@ -34,6 +35,9 @@ class AppSetting extends Model
     protected $attributes = [
         'app_name' => 'Jewel',
         'media_disk' => 'public',
+        'single_device_login' => false,
+        'idle_timeout_minutes' => 0,
+        'idle_warning_seconds' => 60,
         'sidebar_user_bg_from' => '#0acf97',
         'sidebar_user_bg_to' => '#39afd1',
         'sidebar_user_text_color' => '#ffffff',
@@ -48,9 +52,37 @@ class AppSetting extends Model
         's3' => 'Amazon S3',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'single_device_login' => 'boolean',
+            'idle_timeout_minutes' => 'integer',
+            'idle_warning_seconds' => 'integer',
+        ];
+    }
+
     public static function current(): self
     {
         return static::firstOrCreate([]);
+    }
+
+    public function idleTimeoutEnabled(): bool
+    {
+        return $this->idle_timeout_minutes > 0;
+    }
+
+    public function idleTimeoutSeconds(): int
+    {
+        return $this->idle_timeout_minutes * 60;
+    }
+
+    /**
+     * The warning can never be longer than the timeout itself, or it would be on
+     * screen from the moment the user stops typing.
+     */
+    public function idleWarningSeconds(): int
+    {
+        return (int) min($this->idle_warning_seconds, max(1, $this->idleTimeoutSeconds() - 1));
     }
 
     /**

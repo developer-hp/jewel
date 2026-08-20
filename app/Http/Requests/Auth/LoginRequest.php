@@ -30,11 +30,15 @@ class LoginRequest extends FormRequest
     }
 
     /**
-     * Attempt to authenticate the request's credentials.
+     * Check the credentials without starting a session.
+     *
+     * Login is a two-step affair when single-device mode is on: the password has
+     * to be proven before we can tell the user that their account is signed in
+     * elsewhere, but we must not log them in until they have chosen what to do.
      *
      * @throws ValidationException
      */
-    public function authenticate(): void
+    public function validateCredentials(): User
     {
         $this->ensureIsNotRateLimited();
 
@@ -44,7 +48,7 @@ class LoginRequest extends FormRequest
             'is_active' => true,
         ];
 
-        if (! Auth::attempt($credentials, $this->boolean('remember'))) {
+        if (! Auth::validate($credentials)) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
@@ -53,6 +57,8 @@ class LoginRequest extends FormRequest
         }
 
         RateLimiter::clear($this->throttleKey());
+
+        return Auth::getLastAttempted();
     }
 
     /**
