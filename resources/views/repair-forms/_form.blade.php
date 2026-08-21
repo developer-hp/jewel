@@ -44,7 +44,8 @@
                             <div class="col-6">
                                 <input type="text" id="contact_no" name="contact_no"
                                     class="form-control @error('contact_no') is-invalid @enderror"
-                                    value="{{ old('contact_no', $form->contact_no) }}" maxlength="30" required>
+                                    value="{{ old('contact_no', $form->contact_no) }}" maxlength="30"
+                                    autocomplete="off" required>
                                 @error('contact_no')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -71,7 +72,10 @@
                     <div class="col-sm-8">
                         <input type="text" id="customer_name" name="customer_name"
                             class="form-control @error('customer_name') is-invalid @enderror"
-                            value="{{ old('customer_name', $form->customer_name) }}" maxlength="150" required>
+                            value="{{ old('customer_name', $form->customer_name) }}" maxlength="150"
+                            autocomplete="off" required>
+                        {{-- Filled in when the number matches someone already known. --}}
+                        <small class="text-success d-none" id="customer-hint"></small>
                         @error('customer_name')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -264,6 +268,54 @@
     <script>
         $(function () {
             window.appSelect2('#sales_person_ids', { allowClear: false, placeholder: 'Choose sales person…' });
+
+            // Look the number up as it is typed: a customer already on the register
+            // fills in their own name and address, and a new one is added on save.
+            @can('customer.view')
+                const lookupUrl = '{{ route('customers.lookup') }}';
+                let lastLookup = null;
+                let lookupTimer = null;
+
+                function applyCustomer(customer) {
+                    const $hint = $('#customer-hint');
+
+                    if (!customer) {
+                        $hint.addClass('d-none').text('');
+                        return;
+                    }
+
+                    // Never overwrite something already typed — the clerk may be
+                    // correcting a name, and the register is not the authority here.
+                    if (!$('#customer_name').val().trim()) {
+                        $('#customer_name').val(customer.name);
+                    }
+
+                    if (!$('#address').val().trim() && customer.address) {
+                        $('#address').val(customer.address);
+                    }
+
+                    $hint.removeClass('d-none').text('Known customer: ' + customer.name);
+                }
+
+                function lookupCustomer() {
+                    const phone = ($('#contact_no').val() || '').replace(/\D+/g, '');
+
+                    if (phone.length < 6 || phone === lastLookup) {
+                        return;
+                    }
+
+                    lastLookup = phone;
+
+                    $.getJSON(lookupUrl, { phone: phone })
+                        .done(response => applyCustomer(response.customer))
+                        .fail(() => $('#customer-hint').addClass('d-none'));
+                }
+
+                $('#contact_no').on('input', function () {
+                    clearTimeout(lookupTimer);
+                    lookupTimer = setTimeout(lookupCustomer, 350);
+                }).on('blur', lookupCustomer);
+            @endcan
 
             let nextIndex = {{ $lines->count() }};
 

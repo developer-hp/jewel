@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\RepairFormRequest;
 use App\Models\AppSetting;
+use App\Models\Customer;
 use App\Models\RepairForm;
 use App\Models\SalesPerson;
 use App\Services\ItemPhotoStore;
@@ -108,6 +109,7 @@ class RepairFormController extends Controller implements HasMiddleware
 
             $form->lines()->createMany($data['lines']);
             $this->syncSalesPersons($form, $data['sales_person_ids']);
+            $this->linkCustomer($form);
 
             return $form;
         });
@@ -145,6 +147,9 @@ class RepairFormController extends Controller implements HasMiddleware
 
             $this->syncLines($repairForm, $data['lines']);
             $this->syncSalesPersons($repairForm, $data['sales_person_ids']);
+            // Re-run on update too: correcting a mistyped number should attach the
+            // form to the right person, or add them if they are new.
+            $this->linkCustomer($repairForm);
         });
 
         if ($request->hasFile('photo')) {
@@ -209,6 +214,22 @@ class RepairFormController extends Controller implements HasMiddleware
         }
 
         $form->lines()->whereNotIn('id', $kept)->whereDoesntHave('item')->delete();
+    }
+
+    /**
+     * Tie the form to the customer register, adding them on first contact.
+     *
+     * The form keeps its own copy of the name, number and address either way — this
+     * only records who it belongs to, so the next repair for the same number can
+     * prefill itself.
+     */
+    private function linkCustomer(RepairForm $form): void
+    {
+        $customer = Customer::rememberByPhone($form->contact_no, $form->customer_name, $form->address);
+
+        if ($customer && $form->customer_id !== $customer->id) {
+            $form->forceFill(['customer_id' => $customer->id])->save();
+        }
     }
 
     /**

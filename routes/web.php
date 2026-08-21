@@ -4,6 +4,7 @@ use App\Http\Controllers\AngadiyaController;
 use App\Http\Controllers\AngadiyaPrintController;
 use App\Http\Controllers\AppSettingController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HallmarkController;
 use App\Http\Controllers\HallmarkPrintController;
@@ -89,6 +90,10 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('making-charges', MakingChargeController::class)->except('show')
         ->parameters(['making-charges' => 'making_charge']);
+
+    // Lookup sits above the resource so `customers/lookup` is not read as an id.
+    Route::get('customers/lookup', [CustomerController::class, 'lookup'])->name('customers.lookup');
+    Route::resource('customers', CustomerController::class)->except('show');
 
     Route::resource('suppliers', SupplierController::class)->except('show');
 

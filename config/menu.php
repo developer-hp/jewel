@@ -146,6 +146,12 @@ return [
                         'can' => 'making_charge.view',
                     ],
                     [
+                        'label' => 'Customers',
+                        'route' => 'customers.index',
+                        'active' => 'customers.*',
+                        'can' => 'customer.view',
+                    ],
+                    [
                         'label' => 'Sales Persons',
                         'route' => 'sales-persons.index',
                         'active' => 'sales-persons.*',

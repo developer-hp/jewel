@@ -51,6 +51,15 @@ class RepairForm extends Model
         return $this->hasMany(RepairFormSalesPerson::class)->orderBy('sort_order')->orderBy('id');
     }
 
+    /**
+     * Who this repair is for. The columns on the form are still the record of what
+     * was taken in; this only ties it to the register.
+     */
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
+    }
+
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
