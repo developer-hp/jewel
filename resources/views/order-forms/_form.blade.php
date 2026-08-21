@@ -5,127 +5,95 @@
         <h5 class="mb-0">Order Form</h5>
     </div>
     <div class="card-body">
+        {{-- Labels sit above their control rather than beside it. With two columns of
+             label/control pairs, help text on one side pushed that side down and the
+             two stopped lining up; stacked, every field owns its own height. --}}
         <div class="row g-3">
-            <div class="col-md-6">
-                <div class="row">
-                    <label class="col-sm-4 col-form-label text-sm-end">Ref No</label>
-                    <div class="col-sm-8">
-                        {{-- Issued by the system under a lock, so it is never typed. --}}
-                        <input type="text" class="form-control bg-light" value="{{ $nextRef }}" readonly>
-                        @unless ($form->exists)
-                            <small class="text-muted">Assigned on save.</small>
-                        @endunless
-                    </div>
-                </div>
+            <div class="col-md-3">
+                <label class="form-label">Ref No</label>
+                {{-- Issued by the system under a lock, so it is never typed. --}}
+                <input type="text" class="form-control bg-light" value="{{ $nextRef }}" readonly>
+                @unless ($form->exists)
+                    <small class="text-muted">Assigned on save.</small>
+                @endunless
+            </div>
+
+            <div class="col-md-3">
+                <label for="form_date" class="form-label">Date <span class="text-danger">*</span></label>
+                <input type="date" id="form_date" name="form_date"
+                    class="form-control @error('form_date') is-invalid @enderror"
+                    value="{{ old('form_date', optional($form->form_date)->toDateString() ?? today()->toDateString()) }}"
+                    required>
+                @error('form_date')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="col-md-3">
+                <label for="delivery_date" class="form-label">
+                    Delivery Date <span class="text-danger">*</span>
+                </label>
+                <input type="date" id="delivery_date" name="delivery_date"
+                    class="form-control @error('delivery_date') is-invalid @enderror"
+                    value="{{ old('delivery_date', optional($form->delivery_date)->toDateString()) }}" required>
+                @error('delivery_date')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="col-md-3">
+                <label for="sales_person_id" class="form-label">
+                    Sales Person <span class="text-danger">*</span>
+                </label>
+                <select id="sales_person_id" name="sales_person_id"
+                    class="form-select @error('sales_person_id') is-invalid @enderror" required>
+                    <option value="">Select Sales Person</option>
+                    @foreach ($salesPersons as $person)
+                        <option value="{{ $person->id }}"
+                            @selected(old('sales_person_id', $form->sales_person_id) == $person->id)>
+                            {{ $person->name }}@if ($person->city) ({{ $person->city }})@endif
+                        </option>
+                    @endforeach
+                </select>
+                @error('sales_person_id')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="col-md-3">
+                <label for="contact_no" class="form-label">Contact No <span class="text-danger">*</span></label>
+                <input type="text" id="contact_no" name="contact_no"
+                    class="form-control @error('contact_no') is-invalid @enderror"
+                    value="{{ old('contact_no', $form->contact_no) }}" maxlength="30"
+                    autocomplete="off" required>
+                @error('contact_no')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="col-md-3">
+                <label for="contact_no_alt" class="form-label">Alternate No</label>
+                <input type="text" id="contact_no_alt" name="contact_no_alt" class="form-control"
+                    value="{{ old('contact_no_alt', $form->contact_no_alt) }}" maxlength="30">
             </div>
 
             <div class="col-md-6">
-                <div class="row">
-                    <label for="form_date" class="col-sm-4 col-form-label text-sm-end">Date</label>
-                    <div class="col-sm-8">
-                        <input type="date" id="form_date" name="form_date"
-                            class="form-control @error('form_date') is-invalid @enderror"
-                            value="{{ old('form_date', optional($form->form_date)->toDateString() ?? today()->toDateString()) }}"
-                            required>
-                        @error('form_date')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                </div>
+                <label for="customer_name" class="form-label">Name <span class="text-danger">*</span></label>
+                <input type="text" id="customer_name" name="customer_name"
+                    class="form-control @error('customer_name') is-invalid @enderror"
+                    value="{{ old('customer_name', $form->customer_name) }}" maxlength="150"
+                    autocomplete="off" required>
+                {{-- Filled in when the number matches someone already known. --}}
+                <small class="text-success d-none" id="customer-hint"></small>
+                @error('customer_name')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
             </div>
 
-            <div class="col-md-6">
-                <div class="row">
-                    <label for="contact_no" class="col-sm-4 col-form-label text-sm-end">
-                        Contact No <span class="text-danger">*</span>
-                    </label>
-                    <div class="col-sm-8">
-                        <div class="row g-2">
-                            <div class="col-6">
-                                <input type="text" id="contact_no" name="contact_no"
-                                    class="form-control @error('contact_no') is-invalid @enderror"
-                                    value="{{ old('contact_no', $form->contact_no) }}" maxlength="30"
-                                    autocomplete="off" required>
-                                @error('contact_no')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="col-6">
-                                <input type="text" name="contact_no_alt" class="form-control"
-                                    value="{{ old('contact_no_alt', $form->contact_no_alt) }}" maxlength="30"
-                                    placeholder="Alternate">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-6">
-                <div class="row">
-                    <label for="customer_name" class="col-sm-4 col-form-label text-sm-end">
-                        Name <span class="text-danger">*</span>
-                    </label>
-                    <div class="col-sm-8">
-                        <input type="text" id="customer_name" name="customer_name"
-                            class="form-control @error('customer_name') is-invalid @enderror"
-                            value="{{ old('customer_name', $form->customer_name) }}" maxlength="150"
-                            autocomplete="off" required>
-                        {{-- Filled in when the number matches someone already known. --}}
-                        <small class="text-success d-none" id="customer-hint"></small>
-                        @error('customer_name')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-6">
-                <div class="row">
-                    <label for="sales_person_id" class="col-sm-4 col-form-label text-sm-end">
-                        Sales Person <span class="text-danger">*</span>
-                    </label>
-                    <div class="col-sm-8">
-                        <select id="sales_person_id" name="sales_person_id"
-                            class="form-select @error('sales_person_id') is-invalid @enderror" required>
-                            <option value="">Select Sales Person</option>
-                            @foreach ($salesPersons as $person)
-                                <option value="{{ $person->id }}"
-                                    @selected(old('sales_person_id', $form->sales_person_id) == $person->id)>
-                                    {{ $person->name }}@if ($person->city) ({{ $person->city }})@endif
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('sales_person_id')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-6">
-                <div class="row">
-                    <label for="address" class="col-sm-4 col-form-label text-sm-end">Address</label>
-                    <div class="col-sm-8">
-                        <textarea id="address" name="address" rows="2" class="form-control"
-                            maxlength="1000">{{ old('address', $form->address) }}</textarea>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-6">
-                <div class="row">
-                    <label for="delivery_date" class="col-sm-4 col-form-label text-sm-end">
-                        Delivery Date <span class="text-danger">*</span>
-                    </label>
-                    <div class="col-sm-8">
-                        <input type="date" id="delivery_date" name="delivery_date"
-                            class="form-control @error('delivery_date') is-invalid @enderror"
-                            value="{{ old('delivery_date', optional($form->delivery_date)->toDateString()) }}" required>
-                        @error('delivery_date')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                </div>
+            <div class="col-12">
+                <label for="address" class="form-label">Address</label>
+                <textarea id="address" name="address" rows="2" class="form-control"
+                    maxlength="1000">{{ old('address', $form->address) }}</textarea>
             </div>
         </div>
     </div>
