@@ -8,8 +8,11 @@ use App\Models\Purity;
 use App\Models\RepairForm;
 use App\Models\SalesPerson;
 use App\Models\User;
+use App\Services\ItemPhotoStore;
 use Database\Seeders\MasterDataSeeder;
 use Database\Seeders\RolePermissionSeeder;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
     $this->seed(RolePermissionSeeder::class);
@@ -338,6 +341,41 @@ it('prints the form and the sticker, one and several', function () {
             expect($response->getContent())->toStartWith('%PDF-');
         }
     }
+});
+
+it('prints the photo when the form has one, and prints fine when it does not', function () {
+    Storage::fake('public');
+
+    $form = repairForm(['A']);
+
+    expect($form->photoDataUri())->toBeNull();
+
+    // Printing must not fall over on a form with no picture.
+    $this->actingAs($this->admin)->post(route('repair-forms.print'), ['ids' => [$form->id]])->assertOk();
+
+    app(ItemPhotoStore::class)->put($form, UploadedFile::fake()->image('bangle.jpg', 40, 40));
+
+    $form = $form->fresh();
+
+    expect($form->hasPhoto())->toBeTrue()
+        ->and($form->photoDataUri())->toStartWith('data:image/');
+
+    $response = $this->actingAs($this->admin)->post(route('repair-forms.print'), ['ids' => [$form->id]]);
+
+    $response->assertOk();
+    expect($response->getContent())->toStartWith('%PDF-');
+});
+
+it('prints without the photo when its file has gone missing', function () {
+    Storage::fake('public');
+
+    $form = repairForm(['A']);
+    $form->forceFill(['photo_path' => 'repair-forms/gone.jpg', 'photo_disk' => 'public'])->save();
+
+    expect($form->hasPhoto())->toBeTrue()
+        ->and($form->photoDataUri())->toBeNull();
+
+    $this->actingAs($this->admin)->post(route('repair-forms.print'), ['ids' => [$form->id]])->assertOk();
 });
 
 // --- permissions --------------------------------------------------------------------
