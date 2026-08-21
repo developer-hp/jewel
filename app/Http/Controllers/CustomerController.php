@@ -43,10 +43,20 @@ class CustomerController extends Controller implements HasMiddleware
             ->editColumn('address', fn (Customer $customer) => e(Str::limit($customer->address, 60) ?: '—'))
             ->addColumn('status', fn (Customer $customer) => view('components.status-badge', ['active' => $customer->is_active])->render())
             ->addColumn('action', fn (Customer $customer) => view('customers.partials.actions', ['customer' => $customer])->render())
-            // Searching the number has to ignore how it was punctuated.
-            ->filterColumn('phone', fn ($q, $keyword) => $q->where(fn ($sub) => $sub
-                ->where('phone', 'like', "%{$keyword}%")
-                ->orWhere('phone_key', 'like', '%'.Customer::phoneKey($keyword).'%')))
+            // Searching the number has to ignore how it was punctuated. The key is
+            // only brought in when the term actually has digits — matching on an
+            // empty key is `LIKE '%%'`, which would return every row.
+            ->filterColumn('phone', function ($q, $keyword) {
+                $key = Customer::phoneKey($keyword);
+
+                $q->where(function ($sub) use ($keyword, $key) {
+                    $sub->where('phone', 'like', "%{$keyword}%");
+
+                    if ($key !== '') {
+                        $sub->orWhere('phone_key', 'like', "%{$key}%");
+                    }
+                });
+            })
             ->orderColumn('status', 'is_active $1')
             ->rawColumns(['status', 'action'])
             ->toJson();

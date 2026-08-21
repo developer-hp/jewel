@@ -3,6 +3,9 @@
 use App\Models\User;
 use Database\Seeders\MasterDataSeeder;
 use Database\Seeders\RolePermissionSeeder;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
+use Spatie\Permission\Models\Permission;
 
 beforeEach(function () {
     $this->seed(RolePermissionSeeder::class);
@@ -12,7 +15,22 @@ beforeEach(function () {
     $this->admin->assignRole('Admin');
 });
 
-it('offers the account shortcuts in the side menu', function () {
+/**
+ * Every entry in config/menu.php, groups flattened into their children.
+ *
+ * @return array<int, array<string, mixed>>
+ */
+function menuLeaves(): array
+{
+    return collect(config('menu'))
+        ->flatMap(fn (array $section) => $section['items'])
+        ->flatMap(fn (array $item) => $item['children'] ?? [$item])
+        ->all();
+}
+
+it('offers the account shortcuts in the topbar', function () {
+    // These live in the topbar dropdown, not the side menu — the sidebar's own
+    // account block was removed when the menu became data-driven.
     $this->actingAs($this->admin)->get(route('dashboard'))
         ->assertOk()
         ->assertSee('My Account')
@@ -47,14 +65,135 @@ it('shows every sidebar icon from an icon set the theme actually ships', functio
     expect($missing)->toBe([]);
 });
 
+// --- the config itself ------------------------------------------------------------
+
+it('names a route that exists on every menu entry', function () {
+    $broken = collect(menuLeaves())
+        ->reject(fn (array $item) => Route::has($item['route']))
+        ->pluck('route')
+        ->all();
+
+    expect($broken)->toBe([]);
+});
+
+it('guards every menu entry with a permission that is actually seeded', function () {
+    $seeded = Permission::pluck('name')->all();
+
+    $unknown = collect(menuLeaves())
+        ->pluck('can')
+        ->filter()
+        ->unique()
+        ->reject(fn (string $permission) => in_array($permission, $seeded, true))
+        ->values()
+        ->all();
+
+    expect($unknown)->toBe([]);
+});
+
+it('gives every collapsible group an icon and a leaf none', function () {
+    foreach (config('menu') as $section) {
+        foreach ($section['items'] as $item) {
+            expect($item['icon'] ?? null)->not->toBeNull("{$item['label']} has no icon");
+
+            // Children render as plain text in the second level, so an icon there
+            // would simply never be drawn.
+            foreach ($item['children'] ?? [] as $child) {
+                expect($child['icon'] ?? null)->toBeNull("{$child['label']} carries an unused icon");
+            }
+        }
+    }
+});
+
+// --- grouping ---------------------------------------------------------------------
+
+it('groups the operational screens rather than listing them flat', function () {
+    $groups = collect(config('menu'))
+        ->firstWhere('title', 'Main')['items'];
+
+    $byLabel = collect($groups)->keyBy('label');
+
+    expect($byLabel->get('Stock')['children'] ?? null)->not->toBeNull()
+        ->and(collect($byLabel['Stock']['children'])->pluck('label')->all())->toBe(['Items', 'Item Lots'])
+        ->and(collect($byLabel['Repairs']['children'])->pluck('label')->all())->toBe(['Repair Forms', 'Repair Items'])
+        ->and(collect($byLabel['Dispatch']['children'])->pluck('label')->all())->toBe(['Angadiya', 'Hallmark']);
+});
+
+it('opens only the group holding the page being viewed', function (string $route, string $open) {
+    $html = $this->actingAs($this->admin)->get(route($route))->assertOk()->getContent();
+
+    $id = 'menu-'.Str::slug($open);
+
+    expect($html)->toContain('<div class="collapse show" id="'.$id.'"');
+
+    foreach (['Stock', 'Repairs', 'Dispatch', 'Masters', 'Settings', 'Administration'] as $label) {
+        if ($label === $open) {
+            continue;
+        }
+
+        expect($html)->toContain('<div class="collapse " id="menu-'.Str::slug($label).'"');
+    }
+})->with([
+    ['items.index', 'Stock'],
+    ['lots.index', 'Stock'],
+    ['repair-forms.index', 'Repairs'],
+    ['angadiyas.index', 'Dispatch'],
+    ['hallmarks.index', 'Dispatch'],
+    ['suppliers.index', 'Masters'],
+    ['users.index', 'Administration'],
+]);
+
+it('leaves every group closed on a page that belongs to none of them', function () {
+    $html = $this->actingAs($this->admin)->get(route('dashboard'))->assertOk()->getContent();
+
+    expect($html)->not->toContain('class="collapse show"');
+});
+
+// --- what each role sees -----------------------------------------------------------
+
 it('links every masters entry an admin can reach', function () {
     $response = $this->actingAs($this->admin)->get(route('dashboard'))->assertOk();
 
     foreach ([
         'rates.today', 'metal-types.index', 'purities.index', 'item-groups.index',
-        'stones.index', 'diamonds.index', 'making-charges.index', 'suppliers.index',
+        'stock-groups.index', 'stones.index', 'diamonds.index', 'making-charges.index',
+        'suppliers.index', 'customers.index', 'sales-persons.index',
         'app-settings.edit', 'label-settings.edit',
     ] as $name) {
         $response->assertSee(route($name), false);
     }
+});
+
+/*
+ * These assert on markup only the menu can emit — the group ids from
+ * SidebarMenu::group() and the section-title element — rather than on bare labels.
+ * The dashboard's own copy says "Stone & Diamond Masters" and "Masters and the item
+ * register are live", so assertDontSee('Masters') matches page content the test was
+ * never aimed at, and assertSee('Masters') would pass with the menu wholly broken.
+ */
+
+it('shows a sales user the masters but not administration', function () {
+    $sales = User::factory()->create();
+    $sales->assignRole('Sales');
+
+    $this->actingAs($sales)->get(route('dashboard'))
+        ->assertOk()
+        ->assertSee('id="menu-masters"', false)
+        ->assertSee(route('suppliers.index'), false)
+        ->assertDontSee('id="menu-administration"', false)
+        ->assertDontSee(route('users.index'), false)
+        ->assertDontSee(route('roles.index'), false);
+});
+
+it('drops a section entirely when the user can reach none of it', function () {
+    $none = User::factory()->create();
+
+    $this->actingAs($none)->get(route('dashboard'))
+        ->assertOk()
+        // Dashboard carries no permission, so Main survives; Manage should not.
+        ->assertSee('<li class="side-nav-title mt-1">Main</li>', false)
+        ->assertSee(route('dashboard'), false)
+        ->assertDontSee('<li class="side-nav-title mt-1">Manage</li>', false)
+        ->assertDontSee('id="menu-masters"', false)
+        ->assertDontSee('id="menu-settings"', false)
+        ->assertDontSee('id="menu-administration"', false);
 });

@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\AppSetting;
+use App\Models\Customer;
 use App\Models\Item;
 use App\Models\ItemGroup;
 use App\Models\MetalType;
@@ -196,6 +197,80 @@ it('will not delete a form whose pieces are already in stock', function () {
     $this->actingAs($this->admin)->delete(route('repair-forms.destroy', $form))->assertSessionHas('error');
 
     expect(RepairForm::whereKey($form->id)->exists())->toBeTrue();
+});
+
+// --- the customer register ---------------------------------------------------------
+
+it('adds the customer on first contact and links the form to them', function () {
+    $this->actingAs($this->admin)->post(route('repair-forms.store'), [
+        'form_date' => today()->toDateString(),
+        'delivery_date' => today()->addWeeks(2)->toDateString(),
+        'customer_name' => 'MAMTA BEN GOHEL',
+        'contact_no' => '8291 711357',
+        'address' => 'Naranpura, Ahmedabad',
+        'sales_person_ids' => [$this->person->id],
+        'lines' => [['description' => 'GKL SINGLE PCS', 'net_weight' => '12.360']],
+    ])->assertRedirect();
+
+    $customer = Customer::firstOrFail();
+
+    expect($customer->name)->toBe('MAMTA BEN GOHEL')
+        ->and($customer->phone_key)->toBe('8291711357')
+        ->and($customer->address)->toBe('Naranpura, Ahmedabad')
+        ->and(RepairForm::firstOrFail()->customer_id)->toBe($customer->id);
+});
+
+it('reuses the existing customer for a number already on the register', function () {
+    $existing = Customer::create(['name' => 'Mamta Ben', 'phone' => '8291711357', 'address' => 'Naranpura']);
+
+    // Same person, number punctuated differently and the name typed differently.
+    $this->actingAs($this->admin)->post(route('repair-forms.store'), [
+        'form_date' => today()->toDateString(),
+        'delivery_date' => today()->addWeeks(2)->toDateString(),
+        'customer_name' => 'MAMTA B GOHEL',
+        'contact_no' => '829-171-1357',
+        'sales_person_ids' => [$this->person->id],
+        'lines' => [['description' => 'A', 'net_weight' => '1']],
+    ])->assertRedirect();
+
+    $form = RepairForm::firstOrFail();
+
+    expect(Customer::count())->toBe(1)
+        ->and($form->customer_id)->toBe($existing->id)
+        // The register is left as it stood; the form keeps what was typed on it.
+        ->and($existing->refresh()->name)->toBe('Mamta Ben')
+        ->and($form->customer_name)->toBe('MAMTA B GOHEL');
+});
+
+it('re-links the form when a mistyped number is corrected', function () {
+    $form = repairForm();
+    $wrong = Customer::rememberByPhone('8291711357', 'MAMTA BEN GOHEL');
+    $form->forceFill(['customer_id' => $wrong->id])->save();
+
+    $this->actingAs($this->admin)->put(route('repair-forms.update', $form), [
+        'form_date' => $form->form_date->toDateString(),
+        'delivery_date' => $form->delivery_date->toDateString(),
+        'customer_name' => 'MAMTA BEN GOHEL',
+        'contact_no' => '9998887777',
+        'sales_person_ids' => [$this->person->id],
+        'lines' => [['id' => $form->lines->first()->id, 'description' => 'A', 'net_weight' => '1']],
+    ])->assertRedirect();
+
+    expect(Customer::count())->toBe(2)
+        ->and($form->fresh()->customer_id)->toBe(Customer::findByPhone('9998887777')->id);
+});
+
+it('deleting a customer leaves the form and its printed details intact', function () {
+    $form = repairForm();
+    Customer::rememberByPhone($form->contact_no, $form->customer_name);
+    $form->forceFill(['customer_id' => Customer::findByPhone($form->contact_no)->id])->save();
+
+    Customer::findByPhone($form->contact_no)->delete();
+
+    $form = $form->fresh();
+
+    expect($form->customer_name)->toBe('MAMTA BEN GOHEL')
+        ->and($form->contact_no)->toBe('8291711357');
 });
 
 // --- ready ------------------------------------------------------------------------

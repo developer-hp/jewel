@@ -31,7 +31,7 @@ return [
                 'route' => 'dashboard',
             ],
             [
-                // Opened every morning, so it sits above the masters it came from.
+                // Opened every morning, so it sits above everything it feeds.
                 // Links to the bulk entry screen but highlights for any rate page.
                 'label' => 'Daily Rates',
                 'icon' => 'ri-exchange-funds-fill',
@@ -39,57 +39,78 @@ return [
                 'active' => 'rates.*',
                 'can' => 'metal_rate.view',
             ],
+
+            // What the shop holds.
             [
-                'label' => 'Items',
+                'label' => 'Stock',
                 'icon' => 'ri-price-tag-3-fill',
-                // `items.*` deliberately, so it does not also match `item-groups.*`.
-                'route' => 'items.index',
-                'active' => 'items.*',
-                'can' => 'item.view',
+                'children' => [
+                    [
+                        'label' => 'Items',
+                        // `items.*` deliberately, so it does not also match `item-groups.*`.
+                        'route' => 'items.index',
+                        'active' => 'items.*',
+                        'can' => 'item.view',
+                    ],
+                    [
+                        'label' => 'Item Lots',
+                        'route' => 'lots.index',
+                        'active' => 'lots.*',
+                        'can' => 'item_lot.view',
+                    ],
+                ],
             ],
+
+            // Customer goods in for repair, and the pieces coming back.
             [
-                'label' => 'Angadiya',
-                'icon' => 'ri-send-plane-fill',
-                'route' => 'angadiyas.index',
-                'active' => 'angadiyas.*',
-                'can' => 'angadiya.view',
-            ],
-            [
-                'label' => 'Hallmark',
-                'icon' => 'ri-award-fill',
-                'route' => 'hallmarks.index',
-                'active' => 'hallmarks.*',
-                'can' => 'hallmark.view',
-            ],
-            [
-                'label' => 'Repair Forms',
+                'label' => 'Repairs',
                 'icon' => 'ri-tools-fill',
-                'route' => 'repair-forms.index',
-                'active' => 'repair-forms.*',
-                'can' => 'repair_form.view',
+                'children' => [
+                    [
+                        'label' => 'Repair Forms',
+                        'route' => 'repair-forms.index',
+                        'active' => 'repair-forms.*',
+                        'can' => 'repair_form.view',
+                    ],
+                    [
+                        // Booking a repaired piece back into stock — its own screen,
+                        // so it gets its own entry rather than hiding in the item form.
+                        'label' => 'Repair Items',
+                        'route' => 'repair-items.create',
+                        'active' => 'repair-items.*',
+                        'can' => 'repair_form.edit',
+                    ],
+                ],
             ],
+
+            // Goods leaving the premises for a third party.
             [
-                // Booking a repaired piece back into stock — its own screen, so it
-                // gets its own entry rather than hiding inside the item form.
-                'label' => 'Repair Items',
-                'icon' => 'ri-hammer-fill',
-                'route' => 'repair-items.create',
-                'active' => 'repair-items.*',
-                'can' => 'repair_form.edit',
+                'label' => 'Dispatch',
+                'icon' => 'ri-send-plane-fill',
+                'children' => [
+                    [
+                        'label' => 'Angadiya',
+                        'route' => 'angadiyas.index',
+                        'active' => 'angadiyas.*',
+                        'can' => 'angadiya.view',
+                    ],
+                    [
+                        'label' => 'Hallmark',
+                        'route' => 'hallmarks.index',
+                        'active' => 'hallmarks.*',
+                        'can' => 'hallmark.view',
+                    ],
+                ],
             ],
+
+            // Left as a plain link: a collapsible holding one entry is only a click
+            // in the way. Give it a group when a second accounts screen arrives.
             [
                 'label' => 'Supplier Hisab',
                 'icon' => 'ri-hand-coin-fill',
                 'route' => 'supplier-hisabs.index',
                 'active' => 'supplier-hisabs.*',
                 'can' => 'supplier_hisab.view',
-            ],
-            [
-                'label' => 'Item Lots',
-                'icon' => 'ri-inbox-archive-fill',
-                'route' => 'lots.index',
-                'active' => 'lots.*',
-                'can' => 'item_lot.view',
             ],
         ],
     ],
