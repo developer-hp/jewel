@@ -110,3 +110,6 @@ table .no-border{
 @page {
     margin: 10mm;
 }
+.text-red{
+	color: red;
+}

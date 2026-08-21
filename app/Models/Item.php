@@ -18,7 +18,8 @@ use Illuminate\Support\Carbon;
  * and are deliberately left out of the fillable list.
  */
 #[Fillable([
-    'item_group_id', 'item_lot_id', 'supplier_id', 'metal_type_id', 'purity_id', 'making_charge_id',
+    'item_group_id', 'item_lot_id', 'repair_form_line_id', 'supplier_id',
+    'metal_type_id', 'purity_id', 'making_charge_id',
     'huid',
     'name', 'description', 'gross_weight', 'other_deduction', 'is_active',
     'extra_charge_1', 'extra_charge_1_label',
@@ -58,6 +59,14 @@ class Item extends Model
     public function itemGroup(): BelongsTo
     {
         return $this->belongsTo(ItemGroup::class);
+    }
+
+    /**
+     * The repair line this piece came back against, when it did.
+     */
+    public function repairFormLine(): BelongsTo
+    {
+        return $this->belongsTo(RepairFormLine::class);
     }
 
     public function supplier(): BelongsTo

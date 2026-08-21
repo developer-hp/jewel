@@ -62,6 +62,22 @@ return [
                 'can' => 'hallmark.view',
             ],
             [
+                'label' => 'Repair Forms',
+                'icon' => 'ri-tools-fill',
+                'route' => 'repair-forms.index',
+                'active' => 'repair-forms.*',
+                'can' => 'repair_form.view',
+            ],
+            [
+                // Booking a repaired piece back into stock — its own screen, so it
+                // gets its own entry rather than hiding inside the item form.
+                'label' => 'Repair Items',
+                'icon' => 'ri-hammer-fill',
+                'route' => 'repair-items.create',
+                'active' => 'repair-items.*',
+                'can' => 'repair_form.edit',
+            ],
+            [
                 'label' => 'Supplier Hisab',
                 'icon' => 'ri-hand-coin-fill',
                 'route' => 'supplier-hisabs.index',
@@ -128,6 +144,12 @@ return [
                         'route' => 'making-charges.index',
                         'active' => 'making-charges.*',
                         'can' => 'making_charge.view',
+                    ],
+                    [
+                        'label' => 'Sales Persons',
+                        'route' => 'sales-persons.index',
+                        'active' => 'sales-persons.*',
+                        'can' => 'sales_person.view',
                     ],
                     [
                         'label' => 'Suppliers',

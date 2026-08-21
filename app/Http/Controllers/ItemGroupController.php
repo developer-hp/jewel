@@ -97,6 +97,12 @@ class ItemGroupController extends Controller implements HasMiddleware
 
     public function destroy(ItemGroup $itemGroup): RedirectResponse
     {
+        // Reserved groups back a module — Repair issues REPAIR0001, Order will issue
+        // ORDER0001. Removing one would leave that module with nowhere to file items.
+        if ($itemGroup->isReserved()) {
+            return back()->with('error', "\"{$itemGroup->name}\" is used by the system and cannot be deleted.");
+        }
+
         if ($itemGroup->items()->exists()) {
             return back()->with('error', "\"{$itemGroup->name}\" has items and cannot be deleted.");
         }

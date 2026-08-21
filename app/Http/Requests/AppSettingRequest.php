@@ -27,11 +27,22 @@ class AppSettingRequest extends FormRequest
             'firm_name' => ['nullable', 'string', 'max:100'],
             'firm_city' => ['nullable', 'string', 'max:100'],
             'firm_phone' => ['nullable', 'string', 'max:30'],
+            'firm_website' => ['nullable', 'string', 'max:150'],
+            'firm_office_phone' => ['nullable', 'string', 'max:30'],
 
             'angadiya_columns' => ['required', 'integer', 'min:1', 'max:6'],
             'angadiya_slip_height_mm' => ['required', 'numeric', 'min:20', 'max:200'],
 
             'hallmark_next_lot_no' => ['required', 'integer', 'min:1', 'max:99999999'],
+
+            // All optional: the Appearance form is submitted whole, and a new
+            // required field here silently breaks every caller that posts it.
+            'repair_ref_prefix' => ['nullable', 'string', 'alpha_num', 'max:10'],
+            'repair_next_ref_no' => ['nullable', 'integer', 'min:1', 'max:99999999'],
+            'repair_contact_no' => ['nullable', 'string', 'max:30'],
+            'repair_metal_type_id' => ['nullable', 'exists:metal_types,id'],
+            'repair_purity_id' => ['nullable', 'exists:purities,id'],
+            'repair_terms' => ['nullable', 'string', 'max:2000'],
 
             'logo' => $image,
             'logo_dark' => $image,

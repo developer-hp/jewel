@@ -505,3 +505,41 @@ code {
     font-size: 1rem;
     font-weight: bold;
 }
+/* ------------------------------------------------------------------ *
+ * Repair form listing.
+ *
+ * Green means every piece is back in stock and only delivery is pending;
+ * red means something is still out at the workshop. Set through the row
+ * variables rather than a flat background so the striping, hover and
+ * border colours the theme computes all stay consistent — and given its
+ * own dark palette, because a pastel that reads on white is unreadable
+ * on the dark surface.
+ * ------------------------------------------------------------------ */
+.table > tbody > tr.repair-ready {
+    --ct-table-bg: #e3f5e9;
+    --ct-table-color: #14532d;
+}
+
+.table > tbody > tr.repair-pending {
+    --ct-table-bg: #fbe4e6;
+    --ct-table-color: #7f1d1d;
+}
+
+[data-bs-theme="dark"] .table > tbody > tr.repair-ready {
+    --ct-table-bg: #143324;
+    --ct-table-color: #b7f0cd;
+}
+
+[data-bs-theme="dark"] .table > tbody > tr.repair-pending {
+    --ct-table-bg: #3a1b1f;
+    --ct-table-color: #f7c3c7;
+}
+
+/* The cell colour rules further up target `table td` directly, which beats
+   the row variables above; re-assert the row's own colour for these two. */
+.table > tbody > tr.repair-ready > td,
+.table > tbody > tr.repair-pending > td,
+html[data-bs-theme=dark] .table > tbody > tr.repair-ready > td,
+html[data-bs-theme=dark] .table > tbody > tr.repair-pending > td {
+    color: var(--ct-table-color);
+}

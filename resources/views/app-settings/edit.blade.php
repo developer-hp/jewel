@@ -116,6 +116,32 @@
                                 @enderror
                             </div>
 
+                            <div class="col-md-6 mb-3">
+                                <label for="firm_website" class="form-label">Website</label>
+                                <input type="text" id="firm_website" name="firm_website"
+                                    class="form-control @error('firm_website') is-invalid @enderror"
+                                    value="{{ old('firm_website', $settings->firm_website) }}" maxlength="150"
+                                    placeholder="http://example.com">
+                                <small class="text-muted">Printed under the phone on a repair form.</small>
+                                @error('firm_website')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="firm_office_phone" class="form-label">Office phone</label>
+                                <input type="text" id="firm_office_phone" name="firm_office_phone"
+                                    class="form-control @error('firm_office_phone') is-invalid @enderror"
+                                    value="{{ old('firm_office_phone', $settings->firm_office_phone) }}" maxlength="30"
+                                    placeholder="+91-7874655115">
+                                <small class="text-muted">
+                                    Shown on the office copy of a repair form. Falls back to the phone above.
+                                </small>
+                                @error('firm_office_phone')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
                             <div class="col-12">
                                 <div class="alert alert-light border mb-0 fs-13">
                                     Prints as:
@@ -164,6 +190,85 @@
                                     your existing numbering before the first entry.
                                 </small>
                                 @error('hallmark_next_lot_no')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header py-2">
+                        <h5 class="mb-0">Repair Forms</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="repair_ref_prefix" class="form-label">Reference prefix</label>
+                                <input type="text" id="repair_ref_prefix" name="repair_ref_prefix"
+                                    class="form-control @error('repair_ref_prefix') is-invalid @enderror"
+                                    value="{{ old('repair_ref_prefix', $settings->repair_ref_prefix) }}" maxlength="10"
+                                    placeholder="RG">
+                                <small class="text-muted">Prints as <code>{{ $settings->repair_ref_prefix ?: 'RG' }} {{ $settings->repair_next_ref_no }}</code>.</small>
+                                @error('repair_ref_prefix')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label for="repair_next_ref_no" class="form-label">Next reference no</label>
+                                <input type="number" min="1" id="repair_next_ref_no" name="repair_next_ref_no"
+                                    class="form-control @error('repair_next_ref_no') is-invalid @enderror"
+                                    value="{{ old('repair_next_ref_no', $settings->repair_next_ref_no) }}">
+                                <small class="text-muted">
+                                    Issued automatically. Set it to continue your existing numbering
+                                    before the first entry.
+                                </small>
+                                @error('repair_next_ref_no')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label for="repair_contact_no" class="form-label">Contact number</label>
+                                <input type="text" id="repair_contact_no" name="repair_contact_no"
+                                    class="form-control @error('repair_contact_no') is-invalid @enderror"
+                                    value="{{ old('repair_contact_no', $settings->repair_contact_no) }}" maxlength="30"
+                                    placeholder="9712406367">
+                                <small class="text-muted">
+                                    Printed at the top of a repair form. Falls back to the firm phone above.
+                                </small>
+                                @error('repair_contact_no')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-2 mb-3">
+                                <label for="repair_metal_type_id" class="form-label">Default metal</label>
+                                <select id="repair_metal_type_id" name="repair_metal_type_id" class="form-select">
+                                    <option value="">None</option>
+                                    @foreach ($metalTypes as $id => $name)
+                                        <option value="{{ $id }}" @selected(old('repair_metal_type_id', $settings->repair_metal_type_id) == $id)>{{ $name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="col-md-2 mb-3">
+                                <label for="repair_purity_id" class="form-label">Default purity</label>
+                                <select id="repair_purity_id" name="repair_purity_id" class="form-select">
+                                    <option value="">None</option>
+                                    @foreach ($purities as $id => $label)
+                                        <option value="{{ $id }}" @selected(old('repair_purity_id', $settings->repair_purity_id) == $id)>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="col-12 mb-3">
+                                <label for="repair_terms" class="form-label">Terms and conditions</label>
+                                <textarea id="repair_terms" name="repair_terms" rows="6"
+                                    class="form-control @error('repair_terms') is-invalid @enderror">{{ old('repair_terms', $settings->repair_terms) }}</textarea>
+                                <small class="text-muted">One condition per line; printed at the foot of both copies.</small>
+                                @error('repair_terms')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>

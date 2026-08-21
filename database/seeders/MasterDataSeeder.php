@@ -46,6 +46,18 @@ class MasterDataSeeder extends Seeder
         ['Pendant', 'PND', 4],
     ];
 
+    /**
+     * Groups the app itself owns. Repair pieces coming back into stock are coded
+     * REPAIR0001; the Order module will use ORDER0001 when it is built. Marked with
+     * a system key so they cannot be deleted.
+     *
+     * [name, prefix, padding, system key]
+     */
+    private const RESERVED_ITEM_GROUPS = [
+        ['Repair', 'REPAIR', 4, ItemGroup::SYSTEM_REPAIR],
+        ['Order', 'ORDER', 4, ItemGroup::SYSTEM_ORDER],
+    ];
+
     /** [kind, name, code, rate unit, default rate, shape, quality, colour, size] */
     private const STONES = [
         ['stone', 'Ruby', 'ST-RUBY', 'carat', 1200.00, null, null, 'Red', null],
@@ -91,6 +103,20 @@ class MasterDataSeeder extends Seeder
             ItemGroup::firstOrCreate(
                 ['name' => $name],
                 ['prefix' => $prefix, 'code_padding' => $padding, 'sort_order' => $index + 1],
+            );
+        }
+
+        foreach (self::RESERVED_ITEM_GROUPS as $index => [$name, $prefix, $padding, $key]) {
+            // Matched on the system key, not the name, so renaming the group in the
+            // UI does not make the seeder create a second one.
+            ItemGroup::firstOrCreate(
+                ['system_key' => $key],
+                [
+                    'name' => $name,
+                    'prefix' => $prefix,
+                    'code_padding' => $padding,
+                    'sort_order' => 100 + $index,
+                ],
             );
         }
 

@@ -20,7 +20,11 @@ use App\Http\Controllers\MetalTypeController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PurityController;
+use App\Http\Controllers\RepairFormController;
+use App\Http\Controllers\RepairFormPrintController;
+use App\Http\Controllers\RepairItemController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SalesPersonController;
 use App\Http\Controllers\SecuritySettingController;
 use App\Http\Controllers\SessionHeartbeatController;
 use App\Http\Controllers\StockGroupController;
@@ -99,6 +103,21 @@ Route::middleware('auth')->group(function () {
 
     Route::get('hallmarks/{hallmark}/print', HallmarkPrintController::class)->name('hallmarks.print');
     Route::resource('hallmarks', HallmarkController::class)->except('show');
+
+    // Booking a repaired piece back into stock. Its own screen, deliberately apart
+    // from the general item form.
+    Route::get('repair-items/create', [RepairItemController::class, 'create'])->name('repair-items.create');
+    Route::post('repair-items', [RepairItemController::class, 'store'])->name('repair-items.store');
+
+    // Print and stickers sit above the resource so `repair-forms/print` is not read
+    // as a form id.
+    Route::post('repair-forms/print', [RepairFormPrintController::class, 'forms'])->name('repair-forms.print');
+    Route::post('repair-forms/stickers', [RepairFormPrintController::class, 'stickers'])->name('repair-forms.stickers');
+    Route::resource('repair-forms', RepairFormController::class)->except('show')
+        ->parameters(['repair-forms' => 'repair_form']);
+
+    Route::resource('sales-persons', SalesPersonController::class)->except('show')
+        ->parameters(['sales-persons' => 'sales_person']);
 
     // Rate, print and summary sit above the resource so `supplier-hisabs/print` is
     // not read as an entry id.

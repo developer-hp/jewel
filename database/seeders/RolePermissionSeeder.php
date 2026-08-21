@@ -29,12 +29,14 @@ class RolePermissionSeeder extends Seeder
         'stone' => ['view', 'create', 'edit', 'delete'],
         'making_charge' => ['view', 'create', 'edit', 'delete'],
         'supplier' => ['view', 'create', 'edit', 'delete'],
+        'sales_person' => ['view', 'create', 'edit', 'delete'],
         'label_setting' => ['view', 'edit'],
         'app_setting' => ['view', 'edit'],
         'item_lot' => ['view', 'create', 'edit', 'delete'],
         'angadiya' => ['view', 'create', 'edit', 'delete', 'print'],
         'hallmark' => ['view', 'create', 'edit', 'delete', 'print'],
         'supplier_hisab' => ['view', 'create', 'edit', 'delete', 'print'],
+        'repair_form' => ['view', 'create', 'edit', 'delete', 'print'],
         'item' => ['view', 'create', 'edit', 'delete', 'print'],
         'stock' => ['view', 'adjust', 'report'],
         'customer' => ['view', 'create', 'edit', 'delete'],
@@ -51,7 +53,7 @@ class RolePermissionSeeder extends Seeder
      */
     private const MASTER_MODULES = [
         'metal_type', 'purity', 'metal_rate', 'item_group', 'stock_group', 'stone', 'making_charge',
-        'supplier', 'label_setting', 'app_setting',
+        'supplier', 'sales_person', 'label_setting', 'app_setting',
     ];
 
     public function run(): void
@@ -80,7 +82,7 @@ class RolePermissionSeeder extends Seeder
         $this->syncRole('Manager', array_merge(
             ['user.view'],
             $this->modulePermissions(...self::MASTER_MODULES),
-            $this->modulePermissions('item_lot', 'angadiya', 'hallmark', 'supplier_hisab', 'item', 'stock', 'customer'),
+            $this->modulePermissions('item_lot', 'angadiya', 'hallmark', 'supplier_hisab', 'repair_form', 'item', 'stock', 'customer'),
             ['quotation.view', 'quotation.create', 'quotation.edit', 'quotation.approve', 'quotation.print'],
         ));
 
@@ -90,7 +92,9 @@ class RolePermissionSeeder extends Seeder
             ['item.view', 'item.print', 'item_lot.view', 'stock.view',
                 'angadiya.view', 'angadiya.create', 'angadiya.print',
                 'hallmark.view', 'hallmark.print',
-                'supplier_hisab.view', 'supplier_hisab.print'],
+                'supplier_hisab.view', 'supplier_hisab.print',
+                // Repairs are taken in over the counter, so Sales books and prints them.
+                'repair_form.view', 'repair_form.create', 'repair_form.print'],
             // Sales reads the masters so quotation screens can resolve rates and names.
             array_map(fn (string $module) => "{$module}.view", self::MASTER_MODULES),
             $this->modulePermissions('customer'),

@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * A lot of goods sent for BIS hallmarking.
@@ -89,31 +88,5 @@ class Hallmark extends Model
     public function totalCost(): float
     {
         return round($this->totalPieces() * (float) $this->cost_per_piece, 2);
-    }
-
-    /**
-     * The docket photo as a data URI, so dompdf renders it without reaching for
-     * the filesystem or the network.
-     */
-    public function photoDataUri(): ?string
-    {
-        if (! $this->hasPhoto()) {
-            return null;
-        }
-
-        $disk = $this->photo_disk ?: 'public';
-
-        if (! config("filesystems.disks.{$disk}")) {
-            return null;
-        }
-
-        $storage = Storage::disk($disk);
-
-        if (! $storage->exists($this->photo_path)) {
-            return null;
-        }
-
-        return 'data:'.$storage->mimeType($this->photo_path).';base64,'
-            .base64_encode($storage->get($this->photo_path));
     }
 }

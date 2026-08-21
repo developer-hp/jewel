@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\AppSettingRequest;
 use App\Models\AppSetting;
+use App\Models\MetalType;
+use App\Models\Purity;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -29,7 +31,12 @@ class AppSettingController extends Controller implements HasMiddleware
 
     public function edit(): View
     {
-        return view('app-settings.edit', ['settings' => AppSetting::current()]);
+        return view('app-settings.edit', [
+            'settings' => AppSetting::current(),
+            'metalTypes' => MetalType::active()->ordered()->pluck('name', 'id'),
+            'purities' => Purity::active()->with('metalType')->ordered()->get()
+                ->mapWithKeys(fn (Purity $purity) => [$purity->id => $purity->label()]),
+        ]);
     }
 
     public function update(AppSettingRequest $request): RedirectResponse
@@ -42,9 +49,17 @@ class AppSettingController extends Controller implements HasMiddleware
             'firm_name',
             'firm_city',
             'firm_phone',
+            'firm_website',
+            'firm_office_phone',
             'angadiya_columns',
             'angadiya_slip_height_mm',
             'hallmark_next_lot_no',
+            'repair_ref_prefix',
+            'repair_next_ref_no',
+            'repair_contact_no',
+            'repair_metal_type_id',
+            'repair_purity_id',
+            'repair_terms',
             'sidebar_user_bg_from',
             'sidebar_user_bg_to',
             'sidebar_user_text_color',

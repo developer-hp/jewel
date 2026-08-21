@@ -14,6 +14,11 @@ class ItemGroup extends Model
 {
     use SoftDeletes;
 
+    /** Groups the app itself owns and depends on. */
+    public const SYSTEM_REPAIR = 'repair';
+
+    public const SYSTEM_ORDER = 'order';
+
     protected function casts(): array
     {
         return [
@@ -64,6 +69,24 @@ class ItemGroup extends Model
     public function previewNextCode(): string
     {
         return $this->prefix.str_pad((string) $this->next_sequence, $this->code_padding, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * A group the app depends on. It cannot be deleted; its prefix stays editable
+     * under the same rule as any other group.
+     */
+    public function isReserved(): bool
+    {
+        return filled($this->system_key);
+    }
+
+    /**
+     * The reserved group behind a module, e.g. the Repair group that issues
+     * REPAIR0001 for a repaired piece coming back into stock.
+     */
+    public static function system(string $key): self
+    {
+        return static::query()->where('system_key', $key)->firstOrFail();
     }
 
     public function scopeActive(Builder $query): void
