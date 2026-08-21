@@ -316,8 +316,8 @@ it('counts and filters ready against pending in the listing', function () {
         ->and($onlyReady->json('data.0.progress'))->toBe('1 / 1')
         ->and($onlyPending->json('recordsTotal'))->toBe(1)
         ->and($onlyPending->json('data.0.progress'))->toBe('0 / 2')
-        ->and($onlyPending->json('data.0.DT_RowClass'))->toBe('repair-pending')
-        ->and($onlyReady->json('data.0.DT_RowClass'))->toBe('repair-ready')
+        ->and($onlyPending->json('data.0.DT_RowClass'))->toBe('row-pending')
+        ->and($onlyReady->json('data.0.DT_RowClass'))->toBe('row-ready')
         ->and($pending->fresh()->isReady())->toBeFalse();
 });
 

@@ -18,7 +18,7 @@ use Illuminate\Support\Carbon;
  * and are deliberately left out of the fillable list.
  */
 #[Fillable([
-    'item_group_id', 'item_lot_id', 'repair_form_line_id', 'supplier_id',
+    'item_group_id', 'item_lot_id', 'repair_form_line_id', 'order_form_line_id', 'supplier_id',
     'metal_type_id', 'purity_id', 'making_charge_id',
     'huid',
     'name', 'description', 'gross_weight', 'other_deduction', 'is_active',
@@ -67,6 +67,23 @@ class Item extends Model
     public function repairFormLine(): BelongsTo
     {
         return $this->belongsTo(RepairFormLine::class);
+    }
+
+    /**
+     * The order line holding this piece — set either by reserving it from stock or
+     * by making it to order. While set, the piece is spoken for.
+     */
+    public function orderFormLine(): BelongsTo
+    {
+        return $this->belongsTo(OrderFormLine::class);
+    }
+
+    /**
+     * Promised to a customer, so not available to anyone else.
+     */
+    public function isReserved(): bool
+    {
+        return $this->order_form_line_id !== null;
     }
 
     public function supplier(): BelongsTo

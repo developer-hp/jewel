@@ -18,6 +18,9 @@ use App\Http\Controllers\LotItemEntryController;
 use App\Http\Controllers\MakingChargeController;
 use App\Http\Controllers\MetalRateController;
 use App\Http\Controllers\MetalTypeController;
+use App\Http\Controllers\OrderFormController;
+use App\Http\Controllers\OrderFormPrintController;
+use App\Http\Controllers\OrderItemController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PurityController;
@@ -109,6 +112,19 @@ Route::middleware('auth')->group(function () {
     Route::get('hallmarks/{hallmark}/print', HallmarkPrintController::class)->name('hallmarks.print');
     Route::resource('hallmarks', HallmarkController::class)->except('show');
 
+    // Making a piece to order. Its own screen, carrying the full item detail.
+    Route::get('order-items/create', [OrderItemController::class, 'create'])->name('order-items.create');
+    Route::post('order-items', [OrderItemController::class, 'store'])->name('order-items.store');
+
+    // Print, stickers and the by-ref sticker screen sit above the resource so
+    // `order-forms/print` is not read as an order id.
+    Route::post('order-forms/print', [OrderFormPrintController::class, 'forms'])->name('order-forms.print');
+    Route::post('order-forms/stickers', [OrderFormPrintController::class, 'stickers'])->name('order-forms.stickers');
+    Route::get('order-forms/sticker-by-ref', [OrderFormPrintController::class, 'stickerByRef'])->name('order-forms.sticker-by-ref');
+    Route::post('order-forms/lines/{line}/fix-rate', [OrderFormController::class, 'fixRate'])->name('order-forms.fix-rate');
+    Route::resource('order-forms', OrderFormController::class)->except('show')
+        ->parameters(['order-forms' => 'order_form']);
+
     // Booking a repaired piece back into stock. Its own screen, deliberately apart
     // from the general item form.
     Route::get('repair-items/create', [RepairItemController::class, 'create'])->name('repair-items.create');
@@ -145,6 +161,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('lots', ItemLotController::class)->parameters(['lots' => 'lot']);
 
     // All above the resource so these are not swallowed by `items/{item}`.
+    Route::get('items-lookup', [ItemController::class, 'lookup'])->name('items.lookup');
     Route::get('items/{item}/label', ItemLabelController::class)->name('items.label');
     Route::get('items-photos/bulk', [ItemPhotoController::class, 'bulk'])->name('items.photos.bulk');
     Route::post('items-photos/bulk', [ItemPhotoController::class, 'bulkStore'])->name('items.photos.bulk.store');

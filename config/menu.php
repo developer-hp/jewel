@@ -61,6 +61,28 @@ return [
                 ],
             ],
 
+            // Customer orders, and the pieces made against them.
+            [
+                'label' => 'Orders',
+                'icon' => 'ri-shopping-bag-fill',
+                'children' => [
+                    [
+                        'label' => 'Order Forms',
+                        'route' => 'order-forms.index',
+                        'active' => 'order-forms.*',
+                        'can' => 'order_form.view',
+                    ],
+                    [
+                        // Making a piece to order — the full item detail, so it gets
+                        // a screen and an entry of its own.
+                        'label' => 'Order Items',
+                        'route' => 'order-items.create',
+                        'active' => 'order-items.*',
+                        'can' => 'order_form.edit',
+                    ],
+                ],
+            ],
+
             // Customer goods in for repair, and the pieces coming back.
             [
                 'label' => 'Repairs',

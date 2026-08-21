@@ -278,6 +278,65 @@
 
                 <div class="card">
                     <div class="card-header py-2">
+                        <h5 class="mb-0">Order Forms</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="order_ref_prefix" class="form-label">Reference prefix</label>
+                                <input type="text" id="order_ref_prefix" name="order_ref_prefix"
+                                    class="form-control @error('order_ref_prefix') is-invalid @enderror"
+                                    value="{{ old('order_ref_prefix', $settings->order_ref_prefix) }}" maxlength="10"
+                                    placeholder="CF">
+                                <small class="text-muted">Prints as <code>{{ $settings->order_ref_prefix ?: 'CF' }} {{ $settings->order_next_ref_no }}</code>.</small>
+                                @error('order_ref_prefix')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label for="order_next_ref_no" class="form-label">Next reference no</label>
+                                <input type="number" min="1" id="order_next_ref_no" name="order_next_ref_no"
+                                    class="form-control @error('order_next_ref_no') is-invalid @enderror"
+                                    value="{{ old('order_next_ref_no', $settings->order_next_ref_no) }}">
+                                <small class="text-muted">
+                                    Issued automatically. Set it to continue your existing numbering
+                                    before the first order.
+                                </small>
+                                @error('order_next_ref_no')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label for="order_contact_no" class="form-label">Query number</label>
+                                <input type="text" id="order_contact_no" name="order_contact_no"
+                                    class="form-control @error('order_contact_no') is-invalid @enderror"
+                                    value="{{ old('order_contact_no', $settings->order_contact_no) }}" maxlength="30"
+                                    placeholder="9712406367">
+                                <small class="text-muted">
+                                    Prints as <em>For Query</em>. Falls back to the firm phone.
+                                </small>
+                                @error('order_contact_no')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-12 mb-3">
+                                <label for="order_terms" class="form-label">Terms and conditions</label>
+                                <textarea id="order_terms" name="order_terms" rows="6"
+                                    class="form-control @error('order_terms') is-invalid @enderror">{{ old('order_terms', $settings->order_terms) }}</textarea>
+                                <small class="text-muted">One condition per line; printed at the foot of the order form.</small>
+                                @error('order_terms')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header py-2">
                         <h5 class="mb-0">Logos</h5>
                     </div>
                     <div class="card-body">

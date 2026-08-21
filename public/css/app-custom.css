@@ -506,40 +506,73 @@ code {
     font-weight: bold;
 }
 /* ------------------------------------------------------------------ *
- * Repair form listing.
+ * Ready / pending rows, shared by the repair and order listings.
  *
- * Green means every piece is back in stock and only delivery is pending;
- * red means something is still out at the workshop. Set through the row
+ * Green means every piece is accounted for and only delivery is pending;
+ * red means something is still outstanding. Set through the row
  * variables rather than a flat background so the striping, hover and
  * border colours the theme computes all stay consistent — and given its
  * own dark palette, because a pastel that reads on white is unreadable
  * on the dark surface.
  * ------------------------------------------------------------------ */
-.table > tbody > tr.repair-ready {
+.table > tbody > tr.row-ready {
     --ct-table-bg: #e3f5e9;
     --ct-table-color: #14532d;
 }
 
-.table > tbody > tr.repair-pending {
+.table > tbody > tr.row-pending {
     --ct-table-bg: #fbe4e6;
     --ct-table-color: #7f1d1d;
 }
 
-[data-bs-theme="dark"] .table > tbody > tr.repair-ready {
+[data-bs-theme="dark"] .table > tbody > tr.row-ready {
     --ct-table-bg: #143324;
     --ct-table-color: #b7f0cd;
 }
 
-[data-bs-theme="dark"] .table > tbody > tr.repair-pending {
+[data-bs-theme="dark"] .table > tbody > tr.row-pending {
     --ct-table-bg: #3a1b1f;
     --ct-table-color: #f7c3c7;
 }
 
 /* The cell colour rules further up target `table td` directly, which beats
    the row variables above; re-assert the row's own colour for these two. */
-.table > tbody > tr.repair-ready > td,
-.table > tbody > tr.repair-pending > td,
-html[data-bs-theme=dark] .table > tbody > tr.repair-ready > td,
-html[data-bs-theme=dark] .table > tbody > tr.repair-pending > td {
+.table > tbody > tr.row-ready > td,
+.table > tbody > tr.row-pending > td,
+html[data-bs-theme=dark] .table > tbody > tr.row-ready > td,
+html[data-bs-theme=dark] .table > tbody > tr.row-pending > td {
     color: var(--ct-table-color);
+}
+
+/* ------------------------------------------------------------------ *
+ * Order form line grid.
+ *
+ * Each piece is two rows — its fields, then the stones asked for — so
+ * without a break the stones of one line read as belonging to the next.
+ * A heavy rule opens each line and the stone row is tinted and inset, so
+ * the pair reads as one block.
+ * ------------------------------------------------------------------ */
+tr.order-row > td {
+    border-top: 2px solid var(--ct-emphasis-color);
+    padding-top: 0.6rem;
+}
+
+tr.order-row:first-child > td {
+    border-top-width: 1px;
+}
+
+tr.order-stone-row > td {
+    border-top: 0;
+    padding: 0.35rem 0.75rem 0.9rem 2rem;
+    background-color: var(--ct-tertiary-bg);
+}
+
+.order-line-badge {
+    display: inline-block;
+    margin-bottom: 0.25rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ct-secondary-color);
 }

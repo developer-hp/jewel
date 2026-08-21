@@ -27,7 +27,7 @@ class ItemController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:item.view', only: ['index', 'show']),
+            new Middleware('permission:item.view', only: ['index', 'show', 'lookup']),
             new Middleware('permission:item.create', only: ['create', 'store']),
             new Middleware('permission:item.edit', only: ['edit', 'update']),
             new Middleware('permission:item.delete', only: ['destroy']),
@@ -176,6 +176,66 @@ class ItemController extends Controller implements HasMiddleware
         $masters = StoneMaster::whereIn('id', array_column($rows, 'stone_master_id'))->get()->keyBy('id');
 
         $item->itemStones()->createMany($this->calculator->buildStoneRows($rows, $masters));
+    }
+
+    /**
+     * Search stock for a picker, returning everything a caller needs to copy a piece
+     * onto one of its own lines — the order form does exactly that.
+     *
+     * Reserved pieces are excluded by default: one already promised to a customer is
+     * not available to promise again.
+     */
+    public function lookup(Request $request): JsonResponse
+    {
+        $term = $request->string('q')->toString();
+
+        $items = Item::query()
+            ->active()
+            ->with(['metalType:id,name', 'purity:id,name', 'makingCharge', 'itemStones'])
+            ->when($request->boolean('include_reserved') === false, fn ($q) => $q->whereNull('order_form_line_id'))
+            ->when($term !== '', fn ($q) => $q->where(fn ($sub) => $sub
+                ->where('code', 'like', "%{$term}%")
+                ->orWhere('name', 'like', "%{$term}%")
+                ->orWhere('huid', 'like', "%{$term}%")))
+            ->orderBy('code')
+            ->limit(30)
+            ->get();
+
+        return response()->json([
+            'items' => $items->map(fn (Item $item) => [
+                'id' => $item->id,
+                'code' => $item->code,
+                'name' => $item->name,
+                'description' => $item->description,
+                'metal_type_id' => $item->metal_type_id,
+                'metal_type' => $item->metalType?->name,
+                'purity_id' => $item->purity_id,
+                'purity' => $item->purity?->name,
+                'making_charge_id' => $item->making_charge_id,
+                // The order line copies labour off the making charge, and carries the
+                // extra charges into its own other-charges total.
+                'making_charge' => $item->makingCharge ? [
+                    'charge_type' => $item->makingCharge->charge_type,
+                    'rate' => (float) $item->makingCharge->rate,
+                ] : null,
+                'extra_charge_1' => (float) $item->extra_charge_1,
+                'extra_charge_2' => (float) $item->extra_charge_2,
+                'gross_weight' => (float) $item->gross_weight,
+                'net_weight' => (float) $item->net_weight,
+                'other_deduction' => (float) $item->other_deduction,
+                'stones' => $item->itemStones->map(fn ($row) => [
+                    'stone_master_id' => $row->stone_master_id,
+                    'kind' => $row->kind,
+                    'pieces' => $row->pieces,
+                    'weight_carat' => (float) $row->weight_carat,
+                    'weight_grams' => (float) $row->weight_grams,
+                    'rate_unit' => $row->rate_unit,
+                    'rate' => (float) $row->rate,
+                    'amount' => (float) $row->amount,
+                    'deduct_from_gross' => (bool) $row->deduct_from_gross,
+                ])->values(),
+            ])->values(),
+        ]);
     }
 
     /**

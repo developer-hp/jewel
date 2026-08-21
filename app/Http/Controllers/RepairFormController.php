@@ -63,7 +63,7 @@ class RepairFormController extends Controller implements HasMiddleware
             ->addColumn('action', fn (RepairForm $form) => view('repair-forms.partials.actions', ['form' => $form])->render())
             // Green when every piece is back, red while any is still out — the same
             // read the paper listing gives at a glance.
-            ->setRowClass(fn (RepairForm $form) => $this->isRowReady($form) ? 'repair-ready' : 'repair-pending')
+            ->setRowClass(fn (RepairForm $form) => $this->isRowReady($form) ? 'row-ready' : 'row-pending')
             ->filterColumn('ref', fn ($q, $keyword) => $q->where('ref_no', 'like', '%'.ltrim($keyword, $prefix.' ').'%'))
             ->filterColumn('customer', fn ($q, $keyword) => $q->where('customer_name', 'like', "%{$keyword}%"))
             ->filterColumn('contact', function ($q, $keyword) {

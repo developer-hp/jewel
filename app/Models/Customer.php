@@ -38,6 +38,11 @@ class Customer extends Model
         return $this->hasMany(RepairForm::class);
     }
 
+    public function orderForms(): HasMany
+    {
+        return $this->hasMany(OrderForm::class);
+    }
+
     /**
      * Digits only, so "9712 406367", "9712-406367" and "(9712) 406367" are one
      * person. A country code typed on one entry and not the other is still two —

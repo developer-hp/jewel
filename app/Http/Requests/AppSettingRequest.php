@@ -44,6 +44,11 @@ class AppSettingRequest extends FormRequest
             'repair_purity_id' => ['nullable', 'exists:purities,id'],
             'repair_terms' => ['nullable', 'string', 'max:2000'],
 
+            'order_ref_prefix' => ['nullable', 'string', 'alpha_num', 'max:10'],
+            'order_next_ref_no' => ['nullable', 'integer', 'min:1', 'max:99999999'],
+            'order_contact_no' => ['nullable', 'string', 'max:30'],
+            'order_terms' => ['nullable', 'string', 'max:2000'],
+
             'logo' => $image,
             'logo_dark' => $image,
             'logo_small' => $image,
