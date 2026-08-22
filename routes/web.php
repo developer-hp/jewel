@@ -35,7 +35,9 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SalesPersonController;
 use App\Http\Controllers\SecuritySettingController;
 use App\Http\Controllers\SessionHeartbeatController;
+use App\Http\Controllers\StockController;
 use App\Http\Controllers\StockGroupController;
+use App\Http\Controllers\StockReportController;
 use App\Http\Controllers\StoneMasterController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SupplierHisabController;
@@ -146,6 +148,12 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('sales-persons', SalesPersonController::class)->except('show')
         ->parameters(['sales-persons' => 'sales_person']);
+
+    // What the shop holds, and how it moved. Both read off items; nothing is stored.
+    Route::get('stock', [StockController::class, 'index'])->name('stock.index');
+    Route::get('stock/print', [StockController::class, 'print'])->name('stock.print');
+    Route::get('stock/daily', [StockReportController::class, 'index'])->name('stock.daily');
+    Route::get('stock/daily/export', [StockReportController::class, 'export'])->name('stock.daily.export');
 
     // Export sits above the resource so `internal-stock-entries/export` is not read
     // as an entry id.

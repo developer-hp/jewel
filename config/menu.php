@@ -46,6 +46,18 @@ return [
                 'icon' => 'ri-price-tag-3-fill',
                 'children' => [
                     [
+                        'label' => 'Stock Summary',
+                        'route' => 'stock.index',
+                        'active' => 'stock.index',
+                        'can' => 'stock.view',
+                    ],
+                    [
+                        'label' => 'Daily Report',
+                        'route' => 'stock.daily',
+                        'active' => 'stock.daily*',
+                        'can' => 'stock.report',
+                    ],
+                    [
                         'label' => 'Items',
                         // `items.*` deliberately, so it does not also match `item-groups.*`.
                         'route' => 'items.index',
