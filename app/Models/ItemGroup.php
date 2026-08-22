@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[Fillable(['name', 'prefix', 'code_padding', 'next_sequence', 'metal_type_id', 'stock_group_id', 'sort_order', 'is_active'])]
+#[Fillable(['name', 'prefix', 'code_padding', 'next_sequence', 'metal_type_id', 'stock_group_id', 'sort_order', 'is_active', 'show_in_daily_report'])]
 class ItemGroup extends Model
 {
     use SoftDeletes;
@@ -26,6 +26,7 @@ class ItemGroup extends Model
             'next_sequence' => 'integer',
             'sort_order' => 'integer',
             'is_active' => 'boolean',
+            'show_in_daily_report' => 'boolean',
         ];
     }
 
@@ -87,6 +88,14 @@ class ItemGroup extends Model
     public static function system(string $key): self
     {
         return static::query()->where('system_key', $key)->firstOrFail();
+    }
+
+    /**
+     * Groups the daily stock report is set to show. Global, not per user.
+     */
+    public function scopeOnDailyReport(Builder $query): void
+    {
+        $query->where('show_in_daily_report', true);
     }
 
     public function scopeActive(Builder $query): void

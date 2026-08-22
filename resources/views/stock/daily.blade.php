@@ -50,6 +50,66 @@
                         together. Sold will split out of Less once sales are recorded.
                     </p>
 
+                    @php($hidden = $allGroups->where('show_in_daily_report', false))
+
+                    <div class="mb-3">
+                        <a class="btn btn-sm btn-soft-secondary" data-bs-toggle="collapse" href="#group-picker"
+                            role="button" aria-expanded="false" aria-controls="group-picker">
+                            <i class="ri-list-check-2"></i> Item groups shown
+                            @if ($hidden->isNotEmpty())
+                                <span class="badge bg-warning text-dark ms-1">{{ $hidden->count() }} hidden</span>
+                            @endif
+                        </a>
+
+                        <div class="collapse mt-2 {{ $hidden->isNotEmpty() ? 'show' : '' }}" id="group-picker">
+                            <div class="card border mb-0">
+                                <div class="card-body">
+                                    {{-- Saved on the groups themselves, so this holds for
+                                         everyone and every day until it is changed again. --}}
+                                    <p class="text-muted fs-13">
+                                        Untick a group to leave it off this report. The choice is shared
+                                        by everyone and stays until it is changed here.
+                                    </p>
+
+                                    <form method="POST" action="{{ route('stock.daily.groups') }}">
+                                        @csrf
+                                        {{-- Present even when every box is unticked, so the server
+                                             is told "none" rather than nothing at all. --}}
+                                        <input type="hidden" name="item_group_ids[]" value="">
+
+                                        <div class="row row-cols-2 row-cols-md-4 g-2 mb-3">
+                                            @foreach ($allGroups as $group)
+                                                <div class="col">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input group-pick" type="checkbox"
+                                                            name="item_group_ids[]" value="{{ $group->id }}"
+                                                            id="group-{{ $group->id }}"
+                                                            @checked($group->show_in_daily_report)>
+                                                        <label class="form-check-label" for="group-{{ $group->id }}">
+                                                            <code>{{ $group->prefix }}</code> {{ $group->name }}
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+
+                                        <div class="d-flex gap-2">
+                                            <button type="submit" class="btn btn-sm btn-primary">
+                                                <i class="ri-save-line"></i> Save
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-light" id="group-all">
+                                                Select all
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-light" id="group-none">
+                                                Select none
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="table-responsive">
                         <table class="table table-sm table-centered table-bordered mb-0">
                             <thead class="table-light">
@@ -104,3 +164,12 @@
         </div>
     </div>
 @endsection
+
+@push('js')
+    <script>
+        $(function () {
+            $('#group-all').on('click', () => $('.group-pick').prop('checked', true));
+            $('#group-none').on('click', () => $('.group-pick').prop('checked', false));
+        });
+    </script>
+@endpush

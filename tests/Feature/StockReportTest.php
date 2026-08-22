@@ -301,3 +301,79 @@ it('hides both from a user with no permissions', function () {
         ->assertOk()
         ->assertSee(route('stock.index'));
 });
+
+// --- choosing which groups the report shows -------------------------------------------
+
+it('leaves an unticked group off the report, for everyone', function () {
+    $this->travelTo(today()->setHour(9));
+    stockItem($this->ring, net: 9);
+    stockItem($this->bangle, net: 38.6);
+    $this->travelBack();
+
+    expect($this->figures->daily(today())->pluck('code'))->toContain('RNG', 'BNG');
+
+    // Tick everything except bangles.
+    $keep = ItemGroup::active()->where('prefix', '!=', 'BNG')->pluck('id')->all();
+
+    $this->actingAs($this->admin)
+        ->post(route('stock.daily.groups'), ['item_group_ids' => $keep])
+        ->assertRedirect();
+
+    $rows = $this->figures->daily(today());
+
+    expect($rows->pluck('code'))->toContain('RNG')
+        ->and($rows->pluck('code'))->not->toContain('BNG')
+        // Dropping a group drops its figures from the totals too.
+        ->and($this->figures->totals($rows, ['add_pcs'])->add_pcs)->toBe(1);
+
+    // It is a property of the group, so the next person sees the same.
+    expect(ItemGroup::where('prefix', 'BNG')->firstOrFail()->show_in_daily_report)->toBeFalse();
+});
+
+it('shows every group until told otherwise, and can be put back', function () {
+    // A group added later shows up without anyone touching this.
+    $fresh = ItemGroup::create(['name' => 'Anklet', 'prefix' => 'ANK', 'code_padding' => 4]);
+
+    expect($fresh->show_in_daily_report)->toBeTrue()
+        ->and($this->figures->daily(today())->pluck('code'))->toContain('ANK');
+
+    $this->actingAs($this->admin)
+        ->post(route('stock.daily.groups'), ['item_group_ids' => [$fresh->id]])
+        ->assertRedirect();
+
+    expect($this->figures->daily(today())->pluck('code')->all())->toBe(['ANK']);
+
+    // And back again.
+    $this->actingAs($this->admin)
+        ->post(route('stock.daily.groups'), ['item_group_ids' => ItemGroup::pluck('id')->all()])
+        ->assertRedirect();
+
+    expect($this->figures->daily(today())->pluck('code'))->toContain('RNG', 'BNG', 'ANK');
+});
+
+it('accepts none ticked, and the empty value the form sends with it', function () {
+    $this->actingAs($this->admin)
+        ->post(route('stock.daily.groups'), ['item_group_ids' => ['']])
+        ->assertRedirect()
+        ->assertSessionHasNoErrors();
+
+    expect($this->figures->daily(today()))->toHaveCount(0)
+        ->and(ItemGroup::active()->where('show_in_daily_report', true)->count())->toBe(0);
+});
+
+it('leaves the stock summary alone', function () {
+    stockItem($this->bangle, net: 38.6);
+
+    $keep = ItemGroup::active()->where('prefix', '!=', 'BNG')->pluck('id')->all();
+
+    $this->actingAs($this->admin)->post(route('stock.daily.groups'), ['item_group_ids' => $keep]);
+
+    // The choice was made on the daily report and belongs to it.
+    expect($this->figures->byItemGroup()->pluck('code'))->toContain('BNG');
+});
+
+it('will not let a sales user change what the report shows', function () {
+    $this->actingAs($this->sales)
+        ->post(route('stock.daily.groups'), ['item_group_ids' => []])
+        ->assertForbidden();
+});

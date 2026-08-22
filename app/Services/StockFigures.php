@@ -117,7 +117,9 @@ class StockFigures
             ->get()
             ->keyBy('item_group_id');
 
-        return ItemGroup::active()->ordered()->get()->map(function (ItemGroup $group) use ($totals) {
+        // Only the groups the report is set to show. The figures above are gathered
+        // across everything and then narrowed here, so the SQL stays one query.
+        return ItemGroup::active()->onDailyReport()->ordered()->get()->map(function (ItemGroup $group) use ($totals) {
             $row = $totals->get($group->id);
 
             $openingPcs = (int) ($row->opening_pcs ?? 0);

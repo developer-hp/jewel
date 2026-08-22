@@ -154,6 +154,7 @@ Route::middleware('auth')->group(function () {
     Route::get('stock/print', [StockController::class, 'print'])->name('stock.print');
     Route::get('stock/daily', [StockReportController::class, 'index'])->name('stock.daily');
     Route::get('stock/daily/export', [StockReportController::class, 'export'])->name('stock.daily.export');
+    Route::post('stock/daily/groups', [StockReportController::class, 'updateGroups'])->name('stock.daily.groups');
 
     // Export sits above the resource so `internal-stock-entries/export` is not read
     // as an entry id.
