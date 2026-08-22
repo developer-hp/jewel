@@ -108,9 +108,11 @@ it('renders the add and edit screens', function () {
 
     postSupplierOrder($this)->assertRedirect();
 
+    // The supplier dropdown reads by short name, as it does everywhere else.
     $this->actingAs($this->admin)->get(route('supplier-orders.edit', SupplierOrder::firstOrFail()))
         ->assertOk()
-        ->assertSee('MILAN GOLD PVT LTD');
+        ->assertSee('MGP')
+        ->assertSee('Stock ms 8173 ni butti ma dimond nakhva');
 });
 
 // --- state ------------------------------------------------------------------------

@@ -59,6 +59,12 @@ return [
                         'can' => 'item.view',
                     ],
                     [
+                        'label' => 'Internal Stock',
+                        'route' => 'internal-stock-entries.index',
+                        'active' => 'internal-stock-entries.*',
+                        'can' => 'internal_stock_entry.view',
+                    ],
+                    [
                         'label' => 'Item Lots',
                         'route' => 'lots.index',
                         'active' => 'lots.*',
@@ -209,6 +215,12 @@ return [
                         'route' => 'customers.index',
                         'active' => 'customers.*',
                         'can' => 'customer.view',
+                    ],
+                    [
+                        'label' => 'Internal Stock Master',
+                        'route' => 'internal-stocks.index',
+                        'active' => 'internal-stocks.*',
+                        'can' => 'internal_stock.view',
                     ],
                     [
                         'label' => 'Order Types',

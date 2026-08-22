@@ -31,6 +31,7 @@ class RolePermissionSeeder extends Seeder
         'supplier' => ['view', 'create', 'edit', 'delete'],
         'sales_person' => ['view', 'create', 'edit', 'delete'],
         'order_type' => ['view', 'create', 'edit', 'delete'],
+        'internal_stock' => ['view', 'create', 'edit', 'delete'],
         'label_setting' => ['view', 'edit'],
         'app_setting' => ['view', 'edit'],
         'item_lot' => ['view', 'create', 'edit', 'delete'],
@@ -40,6 +41,7 @@ class RolePermissionSeeder extends Seeder
         'repair_form' => ['view', 'create', 'edit', 'delete', 'print'],
         'order_form' => ['view', 'create', 'edit', 'delete', 'print'],
         'supplier_order' => ['view', 'create', 'edit', 'delete', 'print'],
+        'internal_stock_entry' => ['view', 'create', 'edit', 'delete', 'print'],
         'item' => ['view', 'create', 'edit', 'delete', 'print'],
         'stock' => ['view', 'adjust', 'report'],
         'customer' => ['view', 'create', 'edit', 'delete'],
@@ -56,7 +58,7 @@ class RolePermissionSeeder extends Seeder
      */
     private const MASTER_MODULES = [
         'metal_type', 'purity', 'metal_rate', 'item_group', 'stock_group', 'stone', 'making_charge',
-        'supplier', 'sales_person', 'order_type', 'label_setting', 'app_setting',
+        'supplier', 'sales_person', 'order_type', 'internal_stock', 'label_setting', 'app_setting',
     ];
 
     public function run(): void
@@ -85,7 +87,7 @@ class RolePermissionSeeder extends Seeder
         $this->syncRole('Manager', array_merge(
             ['user.view'],
             $this->modulePermissions(...self::MASTER_MODULES),
-            $this->modulePermissions('item_lot', 'angadiya', 'hallmark', 'supplier_hisab', 'repair_form', 'order_form', 'supplier_order', 'item', 'stock', 'customer'),
+            $this->modulePermissions('item_lot', 'angadiya', 'hallmark', 'supplier_hisab', 'repair_form', 'order_form', 'supplier_order', 'internal_stock_entry', 'item', 'stock', 'customer'),
             ['quotation.view', 'quotation.create', 'quotation.edit', 'quotation.approve', 'quotation.print'],
         ));
 
@@ -101,7 +103,10 @@ class RolePermissionSeeder extends Seeder
                 'order_form.view', 'order_form.create', 'order_form.print',
                 // Karigar work goes out from the counter, but only a manager
                 // removes an order — which also gates the scan screen.
-                'supplier_order.view', 'supplier_order.create', 'supplier_order.print'],
+                'supplier_order.view', 'supplier_order.create', 'supplier_order.print',
+                // Gold moves between pots at the counter all day; correcting the
+                // ledger afterwards is a manager's job.
+                'internal_stock_entry.view', 'internal_stock_entry.create', 'internal_stock_entry.print'],
             // Sales reads the masters so quotation screens can resolve rates and names.
             array_map(fn (string $module) => "{$module}.view", self::MASTER_MODULES),
             $this->modulePermissions('customer'),

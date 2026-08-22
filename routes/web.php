@@ -8,6 +8,9 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HallmarkController;
 use App\Http\Controllers\HallmarkPrintController;
+use App\Http\Controllers\InternalStockController;
+use App\Http\Controllers\InternalStockEntryController;
+use App\Http\Controllers\InternalStockExportController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\ItemGroupController;
 use App\Http\Controllers\ItemLabelController;
@@ -21,6 +24,7 @@ use App\Http\Controllers\MetalTypeController;
 use App\Http\Controllers\OrderFormController;
 use App\Http\Controllers\OrderFormPrintController;
 use App\Http\Controllers\OrderItemController;
+use App\Http\Controllers\OrderTypeController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PurityController;
@@ -34,7 +38,6 @@ use App\Http\Controllers\SessionHeartbeatController;
 use App\Http\Controllers\StockGroupController;
 use App\Http\Controllers\StoneMasterController;
 use App\Http\Controllers\SupplierController;
-use App\Http\Controllers\OrderTypeController;
 use App\Http\Controllers\SupplierHisabController;
 use App\Http\Controllers\SupplierHisabPaymentController;
 use App\Http\Controllers\SupplierHisabPrintController;
@@ -143,6 +146,18 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('sales-persons', SalesPersonController::class)->except('show')
         ->parameters(['sales-persons' => 'sales_person']);
+
+    // Export sits above the resource so `internal-stock-entries/export` is not read
+    // as an entry id.
+    Route::get('internal-stock-entries/export', InternalStockExportController::class)
+        ->name('internal-stock-entries.export');
+    Route::resource('internal-stock-entries', InternalStockEntryController::class)->except('show')
+        ->parameters(['internal-stock-entries' => 'entry']);
+
+    Route::post('internal-stocks/{internal_stock}/reset-toggle', [InternalStockController::class, 'toggleReset'])
+        ->name('internal-stocks.reset-toggle');
+    Route::resource('internal-stocks', InternalStockController::class)->except('show')
+        ->parameters(['internal-stocks' => 'internal_stock']);
 
     // Scan and print sit above the resource, or `supplier-orders/scan` is read as
     // an order id.
