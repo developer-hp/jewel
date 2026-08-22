@@ -8,9 +8,11 @@ use App\Models\MetalType;
 use App\Models\Purity;
 use App\Models\RepairForm;
 use App\Models\User;
+use App\Services\DashboardData;
 use App\Services\StockFigures;
 use Database\Seeders\MasterDataSeeder;
 use Database\Seeders\RolePermissionSeeder;
+use Spatie\Permission\Models\Permission;
 
 beforeEach(function () {
     $this->seed(RolePermissionSeeder::class);
@@ -231,7 +233,7 @@ it('counts what is overdue and due today', function () {
     expect($html)->toContain('Repairs overdue')
         ->and($html)->toContain('Repairs due today');
 
-    $data = app(App\Services\DashboardData::class)->for(config('dashboard'));
+    $data = app(DashboardData::class)->for(config('dashboard'));
     $lines = collect($data['attention']['lines'])->keyBy('label');
 
     expect($lines['Repairs overdue']->count)->toBe(1)
@@ -242,7 +244,7 @@ it('agrees with the stock screens exactly', function () {
     dashItem(9);
     dashItem(11.5);
 
-    $data = app(App\Services\DashboardData::class)->for(config('dashboard'));
+    $data = app(DashboardData::class)->for(config('dashboard'));
     $figures = app(StockFigures::class);
     $expected = $figures->totals($figures->byItemGroup(), ['pcs', 'held', 'net']);
 
@@ -256,7 +258,7 @@ it('reports each internal pot at its ledger balance', function () {
     $fine->entries()->create(['type' => 'opening', 'weight' => 442.1, 'note' => 'opening']);
     $fine->entries()->create(['type' => 'out', 'weight' => 305, 'note' => 'out']);
 
-    $data = app(App\Services\DashboardData::class)->for(config('dashboard'));
+    $data = app(DashboardData::class)->for(config('dashboard'));
 
     expect($data['internal_stock']['stocks']->first()->balance())->toBe(137.1);
 });
@@ -271,7 +273,7 @@ it('lists recent activity newest first', function () {
 
     $newer = dashItem();
 
-    $data = app(App\Services\DashboardData::class)->for(config('dashboard'));
+    $data = app(DashboardData::class)->for(config('dashboard'));
     $labels = collect($data['recent']['events'])->pluck('label');
 
     expect($labels->first())->toContain($newer->code)
@@ -285,7 +287,7 @@ it('leaves out activity from a module the viewer cannot see', function () {
     $none = User::factory()->create();
     $this->actingAs($none);
 
-    $data = app(App\Services\DashboardData::class)->for(config('dashboard'));
+    $data = app(DashboardData::class)->for(config('dashboard'));
 
     // Nothing they may look at, so no feed at all.
     expect($data)->not->toHaveKey('recent');
@@ -314,7 +316,7 @@ it('holds nothing that would break a cached config', function () {
 });
 
 it('names a real permission on every section', function () {
-    $seeded = Spatie\Permission\Models\Permission::pluck('name')->all();
+    $seeded = Permission::pluck('name')->all();
 
     $unknown = collect(config('dashboard'))
         ->pluck('can')
