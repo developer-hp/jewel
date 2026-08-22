@@ -223,7 +223,7 @@
                                 <input type="text" id="supplier_order_header" name="supplier_order_header"
                                     class="form-control @error('supplier_order_header') is-invalid @enderror"
                                     value="{{ old('supplier_order_header', $settings->supplier_order_header) }}"
-                                    maxlength="150" placeholder="krsons 079-26925755/50">
+                                    maxlength="150" placeholder="Firma 012871212">
                                 <small class="text-muted">Printed at the top right of the karigar receipt.</small>
                                 @error('supplier_order_header')
                                     <div class="invalid-feedback">{{ $message }}</div>

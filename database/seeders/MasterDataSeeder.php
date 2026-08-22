@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\ItemGroup;
 use App\Models\MakingCharge;
 use App\Models\MetalType;
+use App\Models\OrderType;
 use App\Models\Purity;
 use App\Models\StoneMaster;
 use Illuminate\Database\Seeder;
@@ -73,6 +74,12 @@ class MasterDataSeeder extends Seeder
         ['diamond', 'Solitaire (certified)', 'DI-SOLI', 'fixed', 185000.00, 'Round', 'VVS1', 'D', '1.00'],
     ];
 
+    /** The kinds of work sent out to a karigar. [name, sort order] */
+    private const ORDER_TYPES = [
+        ['CZ', 1],
+        ['Stock', 2],
+    ];
+
     /** [code, name, charge type, rate, weight basis] */
     private const MAKING_CHARGES = [
         ['MC-FIX500', 'Fixed — Small Item', 'fixed', 500.0000, null],
@@ -133,6 +140,10 @@ class MasterDataSeeder extends Seeder
                     'size' => $size,
                 ],
             );
+        }
+
+        foreach (self::ORDER_TYPES as [$name, $order]) {
+            OrderType::firstOrCreate(['name' => $name], ['sort_order' => $order]);
         }
 
         foreach (self::MAKING_CHARGES as [$code, $name, $type, $rate, $basis]) {
