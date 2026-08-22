@@ -1,6 +1,9 @@
 <?php
 
 use App\Models\AppSetting;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
+use App\Models\RepairForm;
 use App\Models\User;
 use Database\Seeders\MasterDataSeeder;
 use Database\Seeders\RolePermissionSeeder;
@@ -338,4 +341,91 @@ it('offers both pickers on the appearance screen', function () {
         ->assertSee('table_header_bg_light', false)
         ->assertSee('table_header_bg_dark', false)
         ->assertSee('table_header_default_light', false);
+});
+
+// --- caching the settings row ----------------------------------------------------
+
+it('reads the settings from the database while caching is off', function () {
+    // Off by default, so nothing changes for anyone who has not asked for it.
+    expect(AppSetting::current()->settings_cache_enabled)->toBeFalse()
+        ->and(Cache::has(AppSetting::CACHE_KEY))->toBeFalse();
+
+    AppSetting::current();
+
+    expect(Cache::has(AppSetting::CACHE_KEY))->toBeFalse();
+});
+
+it('serves the settings from the cache once switched on', function () {
+    AppSetting::current()->update(['settings_cache_enabled' => true, 'app_name' => 'Jewel']);
+
+    // Saving clears it; the next read fills it.
+    expect(Cache::has(AppSetting::CACHE_KEY))->toBeFalse();
+
+    AppSetting::current();
+
+    expect(Cache::has(AppSetting::CACHE_KEY))->toBeTrue();
+
+    // A change made behind Eloquent's back is exactly what a cache cannot see, which
+    // is the point of clearing it on save rather than trusting a timer.
+    DB::table('app_settings')->update(['app_name' => 'Changed In The Database']);
+
+    expect(AppSetting::current()->app_name)->toBe('Jewel');
+
+    AppSetting::flushCache();
+
+    expect(AppSetting::current()->app_name)->toBe('Changed In The Database');
+});
+
+it('clears the cache whenever the settings are saved', function () {
+    AppSetting::current()->update(['settings_cache_enabled' => true]);
+    AppSetting::current();
+
+    expect(Cache::has(AppSetting::CACHE_KEY))->toBeTrue();
+
+    AppSetting::current()->update(['app_name' => 'Renamed']);
+
+    expect(Cache::has(AppSetting::CACHE_KEY))->toBeFalse()
+        ->and(AppSetting::current()->app_name)->toBe('Renamed');
+});
+
+it('drops the cached copy when caching is switched back off', function () {
+    AppSetting::current()->update(['settings_cache_enabled' => true]);
+    AppSetting::current();
+
+    expect(Cache::has(AppSetting::CACHE_KEY))->toBeTrue();
+
+    AppSetting::current()->update(['settings_cache_enabled' => false]);
+    AppSetting::current();
+
+    // Nothing left behind to go stale.
+    expect(Cache::has(AppSetting::CACHE_KEY))->toBeFalse();
+});
+
+it('turns caching on from the settings page', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('Admin');
+
+    $this->actingAs($admin)
+        ->put(route('app-settings.update'), appSettingPayload(['settings_cache_enabled' => '1']))
+        ->assertRedirect();
+
+    expect(AppSetting::current()->settings_cache_enabled)->toBeTrue();
+
+    $this->actingAs($admin)
+        ->put(route('app-settings.update'), appSettingPayload())
+        ->assertRedirect();
+
+    // The switch is a checkbox, so an unticked box means off.
+    expect(AppSetting::current()->settings_cache_enabled)->toBeFalse();
+});
+
+it('still issues counters from the database, not the cached copy', function () {
+    AppSetting::current()->update(['settings_cache_enabled' => true, 'repair_next_ref_no' => 205]);
+    AppSetting::current();
+
+    // The counters take a row lock, which a cached copy could never provide; two in
+    // a row must not hand out the same number.
+    expect(RepairForm::nextRefNo())->toBe(205)
+        ->and(RepairForm::nextRefNo())->toBe(206)
+        ->and((int) AppSetting::current()->repair_next_ref_no)->toBe(207);
 });

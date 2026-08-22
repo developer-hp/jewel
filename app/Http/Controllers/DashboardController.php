@@ -2,26 +2,25 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Item;
-use App\Models\Purity;
-use App\Models\StoneMaster;
+use App\Models\AppSetting;
+use App\Services\DashboardData;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
+    public function __construct(private readonly DashboardData $data) {}
+
     public function __invoke(): View
     {
+        // Which sections this viewer should get: config order, less anything hidden
+        // on Appearance and anything their role cannot reach.
+        $sections = AppSetting::current()->visibleDashboardSections();
+
         return view('dashboard.index', [
-            'itemCount' => Item::count(),
-            'netWeight' => (float) Item::active()->sum('net_weight'),
-            'stoneCount' => StoneMaster::count(),
-            // Purities still missing today's rate — the first thing to fix each morning.
-            'puritiesWithoutRate' => Purity::active()
-                ->whereDoesntHave('rates', fn ($q) => $q->whereDate('effective_date', today()))
-                ->count(),
-            'ratedToday' => Purity::active()
-                ->whereHas('rates', fn ($q) => $q->whereDate('effective_date', today()))
-                ->count(),
+            'sections' => $sections,
+            // Only the survivors are built, so a section switched off costs nothing.
+            // Any that turn out to have nothing to show drop out here too.
+            'data' => $this->data->for($sections),
         ]);
     }
 }

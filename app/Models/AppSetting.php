@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
@@ -24,6 +25,7 @@ use Illuminate\Support\Facades\Storage;
     'logo_path', 'logo_dark_path', 'logo_small_path',
     'sidebar_user_bg_from', 'sidebar_user_bg_to', 'sidebar_user_text_color',
     'table_header_bg_light', 'table_header_bg_dark',
+    'dashboard_hidden_sections', 'settings_cache_enabled',
 ])]
 class AppSetting extends Model
 {
@@ -59,7 +61,41 @@ class AppSetting extends Model
         'sidebar_user_bg_from' => '#0acf97',
         'sidebar_user_bg_to' => '#39afd1',
         'sidebar_user_text_color' => '#ffffff',
+        // Raw values, so the json column takes its default as text.
+        'dashboard_hidden_sections' => '[]',
+        'settings_cache_enabled' => false,
     ];
+
+    /**
+     * Sections switched off, by key. Empty means the dashboard shows everything.
+     *
+     * @return array<int, string>
+     */
+    public function hiddenDashboardSections(): array
+    {
+        return array_values((array) ($this->dashboard_hidden_sections ?? []));
+    }
+
+    /**
+     * The dashboard sections this user should actually be shown, in config order.
+     *
+     * Hidden ones drop out, and so do any whose permission the viewer lacks. What
+     * survives still has to have something in it — that is decided per section, by
+     * the data service.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function visibleDashboardSections(): array
+    {
+        $hidden = $this->hiddenDashboardSections();
+        $user = auth()->user();
+
+        return collect(config('dashboard', []))
+            ->reject(fn (array $section) => in_array($section['key'], $hidden, true))
+            ->filter(fn (array $section) => ($section['can'] ?? null) === null || $user?->can($section['can']))
+            ->values()
+            ->all();
+    }
 
     /**
      * Disks item photos may be written to. Credentials for s3 come from .env; only
@@ -83,12 +119,56 @@ class AppSetting extends Model
             'single_device_login' => 'boolean',
             'idle_timeout_minutes' => 'integer',
             'idle_warning_seconds' => 'integer',
+            'dashboard_hidden_sections' => 'array',
+            'settings_cache_enabled' => 'boolean',
         ];
     }
 
+    /** Where the cached copy lives, on whatever store CACHE_STORE names. */
+    public const CACHE_KEY = 'app_settings';
+
+    /**
+     * The settings row, read from cache when that is switched on.
+     *
+     * This is loaded on every single request — the layout, the sidebar, the
+     * dashboard — so it is the one query worth keeping out of the way.
+     *
+     * The switch itself lives on the row, which sounds circular but is not: the
+     * cached copy carries it, so an enabled cache costs one cache read and nothing
+     * else. Disabled, the stale copy is dropped and the database answers.
+     */
     public static function current(): self
     {
-        return static::firstOrCreate([]);
+        $cached = Cache::get(self::CACHE_KEY);
+
+        if ($cached instanceof self && $cached->settings_cache_enabled) {
+            return $cached;
+        }
+
+        $settings = static::firstOrCreate([]);
+
+        if ($settings->settings_cache_enabled) {
+            Cache::forever(self::CACHE_KEY, $settings);
+        } elseif ($cached !== null) {
+            Cache::forget(self::CACHE_KEY);
+        }
+
+        return $settings;
+    }
+
+    /**
+     * Drop the cached copy. Bound to save and delete below, so nothing can change
+     * these settings and leave a stale page behind.
+     */
+    public static function flushCache(): void
+    {
+        Cache::forget(self::CACHE_KEY);
+    }
+
+    protected static function booted(): void
+    {
+        static::saved(fn () => static::flushCache());
+        static::deleted(fn () => static::flushCache());
     }
 
     public function idleTimeoutEnabled(): bool

@@ -71,7 +71,21 @@ class AppSettingController extends Controller implements HasMiddleware
             'sidebar_user_text_color',
             'table_header_bg_light',
             'table_header_bg_dark',
+            'settings_cache_enabled',
         ]));
+
+        // Stored as what is hidden, so a section added later shows up by default
+        // rather than staying invisible until someone notices. Left alone entirely
+        // when the form did not send the field.
+        if ($request->has('dashboard_sections')) {
+            $shown = $request->safe()->input('dashboard_sections', []);
+
+            $settings->dashboard_hidden_sections = collect(config('dashboard', []))
+                ->pluck('key')
+                ->reject(fn (string $key) => in_array($key, $shown, true))
+                ->values()
+                ->all();
+        }
 
         foreach (self::LOGO_SLOTS as $field => $column) {
             $this->applyLogo($request, $settings, $field, $column);

@@ -14,6 +14,16 @@ class ItemGroup extends Model
 {
     use SoftDeletes;
 
+    /**
+     * Mirrors the migration default, so a group created in code reports what it will
+     * do on the report without needing a re-read.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'show_in_daily_report' => true,
+    ];
+
     /** Groups the app itself owns and depends on. */
     public const SYSTEM_REPAIR = 'repair';
 

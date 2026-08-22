@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 /*
@@ -16,6 +17,9 @@ use Tests\TestCase;
 
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
+    // The array cache store lives for the whole process, so a settings row cached in
+    // one test would survive into the next one whose database has been rolled back.
+    ->beforeEach(fn () => Cache::flush())
     ->in('Feature');
 
 /*

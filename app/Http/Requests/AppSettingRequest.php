@@ -67,6 +67,12 @@ class AppSettingRequest extends FormRequest
             // Nullable: blank means "leave the table header to the theme".
             'table_header_bg_light' => ['nullable', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'table_header_bg_dark' => ['nullable', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
+
+            // The sections to SHOW; what gets stored is the complement. Keys are
+            // checked against the registry, so a stale or invented one is refused.
+            'settings_cache_enabled' => ['boolean'],
+            'dashboard_sections' => ['sometimes', 'array'],
+            'dashboard_sections.*' => [Rule::in(array_column(config('dashboard', []), 'key'))],
         ];
     }
 
@@ -104,6 +110,22 @@ class AppSettingRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        // Only touched when the form actually sent it. Defaulting it to an empty
+        // array here would mean any save that omits the field hides every section.
+        //
+        // The form posts one empty value so "none ticked" still arrives as an array;
+        // drop it before the key rule sees it.
+        $this->merge(['settings_cache_enabled' => $this->boolean('settings_cache_enabled')]);
+
+        if ($this->has('dashboard_sections')) {
+            $this->merge([
+                'dashboard_sections' => array_values(array_filter(
+                    (array) $this->input('dashboard_sections'),
+                    fn ($key) => $key !== '' && $key !== null,
+                )),
+            ]);
+        }
+
         foreach (['remove_logo', 'remove_logo_dark', 'remove_logo_small'] as $flag) {
             $this->merge([$flag => $this->boolean($flag)]);
         }
