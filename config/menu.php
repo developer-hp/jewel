@@ -131,14 +131,24 @@ return [
                 ],
             ],
 
-            // Left as a plain link: a collapsible holding one entry is only a click
-            // in the way. Give it a group when a second accounts screen arrives.
+            // Two entries earn a group, the same rule Stock and Repairs follow.
             [
-                'label' => 'Supplier Hisab',
+                'label' => 'Suppliers',
                 'icon' => 'ri-hand-coin-fill',
-                'route' => 'supplier-hisabs.index',
-                'active' => 'supplier-hisabs.*',
-                'can' => 'supplier_hisab.view',
+                'children' => [
+                    [
+                        'label' => 'Supplier Orders',
+                        'route' => 'supplier-orders.index',
+                        'active' => 'supplier-orders.*',
+                        'can' => 'supplier_order.view',
+                    ],
+                    [
+                        'label' => 'Supplier Hisab',
+                        'route' => 'supplier-hisabs.index',
+                        'active' => 'supplier-hisabs.*',
+                        'can' => 'supplier_hisab.view',
+                    ],
+                ],
             ],
         ],
     ],
@@ -199,6 +209,12 @@ return [
                         'route' => 'customers.index',
                         'active' => 'customers.*',
                         'can' => 'customer.view',
+                    ],
+                    [
+                        'label' => 'Order Types',
+                        'route' => 'order-types.index',
+                        'active' => 'order-types.*',
+                        'can' => 'order_type.view',
                     ],
                     [
                         'label' => 'Sales Persons',

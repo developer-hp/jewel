@@ -49,6 +49,9 @@ class AppSettingRequest extends FormRequest
             'order_contact_no' => ['nullable', 'string', 'max:30'],
             'order_terms' => ['nullable', 'string', 'max:2000'],
 
+            'supplier_order_next_form_no' => ['nullable', 'integer', 'min:1', 'max:99999999'],
+            'supplier_order_header' => ['nullable', 'string', 'max:150'],
+
             'logo' => $image,
             'logo_dark' => $image,
             'logo_small' => $image,

@@ -113,7 +113,7 @@ it('groups the operational screens rather than listing them flat', function () {
     $byLabel = collect($groups)->keyBy('label');
 
     expect($byLabel->get('Stock')['children'] ?? null)->not->toBeNull()
-        ->and(collect($byLabel['Stock']['children'])->pluck('label')->all())->toBe(['Items', 'Item Lots'])
+        ->and(collect($byLabel['Stock']['children'])->pluck('label')->all())->toBe(['Items', 'Item Photos', 'Item Lots'])
         ->and(collect($byLabel['Repairs']['children'])->pluck('label')->all())->toBe(['Repair Forms', 'Repair Items'])
         ->and(collect($byLabel['Dispatch']['children'])->pluck('label')->all())->toBe(['Angadiya', 'Hallmark']);
 });

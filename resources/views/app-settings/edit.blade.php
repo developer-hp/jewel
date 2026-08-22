@@ -199,6 +199,42 @@
 
                 <div class="card">
                     <div class="card-header py-2">
+                        <h5 class="mb-0">Supplier Orders</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="supplier_order_next_form_no" class="form-label">Next form no</label>
+                                <input type="number" min="1" id="supplier_order_next_form_no"
+                                    name="supplier_order_next_form_no"
+                                    class="form-control @error('supplier_order_next_form_no') is-invalid @enderror"
+                                    value="{{ old('supplier_order_next_form_no', $settings->supplier_order_next_form_no) }}">
+                                <small class="text-muted">
+                                    Issued automatically. Set it to continue your existing numbering
+                                    before the first entry.
+                                </small>
+                                @error('supplier_order_next_form_no')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-8 mb-3">
+                                <label for="supplier_order_header" class="form-label">Receipt header</label>
+                                <input type="text" id="supplier_order_header" name="supplier_order_header"
+                                    class="form-control @error('supplier_order_header') is-invalid @enderror"
+                                    value="{{ old('supplier_order_header', $settings->supplier_order_header) }}"
+                                    maxlength="150" placeholder="krsons 079-26925755/50">
+                                <small class="text-muted">Printed at the top right of the karigar receipt.</small>
+                                @error('supplier_order_header')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header py-2">
                         <h5 class="mb-0">Repair Forms</h5>
                     </div>
                     <div class="card-body">

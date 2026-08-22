@@ -8,8 +8,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[Fillable(['name', 'short_name', 'city', 'address', 'phone', 'is_active'])]
-class Supplier extends Model
+/**
+ * What kind of work goes out to a karigar — CZ, Stock, and whatever else the shop
+ * needs. The chosen name is what prints in the receipt's ITEM CODE row.
+ */
+#[Fillable(['name', 'sort_order', 'is_active'])]
+class OrderType extends Model
 {
     use SoftDeletes;
 
@@ -17,28 +21,13 @@ class Supplier extends Model
     {
         return [
             'is_active' => 'boolean',
+            'sort_order' => 'integer',
         ];
-    }
-
-    public function items(): HasMany
-    {
-        return $this->hasMany(Item::class);
     }
 
     public function supplierOrders(): HasMany
     {
         return $this->hasMany(SupplierOrder::class);
-    }
-
-    /**
-     * How the supplier reads in a dropdown or on the item screen — the short name
-     * is what staff actually say, so it leads when present.
-     */
-    public function label(): string
-    {
-        return $this->short_name
-            ? "{$this->short_name} — {$this->name}"
-            : $this->name;
     }
 
     public function scopeActive(Builder $query): void
@@ -48,6 +37,6 @@ class Supplier extends Model
 
     public function scopeOrdered(Builder $query): void
     {
-        $query->orderBy('name');
+        $query->orderBy('sort_order')->orderBy('name');
     }
 }

@@ -600,3 +600,20 @@ html[data-bs-theme=dark] .table > tbody > tr.row-inactive > td {
     color: var(--ct-table-color);
     font-style: italic;
 }
+
+/* Supplier orders: still out, and the day to chase it has passed. Amber sits
+   between the red of pending and the green of received. */
+.table > tbody > tr.row-overdue {
+    --ct-table-bg: #fdf2dd;
+    --ct-table-color: #7a4f00;
+}
+
+[data-bs-theme="dark"] .table > tbody > tr.row-overdue {
+    --ct-table-bg: #3a2f16;
+    --ct-table-color: #f4d58a;
+}
+
+.table > tbody > tr.row-overdue > td,
+html[data-bs-theme=dark] .table > tbody > tr.row-overdue > td {
+    color: var(--ct-table-color);
+}

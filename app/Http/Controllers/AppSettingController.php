@@ -64,6 +64,8 @@ class AppSettingController extends Controller implements HasMiddleware
             'order_next_ref_no',
             'order_contact_no',
             'order_terms',
+            'supplier_order_next_form_no',
+            'supplier_order_header',
             'sidebar_user_bg_from',
             'sidebar_user_bg_to',
             'sidebar_user_text_color',

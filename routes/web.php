@@ -34,9 +34,13 @@ use App\Http\Controllers\SessionHeartbeatController;
 use App\Http\Controllers\StockGroupController;
 use App\Http\Controllers\StoneMasterController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\OrderTypeController;
 use App\Http\Controllers\SupplierHisabController;
 use App\Http\Controllers\SupplierHisabPaymentController;
 use App\Http\Controllers\SupplierHisabPrintController;
+use App\Http\Controllers\SupplierOrderController;
+use App\Http\Controllers\SupplierOrderPrintController;
+use App\Http\Controllers\SupplierOrderScanController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -139,6 +143,20 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('sales-persons', SalesPersonController::class)->except('show')
         ->parameters(['sales-persons' => 'sales_person']);
+
+    // Scan and print sit above the resource, or `supplier-orders/scan` is read as
+    // an order id.
+    Route::get('supplier-orders/scan', [SupplierOrderScanController::class, 'index'])->name('supplier-orders.scan');
+    Route::post('supplier-orders/scan', [SupplierOrderScanController::class, 'destroy'])->name('supplier-orders.scan.destroy');
+    Route::post('supplier-orders/scan/{id}/restore', [SupplierOrderScanController::class, 'restore'])->name('supplier-orders.scan.restore');
+    Route::post('supplier-orders/print', SupplierOrderPrintController::class)->name('supplier-orders.print');
+    Route::post('supplier-orders/{supplier_order}/received', [SupplierOrderController::class, 'markReceived'])
+        ->name('supplier-orders.received');
+    Route::resource('supplier-orders', SupplierOrderController::class)->except('show')
+        ->parameters(['supplier-orders' => 'supplier_order']);
+
+    Route::resource('order-types', OrderTypeController::class)->except('show')
+        ->parameters(['order-types' => 'order_type']);
 
     // Rate, print and summary sit above the resource so `supplier-hisabs/print` is
     // not read as an entry id.
