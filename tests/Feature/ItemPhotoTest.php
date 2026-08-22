@@ -227,3 +227,89 @@ it('gates photo actions behind item.edit', function () {
         ->assertForbidden();
     $this->actingAs($sales)->delete(route('items.photo.destroy', $item))->assertForbidden();
 });
+
+// --- the photo list ------------------------------------------------------------------
+
+it('lists only the pieces that actually have a photo', function () {
+    Storage::fake('public');
+
+    $withPhoto = makePhotoItem();
+    $withoutPhoto = makePhotoItem('NCK');
+
+    $this->actingAs($this->admin)
+        ->post(route('items.photo.store', $withPhoto), ['photo' => UploadedFile::fake()->image('a.jpg')])
+        ->assertRedirect();
+
+    $this->actingAs($this->admin)->get(route('items.photos.index'))->assertOk();
+
+    $response = $this->actingAs($this->admin)
+        ->getJson(route('items.photos.index', dtParams(['code', 'name', 'group'])));
+
+    $response->assertOk()->assertJsonPath('recordsTotal', 1);
+
+    expect(strip_tags($response->json('data.0.code')))->toBe($withPhoto->code)
+        // The list carries no picture of its own, only a way through to one.
+        ->and($response->json('data.0'))->not->toHaveKey('photo')
+        ->and($response->json('data.0.action'))->toContain(route('items.photo.show', $withPhoto))
+        ->and($withoutPhoto->refresh()->hasPhoto())->toBeFalse();
+});
+
+it('shows one photo on a page of its own and streams the file', function () {
+    Storage::fake('public');
+
+    $item = makePhotoItem();
+
+    $this->actingAs($this->admin)
+        ->post(route('items.photo.store', $item), ['photo' => UploadedFile::fake()->image('a.jpg', 640, 480)])
+        ->assertRedirect();
+
+    $this->actingAs($this->admin)->get(route('items.photo.show', $item))
+        ->assertOk()
+        ->assertSee($item->code)
+        // No width or height on the img, so the browser shows it as uploaded.
+        ->assertSee(route('items.photo.raw', $item), false);
+
+    $raw = $this->actingAs($this->admin)->get(route('items.photo.raw', $item));
+
+    $raw->assertOk();
+    expect($raw->headers->get('content-type'))->toStartWith('image/');
+});
+
+it('has nothing to show for a piece with no photo', function () {
+    Storage::fake('public');
+
+    $item = makePhotoItem();
+
+    $this->actingAs($this->admin)->get(route('items.photo.show', $item))->assertNotFound();
+    $this->actingAs($this->admin)->get(route('items.photo.raw', $item))->assertNotFound();
+});
+
+it('404s rather than erroring when the file has gone missing from the disk', function () {
+    Storage::fake('public');
+
+    $item = makePhotoItem();
+    $item->forceFill(['photo_path' => 'items/gone.jpg', 'photo_disk' => 'public'])->save();
+
+    // The row still claims a photo, but the disk disagrees.
+    $this->actingAs($this->admin)->get(route('items.photo.raw', $item))->assertNotFound();
+});
+
+it('lets a user who may only read items look at the photos', function () {
+    Storage::fake('public');
+
+    $item = makePhotoItem();
+    $this->actingAs($this->admin)
+        ->post(route('items.photo.store', $item), ['photo' => UploadedFile::fake()->image('a.jpg')]);
+
+    $sales = User::factory()->create();
+    $sales->assignRole('Sales');
+
+    $this->actingAs($sales)->get(route('items.photos.index'))->assertOk();
+    $this->actingAs($sales)->get(route('items.photo.show', $item))->assertOk();
+    $this->actingAs($sales)->get(route('items.photo.raw', $item))->assertOk();
+
+    // Reading is not attaching.
+    $this->actingAs($sales)
+        ->post(route('items.photo.store', $item), ['photo' => UploadedFile::fake()->image('b.jpg')])
+        ->assertForbidden();
+});

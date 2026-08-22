@@ -199,6 +199,21 @@ it('will not delete a form whose pieces are already in stock', function () {
     expect(RepairForm::whereKey($form->id)->exists())->toBeTrue();
 });
 
+it('renders the add and edit screens', function () {
+    $this->actingAs($this->admin)->get(route('repair-forms.create'))
+        ->assertOk()
+        ->assertSee('Ref No')
+        ->assertSee('Delivery Date');
+
+    $form = repairForm(['A', 'B']);
+    bookRepairItem($this, $form->lines->first())->assertRedirect();
+
+    $this->actingAs($this->admin)->get(route('repair-forms.edit', $form))
+        ->assertOk()
+        ->assertSee('REPAIR0001')
+        ->assertSee('B');
+});
+
 // --- the customer register ---------------------------------------------------------
 
 it('adds the customer on first contact and links the form to them', function () {

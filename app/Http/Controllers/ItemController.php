@@ -7,6 +7,7 @@ use App\Models\Item;
 use App\Models\ItemGroup;
 use App\Models\MakingCharge;
 use App\Models\MetalType;
+use App\Models\OrderForm;
 use App\Models\Purity;
 use App\Models\StoneMaster;
 use App\Models\Supplier;
@@ -52,32 +53,66 @@ class ItemController extends Controller implements HasMiddleware
     {
         $query = Item::query()
             ->select('items.*')
-            ->with(['itemGroup', 'metalType', 'purity', 'makingCharge', 'supplier'])
+            // orderFormLine.orderForm feeds the Order No column; without it that
+            // column is an N+1 across the page.
+            ->with(['itemGroup', 'metalType', 'purity', 'makingCharge', 'supplier', 'orderFormLine.orderForm'])
             ->when($request->filled('item_group_id'), fn ($q) => $q->where('item_group_id', $request->integer('item_group_id')))
             ->when($request->filled('supplier_id'), fn ($q) => $q->where('supplier_id', $request->integer('supplier_id')))
             ->when($request->filled('metal_type_id'), fn ($q) => $q->where('metal_type_id', $request->integer('metal_type_id')))
             ->when($request->filled('status'), fn ($q) => $q->where('is_active', $request->string('status')->toString() === 'active'));
 
+        // Resolved once: refPrefix() reads the settings singleton, and inside a
+        // per-row closure that would be one lookup per item on the page.
+        $orderPrefix = OrderForm::refPrefix();
+
         return DataTables::eloquent($query)
-            ->addColumn('photo', fn (Item $item) => view('items.partials.photo-thumb', compact('item'))->render())
             ->editColumn('code', fn (Item $item) => '<code>'.e($item->code).'</code>')
             ->addColumn('group', fn (Item $item) => e($item->itemGroup?->name ?? '—'))
-            ->editColumn('huid', fn (Item $item) => $item->huid ? '<code>'.e($item->huid).'</code>' : '<span class="text-muted">—</span>')
             ->addColumn('supplier', fn (Item $item) => e($item->supplier?->short_name ?: ($item->supplier?->name ?? '—')))
             ->addColumn('metal', fn (Item $item) => view('items.partials.metal-cell', compact('item'))->render())
             ->addColumn('weights', fn (Item $item) => view('items.partials.weights-cell', compact('item'))->render())
             ->addColumn('making', fn (Item $item) => e($item->makingCharge?->code ?? '—'))
-            ->addColumn('status', fn (Item $item) => view('components.status-badge', ['active' => $item->is_active])->render())
+            ->addColumn('order_no', fn (Item $item) => $this->orderCell($item, $orderPrefix))
             ->addColumn('action', fn (Item $item) => view('items.partials.actions', compact('item'))->render())
+            // With the Status column gone, an inactive piece would otherwise look
+            // exactly like a live one; the row is muted instead.
+            ->setRowClass(fn (Item $item) => $item->is_active ? '' : 'row-inactive')
+            // HUID no longer has a column of its own, but it is what a piece gets
+            // looked up by, so the code search covers it too.
+            ->filterColumn('code', function ($q, $keyword) {
+                $q->where(fn ($sub) => $sub->where('code', 'like', "%{$keyword}%")
+                    ->orWhere('huid', 'like', "%{$keyword}%"));
+            })
             ->filterColumn('group', fn ($q, $keyword) => $q->whereRelation('itemGroup', 'name', 'like', "%{$keyword}%"))
             ->filterColumn('supplier', function ($q, $keyword) {
                 $q->whereHas('supplier', fn ($sub) => $sub->where('name', 'like', "%{$keyword}%")
                     ->orWhere('short_name', 'like', "%{$keyword}%"));
             })
+            ->filterColumn('order_no', function ($q, $keyword) use ($orderPrefix) {
+                // "CF 160" and "160" should both find it.
+                $ref = trim(str_ireplace($orderPrefix, '', $keyword));
+
+                $q->whereHas('orderFormLine.orderForm', fn ($sub) => $sub->where('ref_no', 'like', "%{$ref}%"));
+            })
             ->orderColumn('weights', 'net_weight $1')
-            ->orderColumn('status', 'is_active $1')
-            ->rawColumns(['photo', 'code', 'huid', 'metal', 'weights', 'status', 'action'])
+            ->rawColumns(['code', 'metal', 'weights', 'order_no', 'action'])
             ->toJson();
+    }
+
+    /**
+     * The order holding this piece, or nothing. A held piece is promised to a
+     * customer and must not be sold from the case.
+     */
+    private function orderCell(Item $item, string $prefix): string
+    {
+        $form = $item->orderFormLine?->orderForm;
+
+        if (! $form) {
+            return '<span class="text-muted">—</span>';
+        }
+
+        return '<a href="'.e(route('order-forms.edit', $form)).'" class="badge bg-warning text-dark">'
+            .e(trim($prefix.' '.$form->ref_no)).'</a>';
     }
 
     public function create(): View

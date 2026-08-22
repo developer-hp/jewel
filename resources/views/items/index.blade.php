@@ -67,16 +67,14 @@
                     <table id="items-table" class="table table-centered table-hover dt-responsive nowrap w-100">
                         <thead class="table-light">
                             <tr>
-                                <th style="width: 48px;"></th>
                                 <th>Code</th>
-                                <th>HUID</th>
                                 <th>Name</th>
                                 <th>Group</th>
                                 <th>Supplier</th>
                                 <th>Metal / Purity</th>
                                 <th>Weight</th>
                                 <th>Making</th>
-                                <th>Status</th>
+                                <th>Order No</th>
                                 <th class="text-end">Action</th>
                             </tr>
                         </thead>
@@ -101,18 +99,19 @@
                         params.status = $('#filter-status').val();
                     }
                 },
-                order: [[1, 'desc']],
+                // Code is column 0 now that the photo has gone.
+                order: [[0, 'desc']],
+                searchPlaceholder: 'Search code, HUID, name or order no…',
                 columns: [
-                    { data: 'photo', name: 'photo', orderable: false, searchable: false, className: 'text-center' },
                     { data: 'code', name: 'code' },
-                    { data: 'huid', name: 'huid' },
                     { data: 'name', name: 'name' },
                     { data: 'group', name: 'group' },
                     { data: 'supplier', name: 'supplier', orderable: false },
                     { data: 'metal', name: 'metal', orderable: false, searchable: false },
                     { data: 'weights', name: 'weights', searchable: false },
                     { data: 'making', name: 'making', orderable: false, searchable: false },
-                    { data: 'status', name: 'status', searchable: false },
+                    // Sorting this would need a join for little gain.
+                    { data: 'order_no', name: 'order_no', orderable: false, className: 'text-center' },
                     { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-end' }
                 ]
             });

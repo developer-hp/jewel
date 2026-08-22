@@ -163,8 +163,12 @@ Route::middleware('auth')->group(function () {
     // All above the resource so these are not swallowed by `items/{item}`.
     Route::get('items-lookup', [ItemController::class, 'lookup'])->name('items.lookup');
     Route::get('items/{item}/label', ItemLabelController::class)->name('items.label');
+    // `items-photos/bulk` first, so it is not read as an item id.
     Route::get('items-photos/bulk', [ItemPhotoController::class, 'bulk'])->name('items.photos.bulk');
     Route::post('items-photos/bulk', [ItemPhotoController::class, 'bulkStore'])->name('items.photos.bulk.store');
+    Route::get('items-photos', [ItemPhotoController::class, 'index'])->name('items.photos.index');
+    Route::get('items/{item}/photo', [ItemPhotoController::class, 'show'])->name('items.photo.show');
+    Route::get('items/{item}/photo/raw', [ItemPhotoController::class, 'raw'])->name('items.photo.raw');
     Route::post('items/{item}/photo', [ItemPhotoController::class, 'store'])->name('items.photo.store');
     Route::delete('items/{item}/photo', [ItemPhotoController::class, 'destroy'])->name('items.photo.destroy');
     Route::resource('items', ItemController::class);

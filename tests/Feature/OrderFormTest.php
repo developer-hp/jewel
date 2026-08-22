@@ -222,6 +222,27 @@ it('keeps the other charges figure exactly as it was typed', function () {
         ->and($line->stoneCharge())->toBe(500.0);
 });
 
+it('renders the add and edit screens, held lines and all', function () {
+    $piece = stockPiece();
+
+    $this->actingAs($this->admin)->get(route('order-forms.create'))
+        ->assertOk()
+        ->assertSee('Ref No')
+        ->assertSee('Fix Rate');
+
+    postOrder($this, [
+        orderLine(['source_item_id' => $piece->id, 'reserve' => '1']),
+        orderLine(['description' => 'To be made', 'made_to_order' => '1']),
+    ])->assertRedirect();
+
+    $this->actingAs($this->admin)->get(route('order-forms.edit', OrderForm::firstOrFail()))
+        ->assertOk()
+        ->assertSee($piece->code)
+        ->assertSee('To be made')
+        // The rate card only appears once something is held against a line.
+        ->assertSee('id="rate-card"', false);
+});
+
 // --- reserving a stock piece --------------------------------------------------------
 
 it('holds a stock piece against the order when the line is ticked', function () {
@@ -247,6 +268,44 @@ it('will not promise the same piece to two customers', function () {
 
     // The first order keeps it, and no second order was written.
     expect($piece->refresh()->order_form_line_id)->toBe(OrderFormLine::firstOrFail()->id);
+});
+
+it('shows the order a piece is held against on the items list', function () {
+    $held = stockPiece();
+    $free = stockPiece();
+
+    postOrder($this, [orderLine(['source_item_id' => $held->id, 'reserve' => '1'])])->assertRedirect();
+
+    $columns = ['code', 'name', 'group', 'supplier', 'order_no'];
+
+    $rows = collect($this->actingAs($this->admin)
+        ->getJson(route('items.index', dtParams($columns)))->json('data'))
+        ->keyBy(fn ($row) => strip_tags($row['code']));
+
+    expect($rows[$held->code]['order_no'])->toContain('CF 160')
+        ->and($rows[$held->code]['order_no'])->toContain(route('order-forms.edit', OrderForm::firstOrFail()))
+        // A piece nobody has spoken for shows nothing.
+        ->and(strip_tags($rows[$free->code]['order_no']))->toBe('—');
+});
+
+it('finds a held piece by its order number', function () {
+    $held = stockPiece();
+    stockPiece();
+
+    postOrder($this, [orderLine(['source_item_id' => $held->id, 'reserve' => '1'])])->assertRedirect();
+
+    $columns = ['code', 'name', 'group', 'supplier', 'order_no'];
+
+    // Typed with or without the prefix, it finds the one piece.
+    foreach (['CF 160', '160'] as $term) {
+        $response = $this->actingAs($this->admin)->getJson(route('items.index', dtParams(
+            $columns,
+            ['search' => ['value' => $term]],
+        )));
+
+        expect($response->json('recordsFiltered'))->toBe(1, "search term: {$term}")
+            ->and(strip_tags($response->json('data.0.code')))->toBe($held->code);
+    }
 });
 
 it('keeps a piece out of the stock picker once it is held', function () {

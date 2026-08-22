@@ -576,3 +576,27 @@ tr.order-stone-row > td {
     text-transform: uppercase;
     color: var(--ct-secondary-color);
 }
+
+/* ------------------------------------------------------------------ *
+ * Items listing: an inactive piece.
+ *
+ * The Status column was dropped, so the row itself has to carry the
+ * signal. Muted rather than coloured — inactive is an absence, not a
+ * state worth shouting about — and given its own dark value, since a
+ * light grey that reads on white disappears on the dark surface.
+ * ------------------------------------------------------------------ */
+.table > tbody > tr.row-inactive {
+    --ct-table-color: #8a8f98;
+}
+
+[data-bs-theme="dark"] .table > tbody > tr.row-inactive {
+    --ct-table-color: #6f757e;
+}
+
+/* The cell colour rules further up target `table td` directly, which beats
+   the row variable above; re-assert it for this row. */
+.table > tbody > tr.row-inactive > td,
+html[data-bs-theme=dark] .table > tbody > tr.row-inactive > td {
+    color: var(--ct-table-color);
+    font-style: italic;
+}

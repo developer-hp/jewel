@@ -53,6 +53,12 @@ return [
                         'can' => 'item.view',
                     ],
                     [
+                        'label' => 'Item Photos',
+                        'route' => 'items.photos.index',
+                        'active' => 'items.photos.*',
+                        'can' => 'item.view',
+                    ],
+                    [
                         'label' => 'Item Lots',
                         'route' => 'lots.index',
                         'active' => 'lots.*',
