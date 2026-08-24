@@ -1,7 +1,9 @@
 <?php
 
 use App\Models\MetalRate;
+use App\Models\OgEstimate;
 use App\Models\Purity;
+use App\Models\SalesPerson;
 use App\Models\User;
 use Database\Seeders\MasterDataSeeder;
 use Database\Seeders\RolePermissionSeeder;
@@ -17,17 +19,41 @@ beforeEach(function () {
     $this->admin->assignRole('Admin');
 });
 
-it('offers the button on both estimate forms, create and edit', function (string $route) {
+it('offers the button on the add form of both estimates', function (string $route) {
     $this->actingAs($this->admin)->get($route)
         ->assertOk()
-        ->assertSee("Today's Rates", false)
+        // Escaped by default, so the apostrophe is compared the way Blade wrote it.
+        ->assertSee("Today's Rates")
         ->assertSee('id="todaysRatesModal"', false)
         // Fetched on open, so a form left sitting open still shows current rates.
-        ->assertSee(route('rates.snapshot'), false);
+        ->assertSee('data-rates-url="'.route('rates.snapshot').'"', false);
 })->with([
     fn () => route('og-estimates.create'),
     fn () => route('item-estimates.create'),
 ]);
+
+it('offers it on the edit form too', function () {
+    // Edit as well as add: a rate gets looked up while correcting a saved estimate
+    // just as often as while typing a new one.
+    $person = SalesPerson::first() ?? SalesPerson::create(['name' => 'Counter']);
+
+    $this->actingAs($this->admin)->post(route('og-estimates.store'), [
+        'estimate_date' => today()->toDateString(),
+        'customer_name' => 'Ravibhai Bhalodiya',
+        'contact_no' => '9601263350',
+        'address' => 'Ahmedabad',
+        'sales_person_id' => $person->id,
+        'order_reference' => 'in',
+        'lines' => [['description' => 'Old chain', 'gross_weight' => 10, 'percent' => 90, 'rate' => 60000]],
+    ])->assertRedirect();
+
+    $estimate = OgEstimate::latest('id')->firstOrFail();
+
+    $this->actingAs($this->admin)->get(route('og-estimates.edit', $estimate))
+        ->assertOk()
+        ->assertSee("Today's Rates")
+        ->assertSee('id="todaysRatesModal"', false);
+});
 
 it('returns the rates fragment with the per-ten-gram figure spelt out', function () {
     $purity = Purity::with('metalType')->first();

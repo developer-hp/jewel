@@ -15,7 +15,8 @@
         <i class="ri-exchange-funds-fill"></i> {{ $label }}
     </button>
 
-    <div class="modal fade" id="todaysRatesModal" tabindex="-1" aria-labelledby="todaysRatesLabel" aria-hidden="true">
+    <div class="modal fade" id="todaysRatesModal" tabindex="-1" aria-labelledby="todaysRatesLabel" aria-hidden="true"
+        data-rates-url="{{ route('rates.snapshot') }}">
         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header py-2">
@@ -48,7 +49,7 @@
                     body.innerHTML = '<div class="text-center py-4 text-muted">'
                         + '<div class="spinner-border spinner-border-sm me-1" role="status"></div> Loading…</div>';
 
-                    $.get(@js(route('rates.snapshot')))
+                    $.get(modalEl.dataset.ratesUrl)
                         .done(function (html) {
                             body.innerHTML = html;
                         })
