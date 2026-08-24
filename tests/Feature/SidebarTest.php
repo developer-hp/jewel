@@ -119,7 +119,8 @@ it('groups the operational screens rather than listing them flat', function () {
     expect($byLabel->get('Stock')['children'] ?? null)->not->toBeNull()
         ->and(collect($byLabel['Stock']['children'])->pluck('label')->all())->toContain('Items', 'Item Lots')
         ->and(collect($byLabel['Repairs']['children'])->pluck('label')->all())->toBe(['Repair Forms', 'Repair Items'])
-        ->and(collect($byLabel['Dispatch']['children'])->pluck('label')->all())->toBe(['Angadiya', 'Hallmark']);
+        ->and(collect($byLabel['Dispatch']['children'])->pluck('label')->all())->toBe(['Angadiya', 'Hallmark'])
+        ->and(collect($byLabel['Estimates']['children'])->pluck('label')->all())->toBe(['OG Estimate', 'Item Estimate', 'Voucher']);
 });
 
 it('opens only the group holding the page being viewed', function (string $route, string $open) {
@@ -129,7 +130,10 @@ it('opens only the group holding the page being viewed', function (string $route
 
     expect($html)->toContain('<div class="collapse show" id="'.$id.'"');
 
-    foreach (['Stock', 'Repairs', 'Dispatch', 'Masters', 'Settings', 'Administration'] as $label) {
+    foreach ([
+        'Stock', 'Orders', 'Estimates', 'Repairs', 'Dispatch', 'Suppliers',
+        'Masters', 'Settings', 'Administration',
+    ] as $label) {
         if ($label === $open) {
             continue;
         }
@@ -138,6 +142,10 @@ it('opens only the group holding the page being viewed', function (string $route
     }
 })->with([
     ['items.index', 'Stock'],
+    ['order-forms.index', 'Orders'],
+    ['og-estimates.index', 'Estimates'],
+    ['item-estimates.index', 'Estimates'],
+    ['vouchers.index', 'Estimates'],
     ['lots.index', 'Stock'],
     ['repair-forms.index', 'Repairs'],
     ['angadiyas.index', 'Dispatch'],

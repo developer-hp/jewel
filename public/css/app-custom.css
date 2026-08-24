@@ -617,3 +617,47 @@ html[data-bs-theme=dark] .table > tbody > tr.row-inactive > td {
 html[data-bs-theme=dark] .table > tbody > tr.row-overdue > td {
     color: var(--ct-table-color);
 }
+
+/* ------------------------------------------------------------------ *
+ * Touch.
+ *
+ * The item estimate grid is nine columns of numeric inputs and it is
+ * used on a tablet. Scoped to `pointer: coarse` so the figures grow for
+ * a finger and the mouse layout stays exactly as compact as every other
+ * screen — one stylesheet, two comfortable answers, rather than a second
+ * layout to keep in step.
+ * ------------------------------------------------------------------ */
+@media (pointer: coarse) {
+    .estimate-grid .form-control,
+    .estimate-grid .form-select,
+    .est-stone .form-control,
+    .est-stone .form-select {
+        min-height: 44px;
+        font-size: 1rem;
+    }
+
+    .estimate-grid .btn-icon,
+    .estimate-grid .btn,
+    .est-stone .btn-icon {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .estimate-grid > tbody > tr > td {
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+    }
+
+    /* select2 renders its own box, which ignores the rules above. */
+    .estimate-grid .select2-container .select2-selection--single {
+        height: 44px;
+    }
+
+    .estimate-grid .select2-container .select2-selection--single .select2-selection__rendered {
+        line-height: 42px;
+    }
+
+    .estimate-grid .select2-container .select2-selection--single .select2-selection__arrow {
+        height: 42px;
+    }
+}

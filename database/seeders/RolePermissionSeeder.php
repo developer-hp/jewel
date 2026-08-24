@@ -39,6 +39,9 @@ class RolePermissionSeeder extends Seeder
         'hallmark' => ['view', 'create', 'edit', 'delete', 'print'],
         'supplier_hisab' => ['view', 'create', 'edit', 'delete', 'print'],
         'repair_form' => ['view', 'create', 'edit', 'delete', 'print'],
+        'og_estimate' => ['view', 'create', 'edit', 'delete', 'print'],
+        'voucher' => ['view', 'create', 'edit', 'delete', 'print'],
+        'item_estimate' => ['view', 'create', 'edit', 'delete', 'print'],
         'order_form' => ['view', 'create', 'edit', 'delete', 'print'],
         'supplier_order' => ['view', 'create', 'edit', 'delete', 'print'],
         'internal_stock_entry' => ['view', 'create', 'edit', 'delete', 'print'],
@@ -87,7 +90,8 @@ class RolePermissionSeeder extends Seeder
         $this->syncRole('Manager', array_merge(
             ['user.view'],
             $this->modulePermissions(...self::MASTER_MODULES),
-            $this->modulePermissions('item_lot', 'angadiya', 'hallmark', 'supplier_hisab', 'repair_form', 'order_form', 'supplier_order', 'internal_stock_entry', 'item', 'stock', 'customer'),
+            $this->modulePermissions('item_lot', 'angadiya', 'hallmark', 'supplier_hisab', 'repair_form', 'order_form', 'supplier_order', 'internal_stock_entry',
+                'og_estimate', 'voucher', 'item_estimate', 'item', 'stock', 'customer'),
             ['quotation.view', 'quotation.create', 'quotation.edit', 'quotation.approve', 'quotation.print'],
         ));
 
@@ -106,7 +110,11 @@ class RolePermissionSeeder extends Seeder
                 'supplier_order.view', 'supplier_order.create', 'supplier_order.print',
                 // Gold moves between pots at the counter all day; correcting the
                 // ledger afterwards is a manager's job.
-                'internal_stock_entry.view', 'internal_stock_entry.create', 'internal_stock_entry.print'],
+                'internal_stock_entry.view', 'internal_stock_entry.create', 'internal_stock_entry.print',
+                // Estimates and vouchers are written at the counter too.
+                'og_estimate.view', 'og_estimate.create', 'og_estimate.print',
+                'voucher.view', 'voucher.create', 'voucher.print',
+                'item_estimate.view', 'item_estimate.create', 'item_estimate.print'],
             // Sales reads the masters so quotation screens can resolve rates and names.
             array_map(fn (string $module) => "{$module}.view", self::MASTER_MODULES),
             $this->modulePermissions('customer'),

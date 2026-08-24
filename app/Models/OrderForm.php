@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasPhoto;
+use App\Services\OrderPricing;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -57,6 +58,47 @@ class OrderForm extends Model
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * Advances taken against this order.
+     */
+    public function vouchers(): HasMany
+    {
+        return $this->hasMany(Voucher::class)->orderBy('voucher_date')->orderBy('ref_no');
+    }
+
+    public function advancesPaid(): float
+    {
+        return round((float) $this->vouchers->sum('amount'), 2);
+    }
+
+    /**
+     * What the order is worth, and how much of it could be priced.
+     *
+     * Read through OrderPricing so the quotation, when it arrives, computes the same
+     * figure from the same place rather than restating the rule.
+     *
+     * @return object{value: float, priced: int, unpriced: int}
+     */
+    public function pricing(): object
+    {
+        return app(OrderPricing::class)->value($this);
+    }
+
+    /**
+     * Still to pay, or null while any line cannot be priced — an order missing a rate
+     * has no honest balance to show.
+     */
+    public function balance(): ?float
+    {
+        $pricing = $this->pricing();
+
+        if ($pricing->unpriced > 0) {
+            return null;
+        }
+
+        return round($pricing->value - $this->advancesPaid(), 2);
     }
 
     /**

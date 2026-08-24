@@ -6,12 +6,14 @@ use App\Http\Controllers\AppSettingController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EstimatePrintController;
 use App\Http\Controllers\HallmarkController;
 use App\Http\Controllers\HallmarkPrintController;
 use App\Http\Controllers\InternalStockController;
 use App\Http\Controllers\InternalStockEntryController;
 use App\Http\Controllers\InternalStockExportController;
 use App\Http\Controllers\ItemController;
+use App\Http\Controllers\ItemEstimateController;
 use App\Http\Controllers\ItemGroupController;
 use App\Http\Controllers\ItemLabelController;
 use App\Http\Controllers\ItemLotController;
@@ -21,6 +23,7 @@ use App\Http\Controllers\LotItemEntryController;
 use App\Http\Controllers\MakingChargeController;
 use App\Http\Controllers\MetalRateController;
 use App\Http\Controllers\MetalTypeController;
+use App\Http\Controllers\OgEstimateController;
 use App\Http\Controllers\OrderFormController;
 use App\Http\Controllers\OrderFormPrintController;
 use App\Http\Controllers\OrderItemController;
@@ -47,6 +50,7 @@ use App\Http\Controllers\SupplierOrderController;
 use App\Http\Controllers\SupplierOrderPrintController;
 use App\Http\Controllers\SupplierOrderScanController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\VoucherController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route(auth()->check() ? 'dashboard' : 'login'));
@@ -181,6 +185,23 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('order-types', OrderTypeController::class)->except('show')
         ->parameters(['order-types' => 'order_type']);
+
+    // Print sits above the resource, or `item-estimates/print` is read as an id.
+    Route::post('item-estimates/print', [EstimatePrintController::class, 'itemEstimates'])->name('item-estimates.print');
+    Route::get('item-estimates/from-order/{order_form}', [ItemEstimateController::class, 'fromOrder'])
+        ->name('item-estimates.from-order');
+    Route::resource('item-estimates', ItemEstimateController::class)->except('show')
+        ->parameters(['item-estimates' => 'item_estimate']);
+
+    // Print sits above each resource, or `og-estimates/print` is read as an id.
+    Route::post('og-estimates/print', [EstimatePrintController::class, 'estimates'])->name('og-estimates.print');
+    Route::post('og-estimates/{og_estimate}/copy', [OgEstimateController::class, 'copy'])->name('og-estimates.copy');
+    Route::resource('og-estimates', OgEstimateController::class)->except('show')
+        ->parameters(['og-estimates' => 'og_estimate']);
+
+    Route::post('vouchers/print', [EstimatePrintController::class, 'vouchers'])->name('vouchers.print');
+    Route::post('vouchers/{voucher}/copy', [VoucherController::class, 'copy'])->name('vouchers.copy');
+    Route::resource('vouchers', VoucherController::class)->except('show');
 
     // Rate, print and summary sit above the resource so `supplier-hisabs/print` is
     // not read as an entry id.

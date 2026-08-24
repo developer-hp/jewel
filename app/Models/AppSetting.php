@@ -26,6 +26,9 @@ use Illuminate\Support\Facades\Storage;
     'sidebar_user_bg_from', 'sidebar_user_bg_to', 'sidebar_user_text_color',
     'table_header_bg_light', 'table_header_bg_dark',
     'dashboard_hidden_sections', 'settings_cache_enabled',
+    'og_estimate_next_ref_no', 'og_estimate_ref_prefix',
+    'voucher_next_ref_no', 'voucher_ref_prefix',
+    'item_estimate_next_ref_no', 'item_estimate_ref_prefix', 'gst_percent',
 ])]
 class AppSetting extends Model
 {
@@ -64,6 +67,13 @@ class AppSetting extends Model
         // Raw values, so the json column takes its default as text.
         'dashboard_hidden_sections' => '[]',
         'settings_cache_enabled' => false,
+        'og_estimate_next_ref_no' => 1,
+        'og_estimate_ref_prefix' => '',
+        'voucher_next_ref_no' => 1,
+        'voucher_ref_prefix' => '',
+        'item_estimate_next_ref_no' => 1,
+        'item_estimate_ref_prefix' => '',
+        'gst_percent' => 3,
     ];
 
     /**
@@ -121,6 +131,10 @@ class AppSetting extends Model
             'idle_warning_seconds' => 'integer',
             'dashboard_hidden_sections' => 'array',
             'settings_cache_enabled' => 'boolean',
+            'og_estimate_next_ref_no' => 'integer',
+            'voucher_next_ref_no' => 'integer',
+            'item_estimate_next_ref_no' => 'integer',
+            'gst_percent' => 'decimal:2',
         ];
     }
 

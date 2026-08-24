@@ -109,6 +109,30 @@ return [
 
             // Customer goods in for repair, and the pieces coming back.
             [
+                'label' => 'Estimates',
+                'icon' => 'ri-file-paper-2-fill',
+                'children' => [
+                    [
+                        'label' => 'OG Estimate',
+                        'route' => 'og-estimates.index',
+                        'active' => 'og-estimates.*',
+                        'can' => 'og_estimate.view',
+                    ],
+                    [
+                        'label' => 'Item Estimate',
+                        'route' => 'item-estimates.index',
+                        'active' => 'item-estimates.*',
+                        'can' => 'item_estimate.view',
+                    ],
+                    [
+                        'label' => 'Voucher',
+                        'route' => 'vouchers.index',
+                        'active' => 'vouchers.*',
+                        'can' => 'voucher.view',
+                    ],
+                ],
+            ],
+            [
                 'label' => 'Repairs',
                 'icon' => 'ri-tools-fill',
                 'children' => [
