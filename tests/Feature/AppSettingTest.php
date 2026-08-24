@@ -1,8 +1,11 @@
 <?php
 
 use App\Models\AppSetting;
+use App\Models\ItemEstimate;
+use App\Models\OgEstimate;
 use App\Models\RepairForm;
 use App\Models\User;
+use App\Models\Voucher;
 use Database\Seeders\MasterDataSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Http\UploadedFile;
@@ -452,9 +455,9 @@ it('sets the prefix and counter for each estimate and the voucher', function () 
         ->and($settings->voucher_next_ref_no)->toBe(42);
 
     // Each counter is its own; setting one must not disturb the others.
-    expect(App\Models\OgEstimate::refPrefix())->toBe('OGE')
-        ->and(App\Models\ItemEstimate::refPrefix())->toBe('RE')
-        ->and(App\Models\Voucher::refPrefix())->toBe('VCH');
+    expect(OgEstimate::refPrefix())->toBe('OGE')
+        ->and(ItemEstimate::refPrefix())->toBe('RE')
+        ->and(Voucher::refPrefix())->toBe('VCH');
 });
 
 it('allows a blank prefix so the reference prints as a bare number', function () {
@@ -462,7 +465,7 @@ it('allows a blank prefix so the reference prints as a bare number', function ()
         'og_estimate_ref_prefix' => '',
     ]))->assertRedirect();
 
-    expect(App\Models\OgEstimate::refPrefix())->toBe('');
+    expect(OgEstimate::refPrefix())->toBe('');
 });
 
 it('rejects a prefix that is not plain letters and digits', function () {
@@ -494,4 +497,24 @@ it('shows all three on the appearance page', function () {
         ->assertSee('name="voucher_ref_prefix"', false)
         ->assertSee('name="voucher_next_ref_no"', false)
         ->assertSee('name="gst_percent"', false);
+});
+
+it('keeps a blank prefix as no prefix, and leaves a cleared counter alone', function () {
+    AppSetting::current()->update(['order_next_ref_no' => 160]);
+
+    // These columns are NOT NULL, and ConvertEmptyStringsToNull turns a cleared box
+    // into null on the way in — which used to reach the database as a 500.
+    $this->actingAs($this->admin)->put(route('app-settings.update'), appSettingPayload([
+        'og_estimate_ref_prefix' => '',
+        'order_next_ref_no' => '',
+        'gst_percent' => '',
+    ]))->assertRedirect();
+
+    $settings = AppSetting::current()->fresh();
+
+    // A blank prefix is a real choice: the reference prints as a bare number.
+    expect($settings->og_estimate_ref_prefix)->toBe('')
+        // A blank counter is not a choice at all, so the saved one stands.
+        ->and($settings->order_next_ref_no)->toBe(160)
+        ->and((float) $settings->gst_percent)->toBe(3.0);
 });

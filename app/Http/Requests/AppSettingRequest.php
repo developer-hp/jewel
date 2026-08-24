@@ -148,5 +148,38 @@ class AppSettingRequest extends FormRequest
                 $this->merge(["table_header_bg_{$mode}" => null]);
             }
         }
+
+        $this->normaliseNumbering();
+    }
+
+    /**
+     * Every prefix, counter and rate column is NOT NULL, but ConvertEmptyStringsToNull
+     * turns a cleared box into null on the way in — which reached the database as an
+     * error rather than as an answer.
+     *
+     * A blank prefix is a real choice: no prefix, so the reference prints as a bare
+     * number. A blank counter or GST rate is not a choice at all, so the key is dropped
+     * and whatever is saved stands, rather than a stray tab wiping a counter.
+     */
+    private function normaliseNumbering(): void
+    {
+        $prefixes = ['repair_ref_prefix', 'order_ref_prefix', 'og_estimate_ref_prefix',
+            'voucher_ref_prefix', 'item_estimate_ref_prefix'];
+
+        foreach ($prefixes as $field) {
+            if ($this->has($field) && blank($this->input($field))) {
+                $this->merge([$field => '']);
+            }
+        }
+
+        $numbers = ['repair_next_ref_no', 'order_next_ref_no', 'og_estimate_next_ref_no',
+            'voucher_next_ref_no', 'item_estimate_next_ref_no', 'supplier_order_next_form_no',
+            'gst_percent'];
+
+        foreach ($numbers as $field) {
+            if ($this->has($field) && blank($this->input($field))) {
+                $this->request->remove($field);
+            }
+        }
     }
 }

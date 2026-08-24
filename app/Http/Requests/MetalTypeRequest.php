@@ -24,6 +24,8 @@ class MetalTypeRequest extends FormRequest
             'code' => ['required', 'string', 'alpha_num', 'max:20', Rule::unique('metal_types', 'code')->ignore($id)->withoutTrashed()],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
             'is_active' => ['boolean'],
+            // Null means "use the default template".
+            'label_setting_id' => ['nullable', 'integer', 'exists:label_settings,id'],
         ];
     }
 

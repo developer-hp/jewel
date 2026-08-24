@@ -121,8 +121,13 @@ Route::middleware('auth')->group(function () {
     Route::get('app-settings', [AppSettingController::class, 'edit'])->name('app-settings.edit');
     Route::put('app-settings', [AppSettingController::class, 'update'])->name('app-settings.update');
 
-    Route::get('label-settings', [LabelSettingController::class, 'edit'])->name('label-settings.edit');
-    Route::put('label-settings', [LabelSettingController::class, 'update'])->name('label-settings.update');
+    // Above the resource, so neither path is swallowed by `label-settings/{label_setting}`.
+    Route::post('label-settings/{label_setting}/duplicate', [LabelSettingController::class, 'duplicate'])
+        ->name('label-settings.duplicate');
+    Route::post('label-settings/{label_setting}/default', [LabelSettingController::class, 'setDefault'])
+        ->name('label-settings.default');
+    Route::resource('label-settings', LabelSettingController::class)->except('show')
+        ->parameters(['label-settings' => 'label_setting']);
 
     Route::get('hallmarks/{hallmark}/print', HallmarkPrintController::class)->name('hallmarks.print');
     Route::resource('hallmarks', HallmarkController::class)->except('show');

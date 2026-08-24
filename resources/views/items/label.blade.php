@@ -1,8 +1,19 @@
+{{--
+    The tag shell. Which layout renders inside it is decided by ItemLabelBuilder,
+    which hands over $view — this file makes no decisions of its own.
+
+    dompdf constraints that everything below depends on:
+      * Tables only. There is no flexbox and no grid.
+      * Margins live on @page, not as padding on a wrapper: dompdf honours these
+        exactly, whereas box-sizing on a padded div is unreliable and pushed the tag
+        onto a second page.
+      * Every <img> needs display:block — inline images carry a descender gap that
+        also spilled the tag onto page two.
+      * Helvetica is a PDF core font, so nothing is embedded and the tag stays a few
+        KB instead of ~900 KB with DejaVu. It has no rupee glyph, which is why
+        amounts print bare.
+--}}
 @php
-    // Rows flow into up to three columns so a long tag stays readable and a short
-    // one wraps instead of clipping. Four lines is what 18 mm holds at ~6pt.
-    $perColumn = 4;
-    $columns = array_chunk($rows, $perColumn);
     $font = (float) $settings->font_size_pt;
     $margin = (float) $settings->margin_mm;
 @endphp
@@ -13,9 +24,6 @@
     <meta charset="utf-8">
     <title>{{ $code }}</title>
     <style>
-        /* Margins live on @page, not as padding on a wrapper: dompdf honours these
-           exactly, whereas box-sizing on a padded div is unreliable and pushed the
-           tag onto a second page. */
         @page {
             margin: {{ $margin }}mm;
         }
@@ -27,9 +35,6 @@
         }
 
         body {
-            /* Helvetica is a PDF core font, so nothing is embedded and the tag stays
-               a few KB instead of ~900 KB with DejaVu. It has no rupee glyph, which
-               is why amounts print bare. */
             font-family: Helvetica, Arial, sans-serif;
             font-size: {{ $font }}pt;
             line-height: 1.25;
@@ -51,18 +56,31 @@
             padding: 0;
         }
 
-        .identity {
+        .qr {
+            text-align: right;
+            width: {{ $qrSizeMm }}mm;
+        }
+
+        .qr img {
+            width: {{ $qrSizeMm }}mm;
+            height: {{ $qrSizeMm }}mm;
+            display: block;
+        }
+
+        /* --- standard ------------------------------------------------------ */
+
+        .std-identity {
             text-align: center;
             padding-right: 2mm;
             white-space: nowrap;
         }
 
-        .identity .code {
+        .std-identity .code {
             font-size: {{ $font + 3 }}pt;
             font-weight: bold;
         }
 
-        .identity .net {
+        .std-identity .net {
             font-size: {{ $font + 1 }}pt;
             font-weight: bold;
         }
@@ -93,53 +111,103 @@
             padding-right: 3mm;
         }
 
-        .qr {
-            text-align: right;
-            width: {{ $qrSizeMm }}mm;
+        /* --- stone detail --------------------------------------------------- */
+
+        /* Fixed layout, or dompdf widens on the longest amount and pushes the
+           right-hand block off the tag. */
+        table.sd-lines {
+            border-collapse: collapse;
+            table-layout: fixed;
+            width: 100%;
         }
 
-        .qr img {
-            width: {{ $qrSizeMm }}mm;
-            height: {{ $qrSizeMm }}mm;
-            /* Inline images carry a descender gap that pushes the tag onto a
-               second page at this height. Block removes it. */
-            display: block;
+        table.sd-lines td {
+            padding: 0 1mm 0 0;
+            white-space: nowrap;
+            font-size: {{ $font }}pt;
+        }
+
+        table.sd-lines td.c {
+            font-weight: bold;
+            width: 22%;
+        }
+
+        table.sd-lines td.w {
+            text-align: right;
+            width: 22%;
+        }
+
+        table.sd-lines td.p {
+            text-align: right;
+            width: 15%;
+        }
+
+        table.sd-lines td.r {
+            text-align: right;
+            width: 18%;
+        }
+
+        table.sd-lines td.a {
+            text-align: right;
+            width: 23%;
+        }
+
+        .sd-right {
+            text-align: center;
+            padding-left: 2mm;
+            width: 42%;
+        }
+
+        .sd-right .code {
+            font-size: {{ $font + 4 }}pt;
+            font-weight: bold;
+        }
+
+        .sd-right .line {
+            font-size: {{ $font + 1 }}pt;
+            font-weight: bold;
+        }
+
+        /* A long description has to wrap, not stretch the page box. */
+        .sd-right .desc {
+            font-size: {{ $font }}pt;
+            font-weight: bold;
+        }
+
+        /* --- diamond detail -------------------------------------------------- */
+
+        .dd-identity {
+            padding-right: 2mm;
+            white-space: nowrap;
+        }
+
+        .dd-identity .code {
+            font-size: {{ $font + 4 }}pt;
+            font-weight: bold;
+        }
+
+        .dd-identity .line {
+            font-size: {{ $font + 1 }}pt;
+            font-weight: bold;
+        }
+
+        table.dd-lines {
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        table.dd-lines td {
+            padding: 0 2mm 0 0;
+            white-space: nowrap;
+            font-weight: bold;
+            font-size: {{ $font }}pt;
         }
     </style>
 </head>
 
 <body>
     <div class="tag">
-        <table class="layout">
-            <tr>
-                <td class="identity">
-                    @if ($shopName)
-                        <div class="shop">{{ $shopName }}</div>
-                    @endif
-                    <div class="code">{{ $code }}</div>
-                    <div class="net">({{ $netWeight }})</div>
-                </td>
-
-                @foreach ($columns as $column)
-                    <td>
-                        <table class="fields">
-                            @foreach ($column as $row)
-                                <tr>
-                                    <td class="k">{{ $row['label'] }}:</td>
-                                    <td class="v">{{ $row['value'] }}</td>
-                                </tr>
-                            @endforeach
-                        </table>
-                    </td>
-                @endforeach
-
-                @if ($qr)
-                    <td class="qr">
-                        <img src="{{ $qr }}" alt="{{ $code }}">
-                    </td>
-                @endif
-            </tr>
-        </table>
+        @include($view)
     </div>
 </body>
 

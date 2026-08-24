@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\MetalTypeRequest;
+use App\Models\LabelSetting;
 use App\Models\MetalType;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -49,7 +51,10 @@ class MetalTypeController extends Controller implements HasMiddleware
 
     public function create(): View
     {
-        return view('metal-types.create', ['metalType' => new MetalType(['is_active' => true, 'sort_order' => 0])]);
+        return view('metal-types.create', [
+            'metalType' => new MetalType(['is_active' => true, 'sort_order' => 0]),
+            'labelSettings' => $this->labelSettingOptions(),
+        ]);
     }
 
     public function store(MetalTypeRequest $request): RedirectResponse
@@ -62,7 +67,10 @@ class MetalTypeController extends Controller implements HasMiddleware
 
     public function edit(MetalType $metalType): View
     {
-        return view('metal-types.edit', compact('metalType'));
+        return view('metal-types.edit', [
+            'metalType' => $metalType,
+            'labelSettings' => $this->labelSettingOptions(),
+        ]);
     }
 
     public function update(MetalTypeRequest $request, MetalType $metalType): RedirectResponse
@@ -88,5 +96,13 @@ class MetalTypeController extends Controller implements HasMiddleware
 
         return redirect()->route('metal-types.index')
             ->with('success', "Metal type \"{$name}\" has been deleted.");
+    }
+
+    /**
+     * @return Collection<int, string>
+     */
+    private function labelSettingOptions()
+    {
+        return LabelSetting::orderBy('name')->pluck('name', 'id');
     }
 }

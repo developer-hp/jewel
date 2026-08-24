@@ -290,8 +290,12 @@ return [
                         'can' => 'app_setting.view',
                     ],
                     [
-                        'label' => 'Label Settings',
-                        'route' => 'label-settings.edit',
+                        // Points at the listing, not at edit: since templates became
+                        // multiple, `label-settings.edit` needs a parameter, and the
+                        // menu renders on every page — a parameterless route() here
+                        // would throw site-wide.
+                        'label' => 'Label Templates',
+                        'route' => 'label-settings.index',
                         'active' => 'label-settings.*',
                         'can' => 'label_setting.view',
                     ],

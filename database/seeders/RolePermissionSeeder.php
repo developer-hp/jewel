@@ -32,7 +32,8 @@ class RolePermissionSeeder extends Seeder
         'sales_person' => ['view', 'create', 'edit', 'delete'],
         'order_type' => ['view', 'create', 'edit', 'delete'],
         'internal_stock' => ['view', 'create', 'edit', 'delete'],
-        'label_setting' => ['view', 'edit'],
+        // Templates are added and removed now, not just edited.
+        'label_setting' => ['view', 'create', 'edit', 'delete'],
         'app_setting' => ['view', 'edit'],
         'item_lot' => ['view', 'create', 'edit', 'delete'],
         'angadiya' => ['view', 'create', 'edit', 'delete', 'print'],

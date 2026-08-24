@@ -1,7 +1,7 @@
 @csrf
 
 <div class="row">
-    <div class="col-md-6 mb-3">
+    <div class="col-md-5 mb-3">
         <label for="name" class="form-label">Name <span class="text-danger">*</span></label>
         <input type="text" id="name" name="name" class="form-control @error('name') is-invalid @enderror"
             value="{{ old('name', $metalType->name) }}" placeholder="e.g. Gold, Antique (Jadtar)" required>
@@ -10,7 +10,7 @@
         @enderror
     </div>
 
-    <div class="col-md-3 mb-3">
+    <div class="col-md-2 mb-3">
         <label for="code" class="form-label">Code <span class="text-danger">*</span></label>
         <input type="text" id="code" name="code" class="form-control text-uppercase @error('code') is-invalid @enderror"
             value="{{ old('code', $metalType->code) }}" placeholder="GOLD" maxlength="20" required>
@@ -19,11 +19,28 @@
         @enderror
     </div>
 
-    <div class="col-md-3 mb-3">
+    <div class="col-md-2 mb-3">
         <label for="sort_order" class="form-label">Sort Order</label>
         <input type="number" id="sort_order" name="sort_order" class="form-control @error('sort_order') is-invalid @enderror"
             value="{{ old('sort_order', $metalType->sort_order ?? 0) }}" min="0">
         @error('sort_order')
+            <div class="invalid-feedback">{{ $message }}</div>
+        @enderror
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <label for="label_setting_id" class="form-label">Label Template</label>
+        <select id="label_setting_id" name="label_setting_id"
+            class="form-select @error('label_setting_id') is-invalid @enderror">
+            <option value="">Use the default template</option>
+            @foreach ($labelSettings as $id => $templateName)
+                <option value="{{ $id }}" @selected(old('label_setting_id', $metalType->label_setting_id) == $id)>
+                    {{ $templateName }}
+                </option>
+            @endforeach
+        </select>
+        <small class="text-muted">Every piece of this metal prints its tag from here.</small>
+        @error('label_setting_id')
             <div class="invalid-feedback">{{ $message }}</div>
         @enderror
     </div>
