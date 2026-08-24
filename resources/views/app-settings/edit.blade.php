@@ -607,6 +607,82 @@
                     </div>
                 </div>
                 <div class="row">
+                    <div class="col-lg-12">
+                        <div class="card">
+                            <div class="card-header py-2">
+                                <h5 class="mb-0">Estimates &amp; Vouchers</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    {{-- Three counters, kept apart on purpose: each
+                                         document numbers independently. --}}
+                                    @foreach ([
+                                        ['key' => 'og_estimate', 'title' => 'OG Estimate', 'placeholder' => 'OG'],
+                                        ['key' => 'item_estimate', 'title' => 'Rough Estimate', 'placeholder' => 'ES'],
+                                        ['key' => 'voucher', 'title' => 'Voucher', 'placeholder' => 'VC'],
+                                    ] as $doc)
+                                        @php($prefixField = $doc['key'] . '_ref_prefix')
+                                        @php($counterField = $doc['key'] . '_next_ref_no')
+
+                                        <div class="col-lg-4">
+                                            <div class="fw-semibold mb-2">{{ $doc['title'] }}</div>
+
+                                            <div class="row">
+                                                <div class="col-6 mb-3">
+                                                    <label for="{{ $prefixField }}" class="form-label">Prefix</label>
+                                                    <input type="text" id="{{ $prefixField }}" name="{{ $prefixField }}"
+                                                        class="form-control @error($prefixField) is-invalid @enderror"
+                                                        value="{{ old($prefixField, $settings->$prefixField) }}"
+                                                        maxlength="10" placeholder="{{ $doc['placeholder'] }}">
+                                                    <small class="text-muted">
+                                                        Prints as
+                                                        <code>{{ trim(($settings->$prefixField ?: '') . ' ' . $settings->$counterField) }}</code>.
+                                                        Leave blank for a bare number.
+                                                    </small>
+                                                    @error($prefixField)
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+
+                                                <div class="col-6 mb-3">
+                                                    <label for="{{ $counterField }}" class="form-label">Next no</label>
+                                                    <input type="number" min="1" id="{{ $counterField }}"
+                                                        name="{{ $counterField }}"
+                                                        class="form-control @error($counterField) is-invalid @enderror"
+                                                        value="{{ old($counterField, $settings->$counterField) }}">
+                                                    <small class="text-muted">
+                                                        Issued automatically. Set it to continue your existing
+                                                        numbering before the first entry.
+                                                    </small>
+                                                    @error($counterField)
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+
+                                    <div class="col-md-3 mb-3">
+                                        <label for="gst_percent" class="form-label">GST %</label>
+                                        <input type="number" step="0.01" min="0" max="100" id="gst_percent"
+                                            name="gst_percent"
+                                            class="form-control @error('gst_percent') is-invalid @enderror"
+                                            value="{{ old('gst_percent', $settings->gst_percent) }}">
+                                        <small class="text-muted">
+                                            Used when an estimate has GST ticked. Copied onto the estimate as it
+                                            is saved, so changing it never re-prices one already given.
+                                        </small>
+                                        @error('gst_percent')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
                     <div class="col-lg-6">
                         <div class="card">
                             <div class="card-header py-2">

@@ -49,6 +49,18 @@ class AppSettingRequest extends FormRequest
             'order_contact_no' => ['nullable', 'string', 'max:30'],
             'order_terms' => ['nullable', 'string', 'max:2000'],
 
+            'og_estimate_ref_prefix' => ['nullable', 'string', 'alpha_num', 'max:10'],
+            'og_estimate_next_ref_no' => ['nullable', 'integer', 'min:1', 'max:99999999'],
+
+            'voucher_ref_prefix' => ['nullable', 'string', 'alpha_num', 'max:10'],
+            'voucher_next_ref_no' => ['nullable', 'integer', 'min:1', 'max:99999999'],
+
+            'item_estimate_ref_prefix' => ['nullable', 'string', 'alpha_num', 'max:10'],
+            'item_estimate_next_ref_no' => ['nullable', 'integer', 'min:1', 'max:99999999'],
+            // Snapshotted onto each estimate when it is saved, so changing it here
+            // never rewrites a quote already given.
+            'gst_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
+
             'supplier_order_next_form_no' => ['nullable', 'integer', 'min:1', 'max:99999999'],
             'supplier_order_header' => ['nullable', 'string', 'max:150'],
 

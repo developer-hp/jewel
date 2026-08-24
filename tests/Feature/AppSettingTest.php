@@ -429,3 +429,69 @@ it('still issues counters from the database, not the cached copy', function () {
         ->and(RepairForm::nextRefNo())->toBe(206)
         ->and((int) AppSetting::current()->repair_next_ref_no)->toBe(207);
 });
+
+// --- estimate and voucher numbering ----------------------------------------------------
+
+it('sets the prefix and counter for each estimate and the voucher', function () {
+    $this->actingAs($this->admin)->put(route('app-settings.update'), appSettingPayload([
+        'og_estimate_ref_prefix' => 'OGE',
+        'og_estimate_next_ref_no' => 41,
+        'item_estimate_ref_prefix' => 'RE',
+        'item_estimate_next_ref_no' => 43,
+        'voucher_ref_prefix' => 'VCH',
+        'voucher_next_ref_no' => 42,
+    ]))->assertRedirect();
+
+    $settings = AppSetting::current()->fresh();
+
+    expect($settings->og_estimate_ref_prefix)->toBe('OGE')
+        ->and($settings->og_estimate_next_ref_no)->toBe(41)
+        ->and($settings->item_estimate_ref_prefix)->toBe('RE')
+        ->and($settings->item_estimate_next_ref_no)->toBe(43)
+        ->and($settings->voucher_ref_prefix)->toBe('VCH')
+        ->and($settings->voucher_next_ref_no)->toBe(42);
+
+    // Each counter is its own; setting one must not disturb the others.
+    expect(App\Models\OgEstimate::refPrefix())->toBe('OGE')
+        ->and(App\Models\ItemEstimate::refPrefix())->toBe('RE')
+        ->and(App\Models\Voucher::refPrefix())->toBe('VCH');
+});
+
+it('allows a blank prefix so the reference prints as a bare number', function () {
+    $this->actingAs($this->admin)->put(route('app-settings.update'), appSettingPayload([
+        'og_estimate_ref_prefix' => '',
+    ]))->assertRedirect();
+
+    expect(App\Models\OgEstimate::refPrefix())->toBe('');
+});
+
+it('rejects a prefix that is not plain letters and digits', function () {
+    $this->actingAs($this->admin)->put(route('app-settings.update'), appSettingPayload([
+        'voucher_ref_prefix' => 'VC-1/',
+    ]))->assertSessionHasErrors('voucher_ref_prefix');
+});
+
+it('sets the gst rate estimates snapshot from', function () {
+    $this->actingAs($this->admin)->put(route('app-settings.update'), appSettingPayload([
+        'gst_percent' => '5',
+    ]))->assertRedirect();
+
+    expect((float) AppSetting::current()->fresh()->gst_percent)->toBe(5.0);
+
+    $this->actingAs($this->admin)->put(route('app-settings.update'), appSettingPayload([
+        'gst_percent' => '101',
+    ]))->assertSessionHasErrors('gst_percent');
+});
+
+it('shows all three on the appearance page', function () {
+    $this->actingAs($this->admin)->get(route('app-settings.edit'))
+        ->assertOk()
+        ->assertSee('Estimates &amp; Vouchers', false)
+        ->assertSee('name="og_estimate_ref_prefix"', false)
+        ->assertSee('name="og_estimate_next_ref_no"', false)
+        ->assertSee('name="item_estimate_ref_prefix"', false)
+        ->assertSee('name="item_estimate_next_ref_no"', false)
+        ->assertSee('name="voucher_ref_prefix"', false)
+        ->assertSee('name="voucher_next_ref_no"', false)
+        ->assertSee('name="gst_percent"', false);
+});

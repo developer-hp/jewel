@@ -44,7 +44,13 @@ it('offers it on the edit form too', function () {
         'address' => 'Ahmedabad',
         'sales_person_id' => $person->id,
         'order_reference' => 'in',
-        'lines' => [['description' => 'Old chain', 'gross_weight' => 10, 'percent' => 90, 'rate' => 60000]],
+        'lines' => [[
+            'description' => 'Old chain',
+            'gross_weight' => '10',
+            'net_weight' => '10',
+            'touch_percent' => '91.6',
+            'rate' => '150000',
+        ]],
     ])->assertRedirect();
 
     $estimate = OgEstimate::latest('id')->firstOrFail();
