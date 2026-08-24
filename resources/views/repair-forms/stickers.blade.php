@@ -16,7 +16,6 @@
         .sticker {
             page-break-inside: avoid;
             margin-bottom: 10mm;
-            width: 95mm;
         }
 
         .ref {
@@ -29,12 +28,6 @@
             font-size: 15px;
             font-weight: bold;
             line-height: 1.35;
-        }
-
-        table.items {
-            width: 95mm;
-            table-layout: fixed;
-            margin-top: 2mm;
         }
     </style>
 @endsection
@@ -50,11 +43,11 @@
                 Delivery Date : {{ $form->delivery_date->format('d-m-Y') }}
             </div>
 
-            <table class="pdf-table pd2 items font12">
+            <table class="pdf-table pd2 items font12 mt10">
                 <thead>
                     <tr>
-                        <th style="width: 30mm" class="text-center">Items</th>
-                        <th style="width: 18mm" class="text-center">Ready</th>
+                        <th style="width: 20mm" class="text-center">Items</th>
+                        <th style="width: 10mm" class="text-center">Ready</th>
                         <th class="text-center">Remarks</th>
                     </tr>
                 </thead>

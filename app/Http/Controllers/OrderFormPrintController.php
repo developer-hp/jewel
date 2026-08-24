@@ -43,7 +43,7 @@ class OrderFormPrintController extends Controller implements HasMiddleware
                 'website' => (string) ($settings->firm_website ?? ''),
             ],
             'terms' => $this->termLines($settings->order_terms),
-        ])->setPaper('a4', 'portrait')
+        ])->setPaper(['a4'], 'portrait')
             ->stream('order-'.now()->format('Y-m-d-His').'.pdf', ['Attachment' => false]);
     }
 
@@ -82,7 +82,7 @@ class OrderFormPrintController extends Controller implements HasMiddleware
     private function stickerPdf($forms): Response
     {
         return Pdf::loadView('order-forms.stickers', ['forms' => $forms])
-            ->setPaper('a4', 'portrait')
+            ->setPaper([0,0,105*2.83465,160*2.83465])
             ->stream('order-stickers-'.now()->format('Y-m-d-His').'.pdf', ['Attachment' => false]);
     }
 

@@ -59,7 +59,7 @@ class RepairFormPrintController extends Controller implements HasMiddleware
         }
 
         return Pdf::loadView('repair-forms.stickers', ['forms' => $forms])
-            ->setPaper('a4', 'portrait')
+            ->setPaper([0,0,105*2.83465,160*2.83465])
             ->stream('repair-stickers-'.now()->format('Y-m-d-His').'.pdf', ['Attachment' => false]);
     }
 

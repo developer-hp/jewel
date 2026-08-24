@@ -136,6 +136,27 @@ it('reads labour through its type', function (string $type, string $amount, floa
     ['fixed', '2500', 2500.0],
 ]);
 
+it('itemises other charges so the printed breakdown adds up', function () {
+    postEstimate2($this, [estLine(['oc_amount' => '5000', 'stones' => estStones($this)])])->assertRedirect();
+
+    $line = ItemEstimateLine::with('stones')->firstOrFail();
+
+    // The breakdown under the item lists the stones AND the other charges, so what it
+    // totals plus metal plus labour is exactly the line total. Leaving OC out of the
+    // list was what stopped the printed column reconciling.
+    expect($line->charges())->toBe(85574.0)
+        ->and($line->charges() + $line->metalValue() + $line->labour())->toBe($line->total());
+
+    $html = view('item-estimates.print', [
+        'estimates' => ItemEstimate::with(['lines.stones', 'lines.item', 'ogEstimate'])->get(),
+        'firm' => ['name' => '', 'phone' => ''],
+    ])->render();
+
+    expect($html)->toContain('>OC</td>')
+        // The column footer totals the same set it lists.
+        ->and($html)->toContain('TOTAL : '.number_format(85574, 0));
+});
+
 // --- the printed box ----------------------------------------------------------------------
 
 it('lands the round-off on the final figure, after GST', function () {

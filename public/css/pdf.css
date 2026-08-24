@@ -18,6 +18,7 @@ background: #cdcdcd;
 
 .pdf-table{
     border-collapse: collapse !important;
+    width: 100%;
 }
 .pdf-table.pd1 td,
 .pdf-table.pd1 th{
@@ -112,4 +113,10 @@ table .no-border{
 }
 .text-red{
 	color: red;
+}
+.mt5{
+	margin-top: 5px;
+}
+.mt10{
+	margin-top: 10px;
 }
