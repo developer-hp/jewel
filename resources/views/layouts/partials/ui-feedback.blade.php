@@ -90,7 +90,6 @@
                     showCancelButton: true,
                     confirmButtonText: 'Yes, delete it',
                     cancelButtonText: 'Cancel',
-                    confirmButtonColor: '#f1556c',
                     reverseButtons: true,
                 }).then(function (result) {
                     if (!result.isConfirmed) {
@@ -130,6 +129,43 @@
             $(document).on('click', '[data-delete-url]', function (e) {
                 e.preventDefault();
                 confirmThenDelete($(this));
+            });
+
+            // --- forms that ask first --------------------------------------------
+            // Not every confirmation is a listing delete — removing a photo, marking
+            // an order received. Those still post and reload the page as before; only
+            // the question they ask goes through the same dialog, so the app never
+            // shows two different kinds of confirmation.
+            $(document).on('submit', 'form[data-confirm]', function (e) {
+                var form = this;
+                var $form = $(form);
+
+                if ($form.data('confirmed')) {
+                    return;
+                }
+
+                e.preventDefault();
+
+                if (typeof window.Swal === 'undefined') {
+                    console.error('SweetAlert2 is not loaded — submit cancelled.');
+                    window.appToast('error', 'Cannot confirm that. SweetAlert2 is missing.');
+
+                    return;
+                }
+
+                window.Swal.fire({
+                    title: $form.data('confirm'),
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, go ahead',
+                    cancelButtonText: 'Cancel',
+                    reverseButtons: true,
+                }).then(function (result) {
+                    if (result.isConfirmed) {
+                        $form.data('confirmed', true);
+                        form.submit();
+                    }
+                });
             });
         })(window.jQuery);
     </script>

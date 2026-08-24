@@ -9,7 +9,7 @@
     @can('supplier_order.edit')
         @unless ($order->isReceived())
             <form action="{{ route('supplier-orders.received', $order) }}" method="POST"
-                onsubmit="return confirm(@js('Mark order '.$order->form_no.' as received?'));">
+                data-confirm="{{ 'Mark order '.$order->form_no.' as received?' }}">
                 @csrf
                 <button type="submit" class="btn btn-sm btn-success btn-icon" title="The goods came back">
                     <i class="ri-check-line"></i>

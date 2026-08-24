@@ -663,30 +663,101 @@ html[data-bs-theme=dark] .table > tbody > tr.row-overdue > td {
 }
 
 /* --------------------------------------------------------------------------
-   SweetAlert2 delete confirmation
+   SweetAlert2 confirmations
 
-   The library ships one light palette of its own. These pull it onto the
-   theme's Bootstrap variables so the dialog follows the colour mode instead
-   of flashing white over a dark page.
+   Two things to know about this block.
+
+   The theme prefixes its Bootstrap variables --ct-, not --bs-, so --bs-body-bg
+   and friends do not exist here; used anyway they compute to the initial value,
+   which is how a "white" dialog came out fully transparent.
+
+   And sweetalert2.all.min.js injects its own stylesheet into <head> at runtime,
+   after this file loads, so a plain .swal2-popup would lose the tie. The extra
+   .swal2-container qualifier takes the specificity instead of !important.
    -------------------------------------------------------------------------- */
-.swal2-popup {
-    background: var(--bs-body-bg);
-    color: var(--bs-body-color);
-    border: 1px solid var(--bs-border-color);
-    border-radius: var(--bs-border-radius-lg, 0.5rem);
+.swal2-container .swal2-popup {
+    background: var(--ct-secondary-bg);
+    color: var(--ct-body-color);
+    border: 1px solid var(--ct-border-color);
+    border-radius: var(--ct-border-radius-lg);
     font-family: inherit;
 }
 
-.swal2-popup .swal2-title,
-.swal2-popup .swal2-html-container {
-    color: var(--bs-body-color);
+.swal2-container .swal2-title {
+    color: var(--ct-emphasis-color);
+    font-size: 1.125rem;
+    font-weight: 600;
 }
 
-.swal2-popup .swal2-actions button {
+.swal2-container .swal2-html-container {
+    color: var(--ct-body-color);
+    font-size: 0.875rem;
+}
+
+.swal2-container .swal2-actions button {
     box-shadow: none;
+    border-radius: var(--ct-border-radius);
+    font-size: 0.875rem;
+    padding: 0.45rem 1.1rem;
 }
 
-.swal2-popup .swal2-cancel {
-    background: var(--bs-secondary-bg);
-    color: var(--bs-body-color);
+.swal2-container .swal2-confirm {
+    background: var(--ct-danger);
+    color: #fff;
+}
+
+.swal2-container .swal2-cancel {
+    background: var(--ct-tertiary-bg);
+    color: var(--ct-body-color);
+    border: 1px solid var(--ct-border-color);
+}
+
+.swal2-container .swal2-icon.swal2-warning {
+    border-color: var(--ct-warning);
+    color: var(--ct-warning);
+}
+
+/* --------------------------------------------------------------------------
+   Toasts
+
+   jquery-toast-plugin ships Bootstrap-3 colours of its own (#3c763d green,
+   #a94442 red), which read as a different palette next to the theme. These pull
+   each variant onto the theme variable it is meant to be; the plugin stylesheet
+   is a <link> in the css stack, which this file loads after, so plain class
+   selectors are enough to win.
+   -------------------------------------------------------------------------- */
+.jq-toast-single {
+    font-family: inherit;
+    border-radius: var(--ct-border-radius);
+    padding: 12px 14px 12px 50px;
+}
+
+.jq-toast-single h2 {
+    font-family: inherit;
+    font-size: 0.9375rem;
+}
+
+.jq-icon-success {
+    background-color: var(--ct-success);
+    border-color: var(--ct-success);
+    color: #fff;
+}
+
+.jq-icon-error {
+    background-color: var(--ct-danger);
+    border-color: var(--ct-danger);
+    color: #fff;
+}
+
+.jq-icon-info {
+    background-color: var(--ct-info);
+    border-color: var(--ct-info);
+    color: #fff;
+}
+
+.jq-icon-warning {
+    background-color: var(--ct-warning);
+    border-color: var(--ct-warning);
+    /* Amber is a light ground; white text on it is unreadable. */
+    color: #23272b;
 }

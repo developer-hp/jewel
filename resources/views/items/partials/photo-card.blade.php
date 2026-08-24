@@ -36,8 +36,10 @@
                 </form>
 
                 @if ($item->hasPhoto())
+                    {{-- Posts and reloads as before; only the question goes through
+                         the shared dialog. --}}
                     <form action="{{ route('items.photo.destroy', $item) }}" method="POST"
-                        onsubmit="return confirm('Remove the photo from {{ $item->code }}?');">
+                        data-confirm="Remove the photo from {{ $item->code }}?">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn btn-sm btn-danger w-100">
