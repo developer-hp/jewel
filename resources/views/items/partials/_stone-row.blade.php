@@ -27,7 +27,12 @@
         </select>
     </td>
     <td>
-        <input type="number" min="0" step="1" class="form-control form-control-sm stone-pieces"
+        {{-- whole-number, because step="1" alone is not enough: these rows sit in a
+             closed modal, and a browser skips constraint validation on a control it
+             cannot focus. A carat typed into this box then reached the server and
+             came back as "stones.0.pieces must be an integer" — an error naming a row
+             the user could not see. --}}
+        <input type="number" min="0" step="1" class="form-control form-control-sm stone-pieces whole-number"
             name="stones[{{ $index }}][pieces]" value="{{ $row->pieces ?? 0 }}">
     </td>
     {{-- Carat and gram are two views of the same weight; typing in either fills the

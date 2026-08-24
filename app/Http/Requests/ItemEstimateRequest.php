@@ -47,6 +47,7 @@ class ItemEstimateRequest extends FormRequest
             'lines.*.stones.*.pieces' => ['nullable', 'integer', 'min:0', 'max:100000'],
             'lines.*.stones.*.weight_grams' => ['nullable', 'numeric', 'min:0', 'max:99999.999'],
             'lines.*.stones.*.rate' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
+            'lines.*.stones.*.deduct_from_gross' => ['boolean'],
         ];
     }
 
@@ -72,6 +73,14 @@ class ItemEstimateRequest extends FormRequest
             ->map(function ($row, $i) {
                 $stones = collect($row['stones'] ?? [])
                     ->reject(fn ($stone) => blank($stone['stone_master_id'] ?? null))
+                    // The checkbox posts alongside a hidden 0, so this is where it
+                    // becomes a real boolean. A row arriving without the key at all
+                    // — seeded by script, say — deducts, as it always has.
+                    ->map(fn (array $stone) => array_replace($stone, [
+                        'deduct_from_gross' => filter_var(
+                            $stone['deduct_from_gross'] ?? true, FILTER_VALIDATE_BOOL
+                        ),
+                    ]))
                     ->values()
                     ->all();
 

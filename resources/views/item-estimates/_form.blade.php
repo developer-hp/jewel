@@ -247,7 +247,7 @@
 
 {{-- Full screen on smaller glass, so a thumb has room. --}}
 <div class="modal fade" id="stone-modal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-fullscreen-md-down">
+    <div class="modal-dialog modal-xl modal-fullscreen-md-down">
         <div class="modal-content">
             <div class="modal-header py-2">
                 <h5 class="modal-title">Stones &amp; Diamonds</h5>
@@ -360,14 +360,36 @@
 
                     $stone.find('.est-stone-master').val(stone.stone_master_id);
                     $stone.find('.est-stone-grams').val(stone.weight_grams || '');
+                    $stone.find('.est-stone-carat').val(
+                        stone.weight_grams ? (stone.weight_grams / CARAT_TO_GRAM).toFixed(3) : ''
+                    );
                     $stone.find('.est-stone-pieces').val(stone.pieces || '');
                     $stone.find('.est-stone-rate').val(stone.rate || '');
+                    // The piece's own answer to "does this come out of the gross".
+                    $stone.find('.est-stone-deduct').prop('checked', !!stone.deduct_from_gross);
 
                     $store.append($stone);
                 });
 
                 recalcStones($store);
             }
+
+            // Carat is what the trade quotes; grams is what the schema stores.
+            const CARAT_TO_GRAM = 0.2;
+
+            // Typing in either box fills the other. Only grams carries a name, so the
+            // posted shape is unchanged and the server still derives carat from it.
+            $(document).on('input', '.est-stone-carat', function () {
+                const carat = parseFloat($(this).val());
+                $(this).closest('.est-stone').find('.est-stone-grams')
+                    .val(isNaN(carat) ? '' : (carat * CARAT_TO_GRAM).toFixed(4));
+            });
+
+            $(document).on('input', '.est-stone-grams', function () {
+                const grams = parseFloat($(this).val());
+                $(this).closest('.est-stone').find('.est-stone-carat')
+                    .val(isNaN(grams) ? '' : (grams / CARAT_TO_GRAM).toFixed(3));
+            });
 
             // --- stone arithmetic, mirroring ItemCalculator::lineAmount() -----------
             function stoneAmount($stone) {
@@ -394,7 +416,10 @@
             }
 
             function recalcStones($store) {
-                let weight = 0, amount = 0;
+                // deducted is what comes off the gross; total is every stone on the
+                // piece. The footer shows both, and they differ whenever a stone is
+                // set not to deduct.
+                let deducted = 0, total = 0, amount = 0;
 
                 $store.find('.est-stone').each(function () {
                     const $stone = $(this);
@@ -402,16 +427,25 @@
 
                     $stone.find('.est-stone-amount').val(a ? a.toFixed(0) : '');
 
-                    weight += parseFloat($stone.find('.est-stone-grams').val()) || 0;
+                    // A stone the piece does not deduct must not shrink the net
+                    // weight here either — ItemCalculator::deductibleGrams() filters
+                    // the same way.
+                    const grams = parseFloat($stone.find('.est-stone-grams').val()) || 0;
+                    total += grams;
+
+                    if ($stone.find('.est-stone-deduct').is(':checked')) {
+                        deducted += grams;
+                    }
+
                     amount += a;
                 });
 
                 const $row = $store.closest('tr');
 
                 $row.find('.est-jadtar').val(amount ? amount.toFixed(0) : '');
-                $row.data('stone-weight', weight);
+                $row.data('stone-weight', deducted);
 
-                return { weight: weight, amount: amount };
+                return { weight: deducted, total: total, amount: amount };
             }
 
             // --- the grid ----------------------------------------------------------
@@ -495,10 +529,10 @@
                 }
 
                 const $store = $('#stone-modal-body .est-stone-store');
-                const { weight } = recalcStones($store);
+                const { weight, total } = recalcStones($store);
                 const gross = parseFloat($activeRow.find('.est-gross').val()) || 0;
 
-                $('#stone-total-weight').text(weight.toFixed(3));
+                $('#stone-total-weight').text(total.toFixed(3));
                 $('#stone-net-weight').text((Math.round((gross - weight) * 1000) / 1000).toFixed(3));
             }
 
@@ -506,6 +540,10 @@
                 if ($activeRow) {
                     // Back into its own row, so it saves with the form.
                     $activeRow.find('td').last().append($('#stone-modal-body .est-stone-store'));
+                    // Only now can recalcStones reach the <tr> to write stone-weight
+                    // onto it — while the popup was open the store was detached, so
+                    // everything edited in there is still missing from the grid.
+                    recalcStones($activeRow.find('.est-stone-store'));
                     $activeRow = null;
                 }
 

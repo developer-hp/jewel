@@ -51,6 +51,20 @@ class ItemRequest extends FormRequest
         ];
     }
 
+    /**
+     * The stone rows live in a closed modal, so "stones.0.pieces" names something the
+     * user cannot see. Spell the field out instead.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'stones.*.pieces.integer' => 'A stone or diamond row has a piece count that is not a whole number.',
+            'stones.*.stone_master_id.required' => 'A stone or diamond row has no style selected.',
+        ];
+    }
+
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {

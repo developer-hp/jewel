@@ -3,6 +3,8 @@
 use App\Models\Item;
 use App\Models\ItemGroup;
 use App\Models\LabelSetting;
+use App\Models\MakingCharge;
+use App\Models\MetalType;
 use App\Models\Purity;
 use App\Models\StoneMaster;
 use App\Models\User;
@@ -239,4 +241,212 @@ it('lets a sales user print but not a user without the permission', function () 
 
     $nobody = User::factory()->create();
     $this->actingAs($nobody)->get(route('items.label', $item))->assertForbidden();
+});
+
+// --- which template a tag prints with -------------------------------------------------
+
+it('prints with the template attached to the item metal type', function () {
+    LabelSetting::default();
+
+    $template = LabelSetting::create([
+        'name' => 'Diamond Tag',
+        'layout' => LabelSetting::LAYOUT_DIAMOND_DETAIL,
+        'tag_width_mm' => 110,
+        'tag_height_mm' => 30,
+    ]);
+
+    $diamondMetal = MetalType::where('code', 'DIAM')->firstOrFail();
+    $diamondMetal->update(['label_setting_id' => $template->id]);
+
+    $item = makeLabelItem(['metal_type_id' => $diamondMetal->id, 'purity_id' => null]);
+
+    expect($this->builder->build($item)['layout'])->toBe(LabelSetting::LAYOUT_DIAMOND_DETAIL);
+
+    // The controller sets the paper box separately from the builder, so the streamed
+    // size proves it resolved the same template.
+    $pdf = $this->actingAs($this->admin)->get(route('items.label', $item))->getContent();
+
+    // 110 x 30 mm in points.
+    expect($pdf)->toContain('MediaBox [0.000 0.000 311.810 85.040]');
+});
+
+it('falls back to the default template when the metal type has none', function () {
+    $default = LabelSetting::default();
+    $item = makeLabelItem();
+
+    expect($item->metalType->label_setting_id)->toBeNull();
+
+    $built = $this->builder->build($item);
+
+    expect($built['layout'])->toBe(LabelSetting::LAYOUT_STANDARD)
+        ->and($built['settings']->id)->toBe($default->id);
+});
+
+// --- stone detail ----------------------------------------------------------------------
+
+/**
+ * The tag from the supplied sample: a piece-rated stone at 113 x 230, a carat-rated
+ * one at 4.270 x 1250, and two extra charges — which OC has to total.
+ */
+function stoneDetailItem(): Item
+{
+    $pearl = StoneMaster::where('code', 'ST-PERL')->firstOrFail();
+    $ruby = StoneMaster::where('code', 'ST-RUBY')->firstOrFail();
+
+    return makeLabelItem([
+        'gross_weight' => 69.120,
+        'extra_charge_1' => 2825,
+        'extra_charge_1_label' => 'RDO',
+        'extra_charge_2' => 1000,
+        'extra_charge_2_label' => 'FT',
+    ], [
+        ['stone_master_id' => $pearl->id, 'pieces' => 113, 'weight_carat' => 12.680,
+            'rate' => 230, 'deduct_from_gross' => false],
+        ['stone_master_id' => $ruby->id, 'pieces' => 0, 'weight_carat' => 4.270,
+            'rate' => 1250, 'deduct_from_gross' => false],
+    ]);
+}
+
+function stoneTemplate(array $overrides = []): LabelSetting
+{
+    return LabelSetting::create(array_merge([
+        'name' => 'Jadtar Tag',
+        'layout' => LabelSetting::LAYOUT_STONE_DETAIL,
+        'tag_width_mm' => 110,
+        'tag_height_mm' => 32,
+    ], $overrides));
+}
+
+it('prints a row per stone, and oc totals the column', function () {
+    $built = $this->builder->build(stoneDetailItem(), stoneTemplate());
+
+    expect($built['stoneRows'])->toHaveCount(2)
+        ->and($built['stoneRows'][0])->toMatchArray([
+            'code' => 'ST-PERL', 'weight' => '12.680', 'pieces' => '113',
+            'rate' => '230', 'amount' => '25,990',
+        ])
+        ->and($built['stoneRows'][1]['amount'])->toBe('5,338')
+        ->and($built['chargeRows'])->toBe([
+            ['label' => 'RDO', 'amount' => '2,825'],
+            ['label' => 'FT', 'amount' => '1,000'],
+        ])
+        // 25990 + 5337.5 + 2825 + 1000, to the rupee. The printed column has to add
+        // up to this or the tag is lying about the piece.
+        ->and($built['ocAmount'])->toBe('35,153');
+});
+
+it('leaves the pieces column blank on a stone that was only weighed', function () {
+    $built = $this->builder->build(stoneDetailItem(), stoneTemplate());
+
+    expect($built['stoneRows'][1]['pieces'])->toBe('')
+        ->and($built['stoneRows'][1]['weight'])->toBe('4.270');
+});
+
+it('collapses the stones past the cap into one row that still adds up', function () {
+    $ruby = StoneMaster::where('code', 'ST-RUBY')->firstOrFail();
+
+    $stones = [];
+
+    for ($i = 0; $i < 6; $i++) {
+        $stones[] = ['stone_master_id' => $ruby->id, 'pieces' => 0, 'weight_carat' => 1,
+            'rate' => 1000, 'deduct_from_gross' => false];
+    }
+
+    $item = makeLabelItem(['gross_weight' => 50], $stones);
+    $built = $this->builder->build($item, stoneTemplate(['max_stone_rows' => 3]));
+
+    // Two real rows plus the OTH line carrying the other four.
+    expect($built['stoneRows'])->toHaveCount(3)
+        ->and($built['stoneRows'][2]['code'])->toBe('OTH')
+        ->and($built['stoneRows'][2]['pieces'])->toBe('4 items')
+        ->and($built['stoneRows'][2]['amount'])->toBe('4,000')
+        ->and($built['ocAmount'])->toBe('6,000');
+
+    $printed = collect($built['stoneRows'])->sum(fn ($r) => (float) str_replace(',', '', $r['amount']));
+
+    expect($printed)->toBe(6000.0);
+});
+
+it('omits oc when the template turns it off', function () {
+    $built = $this->builder->build(stoneDetailItem(), stoneTemplate(['show_oc' => false]));
+
+    expect($built['ocAmount'])->toBeNull();
+});
+
+// --- diamond detail ---------------------------------------------------------------------
+
+it('prints a sieve and a detail group per diamond', function () {
+    $princess = StoneMaster::where('code', 'DI-PRVS')->firstOrFail();
+    $round = StoneMaster::where('code', 'DI-RBSI')->firstOrFail();
+
+    $item = makeLabelItem(['gross_weight' => 5], [
+        ['stone_master_id' => $princess->id, 'pieces' => 7, 'weight_carat' => 0.300,
+            'rate' => 92000, 'deduct_from_gross' => false],
+        ['stone_master_id' => $round->id, 'pieces' => 1, 'weight_carat' => 0.040,
+            'rate' => 87000, 'deduct_from_gross' => false],
+    ]);
+
+    $built = $this->builder->build($item, LabelSetting::create([
+        'name' => 'Diamond Tag',
+        'layout' => LabelSetting::LAYOUT_DIAMOND_DETAIL,
+        'tag_height_mm' => 30,
+    ]));
+
+    // The sieve reads weight-pieces with the trailing zeros trimmed: 0.300 -> 0.3.
+    expect($built['sieves'])->toBe(['0.3-7', '0.04-1'])
+        ->and($built['diamondRows'][0])->toMatchArray([
+            'dw' => '0.300', 'dr' => '92,000', 'ds' => 'PRINCESS',
+        ])
+        ->and($built['diamondRows'][1]['ds'])->toBe('ROUND')
+        // One entry each, off the same collection, so the halves cannot drift.
+        ->and($built['diamondRows'])->toHaveCount(count($built['sieves']));
+});
+
+// --- the LB field --------------------------------------------------------------------------
+
+it('prints the making charge code, falling back to its rate', function () {
+    $coded = MakingCharge::create([
+        'code' => 'P', 'name' => 'Polish rate', 'charge_type' => 'per_gram', 'rate' => 350,
+    ]);
+
+    $uncoded = MakingCharge::create([
+        'code' => null, 'name' => 'Flat labour', 'charge_type' => 'per_gram', 'rate' => 2800,
+    ]);
+
+    $template = stoneTemplate();
+
+    expect($this->builder->build(makeLabelItem(['making_charge_id' => $coded->id]), $template)['making'])
+        ->toBe('P');
+
+    expect($this->builder->build(makeLabelItem(['making_charge_id' => $uncoded->id]), $template)['making'])
+        ->toBe('2800');
+});
+
+// --- every layout still has to fit the stock -------------------------------------------------
+
+it('keeps the stone detail layout on a single page', function () {
+    $pdf = $this->actingAs($this->admin)
+        ->get(route('items.label', [stoneDetailItem(), 'template' => stoneTemplate()->id]))
+        ->getContent();
+
+    expect(pdfPageCount($pdf))->toBe(1)
+        // Helvetica is a core font, so nothing is embedded on the detail layouts either.
+        ->and(strlen($pdf))->toBeLessThan(50_000)
+        ->and($pdf)->toContain('/Helvetica');
+});
+
+it('resolves the stone rows without a query per stone', function () {
+    $item = stoneDetailItem();
+    $template = stoneTemplate();
+
+    DB::flushQueryLog();
+    DB::enableQueryLog();
+
+    $this->builder->build(Item::findOrFail($item->id), $template);
+
+    // purity, metalType, makingCharge, itemStones, stoneMaster — a handful, not one
+    // query per stone row.
+    expect(count(DB::getQueryLog()))->toBeLessThan(8);
+
+    DB::disableQueryLog();
 });

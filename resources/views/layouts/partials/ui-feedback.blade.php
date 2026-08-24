@@ -131,6 +131,23 @@
                 confirmThenDelete($(this));
             });
 
+            // --- whole-number boxes ------------------------------------------------
+            // A piece count is a countable thing, and step="1" does not protect it:
+            // these boxes live inside closed modals, and a browser skips constraint
+            // validation on a control it cannot focus. A decimal typed here used to
+            // reach the server and come back as "stones.0.pieces must be an integer",
+            // naming a row the user could not see. Rounding in the box instead keeps
+            // the correction visible and in front of them.
+            $(document).on('change', 'input.whole-number', function () {
+                var value = $(this).val();
+
+                if (value === '' || Number.isInteger(Number(value))) {
+                    return;
+                }
+
+                $(this).val(Math.round(Number(value)) || 0).trigger('input');
+            });
+
             // --- forms that ask first --------------------------------------------
             // Not every confirmation is a listing delete — removing a photo, marking
             // an order received. Those still post and reload the page as before; only

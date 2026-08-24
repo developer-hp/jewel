@@ -29,9 +29,13 @@ class ItemEstimateMath
         return round((float) $line->gross_weight - $this->stoneWeight($line), 3);
     }
 
+    /**
+     * Only the stones set to come out of the gross, the same filter
+     * ItemCalculator::deductibleGrams() applies to a stock piece.
+     */
     public function stoneWeight(ItemEstimateLine $line): float
     {
-        return round((float) $line->stones->sum('weight_grams'), 3);
+        return round((float) $line->stones->where('deduct_from_gross', true)->sum('weight_grams'), 3);
     }
 
     /**

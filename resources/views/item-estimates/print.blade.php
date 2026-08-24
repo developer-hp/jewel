@@ -35,6 +35,7 @@
             font-weight: bold;
             text-align: center;
             margin-bottom: 2mm;
+            margin-top: 2mm;
         }
 
         table.lines {
@@ -62,26 +63,35 @@
             background: #cdcdcd !important;
         }
 
-        /* The stone breakdown sits inside the item cell, small and borderless. */
+        /* The stone breakdown sits inside the item cell, small and borderless.
+
+           Width is auto, not 100%: stretched across the item column the four
+           figures drifted apart into a sparse grid. Sized to its content it reads
+           as one compact block, and the padding below is what separates the
+           columns — without it the pieces and the rate ran together as "7 92,000". */
         table.breakdown {
-            width: 100%;
+            width: auto;
             margin-top: 0.5mm;
         }
 
         table.breakdown td {
             border: none !important;
-            padding: 0 1mm 0 0 !important;
-            font-size: 8px;
+            font-size: 9px;
+            font-weight: bold;
             color: #444;
+            padding: 0 0 0 4mm !important;
+            margin: 0mm 0mm !important;
+            white-space: nowrap;
+        }
+
+        /* The name leads the row, so nothing sits to its left. */
+        table.breakdown td.name {
+            padding-left: 0 !important;
         }
 
         .photo img {
             max-width: 16mm;
             max-height: 16mm;
-        }
-
-        table.summary {
-            width: 46mm;
         }
 
         table.summary th {
@@ -138,14 +148,14 @@
 
                 <table class="pdf-table no-border" style="width: 100%;">
                     <tr>
-                        <td class="no-border" style="width: 74%; vertical-align: top;">
-                            <table class="pdf-table pd2 lines font10">
+                        <td class="no-border" style="width: 80%; vertical-align: top;">
+                            <table class="pdf-table pd2 lines font11">
                                 <thead>
                                     <tr>
-                                        <th style="width: 7%" class="text-center">#</th>
+                                        <th style="width: 5%" class="text-center">#</th>
                                         <th class="text-center">ITEM</th>
-                                        <th style="width: 13%" class="text-center">GROSS</th>
-                                        <th style="width: 13%" class="text-center">NET WT</th>
+                                        <th style="width: 10%" class="text-center">GROSS</th>
+                                        <th style="width: 10%" class="text-center">NET WT</th>
                                         <th style="width: 13%" class="text-center">RATE</th>
                                         <th style="width: 14%" class="text-center">LC</th>
                                         <th style="width: 15%" class="text-center">TOTAL</th>
@@ -174,15 +184,13 @@
                                                     <table class="breakdown">
                                                         @foreach ($line->stones as $stone)
                                                             <tr>
-                                                                <td style="width: 34%">{{ $stone->stoneMaster?->name }}</td>
-                                                                <td style="width: 18%" class="text-right">
+                                                                <td class="name">{{ $stone->stoneMaster?->name }}</td>
+                                                                <td class="text-right">
                                                                     {{ (float) $stone->weight_grams > 0 ? $wt($stone->weight_grams) : '' }}
                                                                 </td>
-                                                                <td style="width: 14%" class="text-right">
-                                                                    {{ $stone->pieces ?: '' }}
-                                                                </td>
-                                                                <td style="width: 16%" class="text-right">{{ $money($stone->rate) }}</td>
-                                                                <td style="width: 18%" class="text-right">{{ $money($stone->amount) }}</td>
+                                                                <td class="text-right">{{ $stone->pieces ?: '' }}</td>
+                                                                <td class="text-right">{{ $money($stone->rate) }}</td>
+                                                                <td class="text-right">{{ $money($stone->amount) }}</td>
                                                             </tr>
                                                         @endforeach
 
@@ -190,11 +198,11 @@
                                                              breakdown does not add up to the line total. --}}
                                                         @if ((float) $line->oc_amount > 0)
                                                             <tr>
-                                                                <td style="width: 34%">OC</td>
-                                                                <td style="width: 18%"></td>
-                                                                <td style="width: 14%"></td>
-                                                                <td style="width: 16%"></td>
-                                                                <td style="width: 18%" class="text-right">{{ $money($line->oc_amount) }}</td>
+                                                                <td class="name">OC</td>
+                                                                <td></td>
+                                                                <td></td>
+                                                                <td></td>
+                                                                <td class="text-right">{{ $money($line->oc_amount) }}</td>
                                                             </tr>
                                                         @endif
                                                     </table>
@@ -231,7 +239,7 @@
                             </table>
                         </td>
 
-                        <td class="no-border" style="width: 26%; vertical-align: top; padding-left: 3mm !important;">
+                        <td class="no-border" style="width: 15%; vertical-align: top; padding-left: 3mm !important;">
                             <table class="pdf-table pd2 summary font11">
                                 <tr>
                                     <th class="text-left">Amount</th>
@@ -239,13 +247,13 @@
                                 </tr>
                                 @if ($estimate->gst_enabled)
                                     <tr>
-                                        <th class="text-left">GST @ {{ rtrim(rtrim(number_format((float) $estimate->gst_percent, 2), '0'), '.') }}%</th>
+                                        <th class="text-left">GST</th>
                                         <td class="text-right">{{ $money($summary->gst) }}</td>
                                     </tr>
                                 @endif
                                 @if ((float) $summary->round_off !== 0.0)
                                     <tr>
-                                        <th class="text-left">Round Off</th>
+                                        <th class="text-left">Round</th>
                                         <td class="text-right">{{ number_format($summary->round_off, 0) }}</td>
                                     </tr>
                                 @endif

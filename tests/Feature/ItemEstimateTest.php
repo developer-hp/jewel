@@ -462,3 +462,37 @@ it('lets a sales user write and print but not edit or delete', function () {
     $this->actingAs($this->sales)->get(route('item-estimates.edit', $estimate))->assertForbidden();
     $this->actingAs($this->sales)->delete(route('item-estimates.destroy', $estimate))->assertForbidden();
 });
+
+// --- deduct from gross -----------------------------------------------------------------
+
+it('leaves the gross alone for a stone marked not to deduct', function () {
+    // The same two weighed rows as the sample, but the 18.760 g one is set not to
+    // come out of the gross — exactly what unticking Ded. on the piece means.
+    postEstimate2($this, [estLine([
+        'stones' => [
+            ['stone_master_id' => $this->byPiece->id, 'pieces' => 446,
+                'weight_grams' => '19.840', 'rate' => '90', 'deduct_from_gross' => '1'],
+            ['stone_master_id' => $this->byGram->id,
+                'weight_grams' => '18.760', 'rate' => '900', 'deduct_from_gross' => '0'],
+        ],
+    ])])->assertRedirect();
+
+    $line = ItemEstimateLine::with('stones')->firstOrFail();
+
+    expect($line->stones->pluck('deduct_from_gross')->all())->toBe([true, false])
+        // Only the first row's weight comes off, not both.
+        ->and($line->stoneWeight())->toBe(19.84)
+        ->and($line->netWeight())->toBe(round((float) $line->gross_weight - 19.84, 3))
+        // The amount is unaffected: a stone still costs what it costs.
+        ->and($line->jadtar())->toBe(round(446 * 90 + 18.760 * 900, 2));
+});
+
+it('deducts every stone when the rows do not say otherwise', function () {
+    // Rows seeded by script carry no flag; the long-standing behaviour is to deduct.
+    postEstimate2($this, [estLine(['stones' => estStones($this)])])->assertRedirect();
+
+    $line = ItemEstimateLine::with('stones')->firstOrFail();
+
+    expect($line->stones->every(fn ($s) => $s->deduct_from_gross))->toBeTrue()
+        ->and($line->stoneWeight())->toBe(38.6);
+});

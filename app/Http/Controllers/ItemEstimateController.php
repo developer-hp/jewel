@@ -240,7 +240,9 @@ class ItemEstimateController extends Controller implements HasMiddleware
                     'rate' => round($rate, 2),
                     // The one rule for what a stone row is worth, per its unit.
                     'amount' => $this->calculator->lineAmount($master->rate_unit, $rate, $pieces, $carat, $grams),
-                    'deduct_from_gross' => true,
+                    // Carried from the piece, not assumed: a stone the item does not
+                    // deduct must not shrink the net weight on its quote either.
+                    'deduct_from_gross' => (bool) ($stone['deduct_from_gross'] ?? true),
                 ]);
             }
         }
