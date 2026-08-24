@@ -761,3 +761,168 @@ html[data-bs-theme=dark] .table > tbody > tr.row-overdue > td {
     /* Amber is a light ground; white text on it is unreadable. */
     color: #23272b;
 }
+
+/* --------------------------------------------------------------------------
+   Command palette (Ctrl+M)
+
+   Cards rather than a list: the whole menu fits on one screen that way, which
+   is the point of opening it instead of the sidebar. Accents come from the
+   theme's own --ct- colours, one per heading, mixed into the surface with
+   colour-mix so light and dark modes both stay legible without a second block.
+   -------------------------------------------------------------------------- */
+.command-palette .modal-content {
+    border-radius: var(--ct-border-radius-lg);
+}
+
+.command-palette .modal-body {
+    padding: 0.5rem 1.25rem 1.25rem;
+}
+
+.command-palette .palette-search {
+    position: relative;
+}
+
+.command-palette .palette-search i {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--ct-secondary-color);
+    pointer-events: none;
+}
+
+.command-palette .palette-search .form-control {
+    padding-left: 2.25rem;
+    border-radius: 999px;
+}
+
+.command-palette .palette-group {
+    margin-top: 1.25rem;
+}
+
+.command-palette .palette-group-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+}
+
+/* The rule trailing each heading, in that heading's own colour. */
+.command-palette .palette-group-title::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: currentColor;
+    opacity: 0.25;
+}
+
+.command-palette .palette-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 0.625rem;
+}
+
+.command-palette .palette-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem 0.75rem;
+    border: 1px solid transparent;
+    border-radius: var(--ct-border-radius);
+    color: var(--ct-emphasis-color);
+    text-decoration: none;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.command-palette .palette-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    border-radius: var(--ct-border-radius);
+    font-size: 1.0625rem;
+    color: #fff;
+}
+
+.command-palette .palette-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.command-palette .palette-label {
+    font-weight: 600;
+    font-size: 0.875rem;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.command-palette .palette-hint {
+    font-size: 0.75rem;
+    color: var(--ct-secondary-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Keyboard cursor and mouse hover are the same state on purpose — arrowing down
+   and moving the mouse must never leave two things looking selected. */
+.command-palette .palette-item.is-active {
+    border-color: currentColor;
+}
+
+/* Where you already are. */
+.command-palette .palette-item.is-current .palette-label::after {
+    content: "•";
+    margin-left: 0.35rem;
+    opacity: 0.6;
+}
+
+.command-palette .modal-footer kbd {
+    background: var(--ct-tertiary-bg);
+    color: var(--ct-body-color);
+    border: 1px solid var(--ct-border-color);
+    border-radius: 3px;
+    padding: 0.05rem 0.3rem;
+    font-size: 0.6875rem;
+}
+
+/* One rule per accent, driven by the variable the class names. */
+.command-palette .palette-primary { --palette-accent: var(--ct-primary); }
+.command-palette .palette-info { --palette-accent: var(--ct-info); }
+.command-palette .palette-purple { --palette-accent: var(--ct-purple); }
+.command-palette .palette-warning { --palette-accent: var(--ct-warning); }
+.command-palette .palette-pink { --palette-accent: var(--ct-pink); }
+.command-palette .palette-success { --palette-accent: var(--ct-success); }
+.command-palette .palette-danger { --palette-accent: var(--ct-danger); }
+.command-palette .palette-secondary { --palette-accent: var(--ct-secondary); }
+
+.command-palette .palette-item {
+    background: color-mix(in srgb, var(--palette-accent) 8%, transparent);
+}
+
+.command-palette .palette-item .palette-icon {
+    background: var(--palette-accent);
+}
+
+.command-palette .palette-item:hover,
+.command-palette .palette-item.is-active {
+    background: color-mix(in srgb, var(--palette-accent) 18%, transparent);
+    border-color: var(--palette-accent);
+}
+
+.command-palette .text-purple {
+    color: var(--ct-purple);
+}
+
+.command-palette .text-pink {
+    color: var(--ct-pink);
+}

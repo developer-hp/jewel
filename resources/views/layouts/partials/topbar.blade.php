@@ -33,6 +33,16 @@
         </div>
 
         <ul class="topbar-menu d-flex align-items-center gap-3">
+            {{-- A shortcut nobody can find is a shortcut nobody uses, so Ctrl+M
+                 also has a button, with the keys printed on it. --}}
+            <li class="d-none d-md-inline-block">
+                <a class="nav-link d-flex align-items-center gap-2" href="#" data-command-palette-open
+                    title="Go to… (Ctrl+M)">
+                    <i class="ri-search-line fs-22"></i>
+                    <span class="fs-12 text-muted d-none d-lg-inline">Ctrl + M</span>
+                </a>
+            </li>
+
             <li class="d-none d-sm-inline-block">
                 <div class="nav-link" id="light-dark-mode">
                     <i class="ri-moon-fill fs-22"></i>
