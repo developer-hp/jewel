@@ -43,7 +43,9 @@ class OrderFormPrintController extends Controller implements HasMiddleware
                 'website' => (string) ($settings->firm_website ?? ''),
             ],
             'terms' => $this->termLines($settings->order_terms),
-        ])->setPaper(['a4'], 'portrait')
+            // A string names a stock size; an array is read as explicit
+            // [x0, y0, x1, y1] corner coordinates, which is why ['a4'] threw.
+        ])->setPaper('a4', 'portrait')
             ->stream('order-'.now()->format('Y-m-d-His').'.pdf', ['Attachment' => false]);
     }
 

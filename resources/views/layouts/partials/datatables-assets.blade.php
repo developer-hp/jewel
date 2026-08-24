@@ -58,6 +58,11 @@
                 .attr('placeholder', (options && options.searchPlaceholder) || 'Search…')
                 .addClass('form-control');
 
+            // Registered so an ajax delete can put every listing back without a
+            // page reload; see layouts/partials/ui-feedback.
+            window.appTables = window.appTables || [];
+            window.appTables.push(table);
+
             return table;
         };
 

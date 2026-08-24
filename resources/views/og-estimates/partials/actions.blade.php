@@ -23,13 +23,9 @@
     @endcan
 
     @can('og_estimate.delete')
-        <form action="{{ route('og-estimates.destroy', $estimate) }}" method="POST"
-            onsubmit="return confirm(@js('Delete estimate '.$estimate->reference().'?'));">
-            @csrf
-            @method('DELETE')
-            <button type="submit" class="btn btn-sm btn-danger btn-icon" title="Delete">
-                <i class="ri-delete-bin-2-fill"></i>
-            </button>
-        </form>
+        <button type="button" class="btn btn-sm btn-danger btn-icon" title="Delete"
+            data-delete-url="{{ route('og-estimates.destroy', $estimate) }}" data-delete-confirm="{{ 'Delete estimate '.$estimate->reference().'?' }}">
+            <i class="ri-delete-bin-2-fill"></i>
+        </button>
     @endcan
 </div>

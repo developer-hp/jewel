@@ -23,13 +23,9 @@
     @endcan
 
     @can('supplier_order.delete')
-        <form action="{{ route('supplier-orders.destroy', $order) }}" method="POST"
-            onsubmit="return confirm(@js('Delete order '.$order->form_no.'?'));">
-            @csrf
-            @method('DELETE')
-            <button type="submit" class="btn btn-sm btn-danger btn-icon" title="Delete">
-                <i class="ri-delete-bin-2-fill"></i>
-            </button>
-        </form>
+        <button type="button" class="btn btn-sm btn-danger btn-icon" title="Delete"
+            data-delete-url="{{ route('supplier-orders.destroy', $order) }}" data-delete-confirm="{{ 'Delete order '.$order->form_no.'?' }}">
+            <i class="ri-delete-bin-2-fill"></i>
+        </button>
     @endcan
 </div>

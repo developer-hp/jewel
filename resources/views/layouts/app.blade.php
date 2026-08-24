@@ -38,6 +38,9 @@
         }
     </style>
 
+    {{-- Pushes onto both stacks, so it has to run before the first of them renders. --}}
+    @include('layouts.partials.ui-feedback')
+
     @stack('css')
 
     {{-- Project overrides load last so they beat both the theme and the vendor

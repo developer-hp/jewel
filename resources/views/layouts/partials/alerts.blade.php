@@ -1,17 +1,11 @@
-@if (session('success'))
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <i class="ri-checkbox-circle-fill me-1"></i> {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
+{{--
+    Only the validation list still occupies the page.
 
-@if (session('error'))
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <i class="ri-error-warning-fill me-1"></i> {{ session('error') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
-
+    A one-line "Saved." or "Deleted." now arrives as a toast (layouts/partials/ui-feedback),
+    which is what the theme's ui-notifications page uses and what keeps the top of a form
+    from jumping down a row on every save. A validation failure is different: it is a list
+    the user has to work through, so it stays put until they dismiss it.
+--}}
 @if ($errors->any() && ! request()->routeIs('login'))
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
         <strong>Please fix the following:</strong>

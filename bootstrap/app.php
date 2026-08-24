@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\AnswerAjaxRedirectsWithJson;
 use App\Http\Middleware\EnforceIdleTimeout;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -19,6 +20,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // Runs on every web request so an idle session cannot be resumed.
         $middleware->web(append: [
             EnforceIdleTimeout::class,
+            // Turns a controller redirect into JSON for callers that asked for JSON,
+            // so the listings can delete over AJAX without rewriting every destroy().
+            AnswerAjaxRedirectsWithJson::class,
         ]);
 
         $middleware->alias([

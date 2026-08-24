@@ -25,12 +25,12 @@
     @endif
 
     @if ($deleteUrl && (! $deletePermission || auth()->user()->can($deletePermission)))
-        <form action="{{ $deleteUrl }}" method="POST" onsubmit="return confirm(@js($confirm));">
-            @csrf
-            @method('DELETE')
-            <button type="submit" class="btn btn-sm btn-danger btn-icon" title="Delete">
-                <i class="ri-delete-bin-2-fill"></i>
-            </button>
-        </form>
+        {{-- No form: the delegated handler in layouts/partials/ui-feedback confirms
+             through SweetAlert2 and sends the DELETE itself, so the row can go
+             without the page going with it. --}}
+        <button type="button" class="btn btn-sm btn-danger btn-icon" title="Delete"
+            data-delete-url="{{ $deleteUrl }}" data-delete-confirm="{{ $confirm }}">
+            <i class="ri-delete-bin-2-fill"></i>
+        </button>
     @endif
 </div>

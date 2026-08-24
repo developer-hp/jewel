@@ -23,13 +23,9 @@
     @endcan
 
     @can('voucher.delete')
-        <form action="{{ route('vouchers.destroy', $voucher) }}" method="POST"
-            onsubmit="return confirm(@js('Delete voucher '.$voucher->reference().'?'));">
-            @csrf
-            @method('DELETE')
-            <button type="submit" class="btn btn-sm btn-danger btn-icon" title="Delete">
-                <i class="ri-delete-bin-2-fill"></i>
-            </button>
-        </form>
+        <button type="button" class="btn btn-sm btn-danger btn-icon" title="Delete"
+            data-delete-url="{{ route('vouchers.destroy', $voucher) }}" data-delete-confirm="{{ 'Delete voucher '.$voucher->reference().'?' }}">
+            <i class="ri-delete-bin-2-fill"></i>
+        </button>
     @endcan
 </div>

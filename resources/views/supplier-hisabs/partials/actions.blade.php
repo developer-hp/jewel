@@ -25,13 +25,9 @@
     @endcan
 
     @can('supplier_hisab.delete')
-        <form action="{{ route('supplier-hisabs.destroy', $hisab) }}" method="POST"
-            onsubmit="return confirm(@js('Delete the hisab for '.$hisab->supplier_label.'?'));">
-            @csrf
-            @method('DELETE')
-            <button type="submit" class="btn btn-sm btn-danger btn-icon" title="Delete">
-                <i class="ri-delete-bin-2-fill"></i>
-            </button>
-        </form>
+        <button type="button" class="btn btn-sm btn-danger btn-icon" title="Delete"
+            data-delete-url="{{ route('supplier-hisabs.destroy', $hisab) }}" data-delete-confirm="{{ 'Delete the hisab for '.$hisab->supplier_label.'?' }}">
+            <i class="ri-delete-bin-2-fill"></i>
+        </button>
     @endcan
 </div>
