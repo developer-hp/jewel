@@ -1,8 +1,11 @@
 @csrf
 
 <div class="card">
-    <div class="card-header py-2">
+    <div class="card-header py-2 d-flex align-items-center justify-content-between">
         <h5 class="mb-0">Item Estimate</h5>
+
+        {{-- The morning's figures, without leaving a half-filled form. --}}
+        <x-todays-rates />
     </div>
     <div class="card-body">
         <div class="row g-3">

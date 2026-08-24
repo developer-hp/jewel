@@ -20,7 +20,7 @@ class MetalRateController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:metal_rate.view', only: ['index', 'today']),
+            new Middleware('permission:metal_rate.view', only: ['index', 'today', 'snapshot']),
             new Middleware('permission:metal_rate.create', only: ['create', 'store', 'storeToday']),
             new Middleware('permission:metal_rate.edit', only: ['edit', 'update', 'storeToday']),
             new Middleware('permission:metal_rate.delete', only: ['destroy']),
@@ -127,6 +127,38 @@ class MetalRateController extends Controller implements HasMiddleware
             ->with('success', $saved > 0
                 ? "Saved {$saved} rate(s) for ".Carbon::parse($date)->format('d M Y').'.'
                 : 'No rates were entered.');
+    }
+
+    /**
+     * Today's rates as a fragment, for the popup on the estimate forms.
+     *
+     * A fragment rather than JSON: the caller wants to read it, not compute with it,
+     * so the formatting belongs on this side where the rate rules already live.
+     */
+    public function snapshot(Request $request): View
+    {
+        $date = $request->filled('date')
+            ? Carbon::parse($request->string('date')->toString())
+            : today();
+
+        $purities = Purity::query()
+            ->active()
+            ->with('metalType')
+            ->whereRelation('metalType', 'is_active', true)
+            ->ordered()
+            ->get()
+            ->sortBy(fn (Purity $purity) => [$purity->metalType->sort_order, $purity->sort_order])
+            ->groupBy(fn (Purity $purity) => $purity->metalType->name);
+
+        return view('rates.partials.snapshot', [
+            'purities' => $purities,
+            'rates' => MetalRate::whereDate('effective_date', $date)->get()->keyBy('purity_id'),
+            'date' => $date,
+            // The most recent day that has any rate at all, so a blank today can say
+            // whose figures the counter would otherwise be working from.
+            'lastEntered' => MetalRate::whereDate('effective_date', '<', $date)
+                ->max('effective_date'),
+        ]);
     }
 
     public function create(): View

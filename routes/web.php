@@ -88,6 +88,8 @@ Route::middleware('auth')->group(function () {
     // is not swallowed by `rates/{rate}`.
     Route::get('rates/today', [MetalRateController::class, 'today'])->name('rates.today');
     Route::post('rates/today', [MetalRateController::class, 'storeToday'])->name('rates.today.store');
+    // The fragment behind the "Today's Rates" button on the estimate forms.
+    Route::get('rates/snapshot', [MetalRateController::class, 'snapshot'])->name('rates.snapshot');
     Route::resource('rates', MetalRateController::class)->except('show')
         ->parameters(['rates' => 'rate']);
 

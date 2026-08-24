@@ -37,14 +37,19 @@ it('gives every sidebar group a heading of its own', function () {
     // Sections lead with their loose links; then every group, flattened one level
     // so nothing in the palette has to be expanded.
     expect($titles)->toContain('Main', 'Stock', 'Orders', 'Estimates', 'Repairs',
-        'Dispatch', 'Suppliers', 'Manage', 'Masters', 'Settings', 'Administration');
+        'Dispatch', 'Suppliers', 'Masters', 'Settings', 'Administration')
+        // Manage holds nothing but groups, so it contributes no heading of its own.
+        ->and($titles)->not->toContain('Manage');
 });
 
 it('puts a section\'s loose links ahead of that section\'s groups', function () {
+    $this->actingAs($this->admin);
+
     $titles = collect(CommandPalette::groups())->pluck('title')->all();
 
+    // Dashboard and Daily Rates sit under Main, above the Stock group they feed.
     expect(array_search('Main', $titles, true))->toBeLessThan(array_search('Stock', $titles, true))
-        ->and(array_search('Manage', $titles, true))->toBeLessThan(array_search('Masters', $titles, true));
+        ->and(array_search('Suppliers', $titles, true))->toBeLessThan(array_search('Masters', $titles, true));
 });
 
 it('lists every entry with a url, an icon and its group as the hint', function () {
