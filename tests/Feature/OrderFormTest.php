@@ -695,9 +695,11 @@ it('prints the whole piece on the office copy when a line has one', function () 
     // Enough to find and check the piece without opening the system — and only
     // once, because the customer's copy does not carry it.
     expect(substr_count($html, $piece->code))->toBe(1)
-        ->and($html)->toContain('GW ')
-        ->and($html)->toContain('NW ')
-        ->and($html)->toContain('22K');
+        ->and($html)->toContain('Gross Wt')
+        ->and($html)->toContain('Net Wt')
+        ->and($html)->toContain('22K')
+        // The office copy is a block per line, not the ten-row form.
+        ->and($html)->toContain('linecard');
 });
 
 it('still prints an order whose lines have no piece behind them', function () {
@@ -708,8 +710,9 @@ it('still prints an order whose lines have no piece behind them', function () {
 
     $response->assertOk();
 
+    // The block is still drawn; it simply carries no piece to describe.
     expect($response->getContent())->toStartWith('%PDF-')
-        ->and(orderPrintHtml())->not->toContain('GW ');
+        ->and(orderPrintHtml())->not->toContain('Gross Wt');
 });
 
 it('renders the print without provoking a php warning', function () {

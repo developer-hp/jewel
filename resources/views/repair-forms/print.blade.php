@@ -18,17 +18,11 @@
 @section('styles')
     <style>
         body {
-            font-size: 20px;
+            font-size: 15px;
         }
         /* Each form is a page of its own — one repair, one sheet. */
-        .form-page {
-            page-break-after: always;
-        }
-
-        .form-page.last {
-            page-break-after: auto;
-        }
-
+        
+        
         table.sheet {
             width: 100%;
             border-collapse: separate;
@@ -46,7 +40,6 @@
         }
 
         .copy {
-            border: 1px solid;
             padding: 2mm;
         }
 
@@ -56,50 +49,14 @@
         }
 
         .office-band {
-            border: 1px solid;
             padding: 1mm;
             margin-bottom: 1.5mm;
         }
 
         .refbox {
-            border: 1px solid;
             padding: 1.5mm;
         }
 
-        .lines {
-            width: 100%;
-            table-layout: fixed;
-            margin-top: 2mm;
-        }
-
-        .terms {
-            margin-top: 2mm;
-        }
-
-        .terms .head {
-            font-weight: bold;
-            font-size: 13px;
-        }
-
-        .terms .line {
-            font-weight: bold;
-            font-size: 12px;
-        }
-
-        /* Beside the terms rather than under them, and capped in mm, so a tall
-           photo cannot push the copy onto a second page. */
-        .photo-cell {
-            width: 32mm;
-            text-align: right;
-            vertical-align: top;
-            padding-top: 2mm !important;
-        }
-
-        .photo-cell img {
-            max-width: 30mm;
-            max-height: 30mm;
-            border: 1px solid;
-        }
     </style>
 @endsection
 
@@ -188,9 +145,9 @@
                                 </tfoot>
                             </table>
 
-                            <table class="pdf-table no-border" style="width: 100%;">
+                            <table class="pdf-table no-border">
                                 <tr>
-                                    <td class="no-border" style="vertical-align: top;">
+                                    <td class="no-border mb5">
                                         @if ($terms !== [])
                                             <div class="terms">
                                                 <div class="head">Terms and Conditions:</div>
@@ -201,8 +158,8 @@
                                         @endif
                                     </td>
                                     @if ($photo)
-                                        <td class="no-border photo-cell">
-                                            <img src="{{ $photo }}" alt="">
+                                        <td class="no-border">
+                                            <img src="{{ $photo }}" style="height:100px;" alt="">
                                         </td>
                                     @endif
                                 </tr>

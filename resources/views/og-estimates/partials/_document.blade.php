@@ -43,10 +43,10 @@
                     </tr>
                 </table>
 
-                <table class="pdf-table no-border" style="width: 100%;">
+                <table class="" style="width: 100%;">
                     <tr>
-                        <td class="no-border" style="width: 86%;">
-                            <table class="pdf-table pd2 lines font11">
+                        <td class="" style="width: 86%;">
+                            <table class="pdf-table no-border pd2 lines font11">
                                 <thead>
                                     <tr>
                                         <th class="text-center">ITEM</th>

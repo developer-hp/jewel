@@ -88,6 +88,35 @@
            comes back null and the render dies with "Trying to access array offset
            on null" in Mpdf\Tag\Table. Laravel turns that warning into a 500, so
            the whole print fails. Plain blocks cannot hit it. */
+        /* One block per line on the office copy. */
+        table.linecard {
+            margin-top: 2mm;
+        }
+
+        table.linecard td.cardhead {
+            background: #cdcdcd !important;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        table.linecard td.k {
+            width: 14%;
+            background: #f2f2f2 !important;
+            font-weight: bold;
+            font-size: 10px;
+        }
+
+        table.linecard td.cardphoto {
+            width: 18mm;
+            text-align: center;
+        }
+
+        table.linecard td.cardphoto img {
+            max-width: 16mm;
+            max-height: 16mm;
+            display: block;
+        }
+
         .itemdetail {
             margin-top: 0.8mm;
             font-size: 9px;
@@ -149,104 +178,205 @@
                 </tr>
             </table>
 
-            <table class="pdf-table pd2 lines font11">
-                <thead>
-                    <tr>
-                        <th style="width: 9%" class="text-center">No.</th>
-                        <th class="text-center">Particulars</th>
-                        <th style="width: 11%" class="text-center">Pcs Size</th>
-                        <th style="width: 14%" class="text-center">Approx Net Weight</th>
-                        <th style="width: 14%" class="text-center">Labour per gm</th>
-                        <th style="width: 13%" class="text-center">Approx O.C.</th>
-                        <th style="width: 13%" class="text-center">Rate</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($form->lines as $i => $line)
-                        @php($piece = $copy === 'office' ? $pieceOf($line) : null)
-                        @php($photo = $copy === 'office' ? ($piece?->photoDataUri() ?: $line->photoDataUri()) : null)
+            @if ($copy === 'office')
+                {{-- A block per line rather than a form row: the office copy is read
+                     to identify and check a piece, not written on, so the fields are
+                     laid out as labelled pairs.
+
+                     Every block is its own top-level table. Nesting one inside the
+                     lines table is what broke this print before — see the .itemdetail
+                     note below — so nothing here nests, and nothing uses rowspan. --}}
+                @foreach ($form->lines as $i => $line)
+                    @php($piece = $pieceOf($line))
+                    @php($photo = $piece?->photoDataUri() ?: $line->photoDataUri())
+
+                    <table class="pdf-table pd2 linecard font11">
                         <tr>
-                            <td class="text-center">
-                                @if ($photo)
-                                    <div class="linephoto"><img src="{{ $photo }}" alt=""></div>
-                                @else
-                                    {{ $i + 1 }}
-                                @endif
-                            </td>
-                            <td class="text-left">
+                            <td class="cardhead" colspan="{{ $photo ? 5 : 6 }}">
+                                {{ $i + 1 }}.
                                 @if ($piece)
-                                    <span class="text-bold">{{ $piece->code }}</span>
+                                    {{ $piece->code }} &mdash;
                                 @endif
                                 {{ $line->description }}
+                            </td>
+                            @if ($photo)
+                                <td class="cardphoto"><img src="{{ $photo }}" alt=""></td>
+                            @endif
+                        </tr>
 
-                                @if ($piece)
-                                    {{-- Everything the counter needs to find and check
-                                         the piece without opening the system. --}}
-                                    <div class="itemdetail">
+                        <tr>
+                            <td class="k">Pcs Size</td>
+                            <td>{{ $line->size_pcs }}</td>
+                            <td class="k">Approx Net Wt</td>
+                            <td>{{ $weight($line->net_weight) }}</td>
+                            <td class="k">Labour</td>
+                            <td>{{ $line->labourLabel() }}</td>
+                        </tr>
+
+                        <tr>
+                            <td class="k">Approx O.C.</td>
+                            <td>{{ $money($line->oc_amount) }}</td>
+                            <td class="k">Rate</td>
+                            <td>{{ $line->rateLabel() }}</td>
+                            <td class="k">Made to order</td>
+                            <td>{{ $line->made_to_order ? 'Yes' : 'No' }}</td>
+                        </tr>
+
+                        @if ($piece)
+                            <tr>
+                                <td class="k">Metal</td>
+                                <td>{{ $piece->metalType?->name }}</td>
+                                <td class="k">Purity</td>
+                                <td>{{ $piece->purity?->name }}</td>
+                                <td class="k">LB</td>
+                                <td>{{ $piece->makingCharge?->code ?: $piece->makingCharge?->name }}</td>
+                            </tr>
+
+                            <tr>
+                                <td class="k">Gross Wt</td>
+                                <td>{{ $weight($piece->gross_weight) }}</td>
+                                <td class="k">Net Wt</td>
+                                <td>{{ $weight($piece->net_weight) }}</td>
+                                <td class="k">HUID</td>
+                                <td>{{ $piece->huid }}</td>
+                            </tr>
+
+                            @foreach ($piece->itemStones as $stone)
+                                <tr>
+                                    <td class="k">{{ $stone->isDiamond() ? 'Diamond' : 'Stone' }}</td>
+                                    <td colspan="5">
                                         {{ collect([
-                                            $piece->metalType?->name,
-                                            $piece->purity?->name,
-                                            'GW ' . $weight($piece->gross_weight),
-                                            'NW ' . $weight($piece->net_weight),
-                                            $piece->makingCharge
-                                                ? 'LB ' . ($piece->makingCharge->code ?: $piece->makingCharge->name)
-                                                : null,
-                                        ])->filter()->implode(' · ') }}
-                                    </div>
+                                            $stone->stoneMaster?->code ?: $stone->stoneMaster?->name,
+                                            (float) $stone->weight_carat > 0 ? $weight($stone->weight_carat) . ' ct' : null,
+                                            $stone->pieces ? $stone->pieces . ' pc' : null,
+                                            '@ ' . $money($stone->rate),
+                                            '= ' . $money($stone->amount),
+                                        ])->filter()->implode('   ') }}
+                                    </td>
+                                </tr>
+                            @endforeach
 
-                                    @foreach ($piece->itemStones as $stone)
+                            @foreach ($piece->extraChargeLines() as $charge)
+                                <tr>
+                                    <td class="k">{{ $charge['label'] }}</td>
+                                    <td colspan="5">{{ $money($charge['amount']) }}</td>
+                                </tr>
+                            @endforeach
+                        @endif
+                    </table>
+                @endforeach
+
+                <table class="pdf-table pd2 font11" style="margin-top: 2mm;">
+                    <tr>
+                        <td class="k" style="width: 25%;">Total Net Weight</td>
+                        <td class="text-bold">{{ $weight($form->totalNetWeight()) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="k">Remarks</td>
+                        <td>{{ $form->remarks }}</td>
+                    </tr>
+                </table>
+            @else
+            <table class="pdf-table pd2 lines font11">
+                    <thead>
+                        <tr>
+                            <th style="width: 9%" class="text-center">No.</th>
+                            <th class="text-center">Particulars</th>
+                            <th style="width: 11%" class="text-center">Pcs Size</th>
+                            <th style="width: 14%" class="text-center">Approx Net Weight</th>
+                            <th style="width: 14%" class="text-center">Labour per gm</th>
+                            <th style="width: 13%" class="text-center">Approx O.C.</th>
+                            <th style="width: 13%" class="text-center">Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($form->lines as $i => $line)
+                            @php($piece = $copy === 'office' ? $pieceOf($line) : null)
+                            @php($photo = $copy === 'office' ? ($piece?->photoDataUri() ?: $line->photoDataUri()) : null)
+                            <tr>
+                                <td class="text-center">
+                                    @if ($photo)
+                                        <div class="linephoto"><img src="{{ $photo }}" alt=""></div>
+                                    @else
+                                        {{ $i + 1 }}
+                                    @endif
+                                </td>
+                                <td class="text-left">
+                                    @if ($piece)
+                                        <span class="text-bold">{{ $piece->code }}</span>
+                                    @endif
+                                    {{ $line->description }}
+
+                                    @if ($piece)
+                                        {{-- Everything the counter needs to find and check
+                                             the piece without opening the system. --}}
                                         <div class="itemdetail">
                                             {{ collect([
-                                                $stone->stoneMaster?->code ?: $stone->stoneMaster?->name,
-                                                (float) $stone->weight_carat > 0 ? $weight($stone->weight_carat) . ' ct' : null,
-                                                $stone->pieces ? $stone->pieces . ' pc' : null,
-                                                '@ ' . $money($stone->rate),
-                                                '= ' . $money($stone->amount),
-                                            ])->filter()->implode('  ') }}
+                                                $piece->metalType?->name,
+                                                $piece->purity?->name,
+                                                'GW ' . $weight($piece->gross_weight),
+                                                'NW ' . $weight($piece->net_weight),
+                                                $piece->makingCharge
+                                                    ? 'LB ' . ($piece->makingCharge->code ?: $piece->makingCharge->name)
+                                                    : null,
+                                            ])->filter()->implode(' · ') }}
                                         </div>
-                                    @endforeach
 
-                                    @foreach ($piece->extraChargeLines() as $charge)
-                                        <div class="itemdetail">
-                                            {{ $charge['label'] }}  = {{ $money($charge['amount']) }}
-                                        </div>
-                                    @endforeach
-                                @endif
-                            </td>
-                            <td class="text-center">{{ $line->size_pcs }}</td>
-                            <td class="text-right">{{ $weight($line->net_weight) }}</td>
-                            <td class="text-right">{{ $line->labourLabel() }}</td>
-                            <td class="text-right">{{ $money($line->oc_amount) }}</td>
-                            <td class="text-right">{{ $line->rateLabel() }}</td>
-                        </tr>
-                    @endforeach
+                                        @foreach ($piece->itemStones as $stone)
+                                            <div class="itemdetail">
+                                                {{ collect([
+                                                    $stone->stoneMaster?->code ?: $stone->stoneMaster?->name,
+                                                    (float) $stone->weight_carat > 0 ? $weight($stone->weight_carat) . ' ct' : null,
+                                                    $stone->pieces ? $stone->pieces . ' pc' : null,
+                                                    '@ ' . $money($stone->rate),
+                                                    '= ' . $money($stone->amount),
+                                                ])->filter()->implode('  ') }}
+                                            </div>
+                                        @endforeach
 
-                    {{-- Padded to ten, as on the paper original. --}}
-                    @for ($i = $form->lines->count(); $i < $rowsPerForm; $i++)
+                                        @foreach ($piece->extraChargeLines() as $charge)
+                                            <div class="itemdetail">
+                                                {{ $charge['label'] }}  = {{ $money($charge['amount']) }}
+                                            </div>
+                                        @endforeach
+                                    @endif
+                                </td>
+                                <td class="text-center">{{ $line->size_pcs }}</td>
+                                <td class="text-right">{{ $weight($line->net_weight) }}</td>
+                                <td class="text-right">{{ $line->labourLabel() }}</td>
+                                <td class="text-right">{{ $money($line->oc_amount) }}</td>
+                                <td class="text-right">{{ $line->rateLabel() }}</td>
+                            </tr>
+                        @endforeach
+
+                        {{-- Padded to ten, as on the paper original. --}}
+                        @for ($i = $form->lines->count(); $i < $rowsPerForm; $i++)
+                            <tr>
+                                <td class="text-center">{{ $i + 1 }}</td>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                            </tr>
+                        @endfor
+                    </tbody>
+                    <tfoot>
                         <tr>
-                            <td class="text-center">{{ $i + 1 }}</td>
-                            <td>&nbsp;</td>
-                            <td>&nbsp;</td>
-                            <td>&nbsp;</td>
+                            <td colspan="3" class="text-center text-bold">Total Netweight</td>
+                            <td class="text-right text-bold">{{ $weight($form->totalNetWeight()) }}</td>
                             <td>&nbsp;</td>
                             <td>&nbsp;</td>
                             <td>&nbsp;</td>
                         </tr>
-                    @endfor
-                </tbody>
-                <tfoot>
-                    <tr>
-                        <td colspan="3" class="text-center text-bold">Total Netweight</td>
-                        <td class="text-right text-bold">{{ $weight($form->totalNetWeight()) }}</td>
-                        <td>&nbsp;</td>
-                        <td>&nbsp;</td>
-                        <td>&nbsp;</td>
-                    </tr>
-                    <tr>
-                        <td colspan="7" class="text-left text-bold">Remarks : {{ $form->remarks }}</td>
-                    </tr>
-                </tfoot>
-            </table>
+                        <tr>
+                            <td colspan="7" class="text-left text-bold">Remarks : {{ $form->remarks }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+
+            @endif
 
             @if ($copy === 'customer')
                 <div class="bring">PLEASE BRING THIS ORDER FORM ALONG WITH YOU DURING DELIVERY</div>

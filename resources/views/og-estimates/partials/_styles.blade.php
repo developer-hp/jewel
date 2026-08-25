@@ -30,15 +30,7 @@
         /* pdf.css kills borders with a DESCENDANT selector — `.no-border th, td` —
            so the plain layout table these sit inside strips the rules off them too.
            Put them back explicitly; without this the whole document prints flat. */
-        table.lines > thead > tr > th,
-        table.lines > tbody > tr > td,
-        table.lines > tfoot > tr > td,
-        table.signoff > tbody > tr > th,
-        table.signoff > tbody > tr > td,
-        table.signoff > tr > th,
-        table.signoff > tr > td {
-            border: 0.8pt solid #000 !important;
-        }
+        
 
         table.lines > thead > tr > th,
         table.signoff th {
