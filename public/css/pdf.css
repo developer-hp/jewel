@@ -3,13 +3,13 @@ th,td{
 }
 
 .no-border th,.no-border td{
-    border: 0px solid;
+    border: none;
 }
 .no-border{
     border: none !important;
 }
 th{
-background: #cdcdcd;
+	background: #cdcdcd;
 }
 
 .no-border th{

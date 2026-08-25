@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AppSetting;
 use App\Models\OrderForm;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Support\PdfDocument;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -36,7 +36,7 @@ class OrderFormPrintController extends Controller implements HasMiddleware
 
         $settings = AppSetting::current();
 
-        return Pdf::loadView('order-forms.print', [
+        return PdfDocument::stream('order-forms.print', [
             'forms' => $forms,
             'firm' => [
                 'query_phone' => (string) ($settings->order_contact_no ?: $settings->firm_phone),
@@ -45,8 +45,7 @@ class OrderFormPrintController extends Controller implements HasMiddleware
             'terms' => $this->termLines($settings->order_terms),
             // A string names a stock size; an array is read as explicit
             // [x0, y0, x1, y1] corner coordinates, which is why ['a4'] threw.
-        ])->setPaper('a4', 'portrait')
-            ->stream('order-'.now()->format('Y-m-d-His').'.pdf', ['Attachment' => false]);
+        ], 'order-'.now()->format('Y-m-d-His').'.pdf', PdfDocument::a4());
     }
 
     public function stickers(Request $request): Response|RedirectResponse
@@ -83,9 +82,10 @@ class OrderFormPrintController extends Controller implements HasMiddleware
 
     private function stickerPdf($forms): Response
     {
-        return Pdf::loadView('order-forms.stickers', ['forms' => $forms])
-            ->setPaper([0,0,105*2.83465,160*2.83465])
-            ->stream('order-stickers-'.now()->format('Y-m-d-His').'.pdf', ['Attachment' => false]);
+        // 105 x 160 mm. dompdf wanted that as a box of points; mPDF takes the
+        // millimetres directly.
+        return PdfDocument::stream('order-forms.stickers', ['forms' => $forms],
+            'order-stickers-'.now()->format('Y-m-d-His').'.pdf', PdfDocument::size(105, 160));
     }
 
     /**
@@ -98,8 +98,19 @@ class OrderFormPrintController extends Controller implements HasMiddleware
             'ids.*' => ['integer', 'exists:order_forms,id'],
         ]);
 
+        // The office copy prints the whole piece — weights, purity, stones, charges
+        // and its photo — so the item is loaded in full rather than by two columns.
         $forms = OrderForm::whereIn('id', $validated['ids'])
-            ->with(['lines.item:id,code,order_form_line_id'])
+            ->with([
+                'lines.item.purity',
+                'lines.item.metalType',
+                'lines.item.makingCharge',
+                'lines.item.itemStones.stoneMaster',
+                'lines.sourceItem.purity',
+                'lines.sourceItem.metalType',
+                'lines.sourceItem.makingCharge',
+                'lines.sourceItem.itemStones.stoneMaster',
+            ])
             ->orderBy('ref_no')
             ->get();
 

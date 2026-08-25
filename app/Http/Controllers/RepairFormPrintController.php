@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AppSetting;
 use App\Models\RepairForm;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Support\PdfDocument;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -35,7 +35,7 @@ class RepairFormPrintController extends Controller implements HasMiddleware
 
         $settings = AppSetting::current();
 
-        return Pdf::loadView('repair-forms.print', [
+        return PdfDocument::stream('repair-forms.print', [
             'forms' => $forms,
             'firm' => [
                 'phone' => (string) ($settings->repair_contact_no ?: $settings->firm_phone),
@@ -46,8 +46,7 @@ class RepairFormPrintController extends Controller implements HasMiddleware
             'terms' => $this->termLines($settings->repair_terms),
             // Landscape: the customer and office copies sit side by side, and
             // portrait squeezes both into unreadable columns.
-        ])->setPaper('a3', 'landscape')
-            ->stream('repair-'.now()->format('Y-m-d-His').'.pdf', ['Attachment' => false]);
+        ], 'repair-'.now()->format('Y-m-d-His').'.pdf', PdfDocument::paper('A3', 'L'));
     }
 
     public function stickers(Request $request): Response|RedirectResponse
@@ -58,9 +57,10 @@ class RepairFormPrintController extends Controller implements HasMiddleware
             return $forms;
         }
 
-        return Pdf::loadView('repair-forms.stickers', ['forms' => $forms])
-            ->setPaper([0,0,105*2.83465,160*2.83465])
-            ->stream('repair-stickers-'.now()->format('Y-m-d-His').'.pdf', ['Attachment' => false]);
+        // 105 x 160 mm. dompdf wanted that as a box of points; mPDF takes the
+        // millimetres directly.
+        return PdfDocument::stream('repair-forms.stickers', ['forms' => $forms],
+            'repair-stickers-'.now()->format('Y-m-d-His').'.pdf', PdfDocument::size(105, 160));
     }
 
     /**

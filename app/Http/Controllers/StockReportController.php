@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ItemGroup;
 use App\Models\MetalType;
 use App\Services\StockFigures;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Support\PdfDocument;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -35,9 +35,7 @@ class StockReportController extends Controller implements HasMiddleware
     {
         $data = $this->sheet($request);
 
-        return Pdf::loadView('stock.daily-export', $data)
-            ->setPaper('a4', 'landscape')
-            ->stream('stock-daily-'.$data['date']->format('Y-m-d').'.pdf', ['Attachment' => false]);
+        return PdfDocument::stream('stock.daily-export', $data, 'stock-daily-'.$data['date']->format('Y-m-d').'.pdf', PdfDocument::a4('L'));
     }
 
     /**

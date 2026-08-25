@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Item;
 use App\Models\LabelSetting;
 use App\Services\ItemLabelBuilder;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Support\PdfDocument;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -34,8 +34,7 @@ class ItemLabelController extends Controller implements HasMiddleware
             ? LabelSetting::findOrFail($request->integer('template'))
             : LabelSetting::forItem($item);
 
-        return Pdf::loadView('items.label', $this->builder->build($item, $settings))
-            ->setPaper($settings->paperBox())
-            ->stream("{$item->code}.pdf", ['Attachment' => false]);
+        return PdfDocument::stream('items.label', $this->builder->build($item, $settings),
+            "{$item->code}.pdf", $settings->pdfConfig());
     }
 }

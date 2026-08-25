@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\MetalType;
 use App\Models\StockGroup;
 use App\Services\StockFigures;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Support\PdfDocument;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -31,9 +31,7 @@ class StockController extends Controller implements HasMiddleware
 
     public function print(Request $request): Response
     {
-        return Pdf::loadView('stock.print', $this->sheet($request))
-            ->setPaper('a4', 'portrait')
-            ->stream('stock-'.now()->format('Y-m-d').'.pdf', ['Attachment' => false]);
+        return PdfDocument::stream('stock.print', $this->sheet($request), 'stock-'.now()->format('Y-m-d').'.pdf', PdfDocument::a4());
     }
 
     /**

@@ -3,31 +3,18 @@
 <head>
     <meta charset="UTF-8">
     {{--
-        pdf.css is inlined rather than linked: dompdf ships with enable_remote =>
-        false, so an asset() URL (http://…) is silently dropped and the document
-        renders unstyled. public/css/pdf.css stays the one place to edit these
+        pdf.css is read off disk and inlined, never linked. A <link> points at an
+        http:// URL, which means the PDF renderer has to go back out over the
+        network to fetch its own stylesheet — it fails quietly when it cannot, and
+        the document then prints with no borders at all. Reading the file is also
+        simply faster. public/css/pdf.css stays the one place to edit these
         utilities.
     --}}
     <style type="text/css">
         {!! file_get_contents(public_path('css/pdf.css')) !!}
+    </style>
 
-        @verbatim
-        /* The standard page margin for every document built on this layout, leaving
-           180mm of content on A4 portrait. Two things to know here:
-
-           - dompdf's own default is 12mm, so a rule of 12mm looks like no margin.
-           - the margin goes on @page, not on a wrapping element; padding on a div
-             is what once pushed the item tag onto a second page.
-
-           Wrapped in @verbatim so Blade never treats `@page` as a directive.
-           Override it from @section('styles') in the document itself. */
-        @page {
-            margin: 10mm;
-        }
-        @endverbatim
-
-        /* Deliberately NOT `html { margin: 0 }` — dompdf folds the root element's
-           style into the page style, so zeroing it wipes the @page margin above. */
+    <style type="text/css">
         body {
             margin: 0;
             padding: 0;

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\InternalStockEntry;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Support\PdfDocument;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -31,11 +31,10 @@ class InternalStockExportController extends Controller implements HasMiddleware
             ->orderByDesc('id')
             ->get();
 
-        return Pdf::loadView('internal-stock-entries.export', [
+        return PdfDocument::stream('internal-stock-entries.export', [
             'entries' => $entries,
             'totalIn' => round((float) $entries->whereIn('type', InternalStockEntry::INCOMING)->sum('weight'), 3),
             'totalOut' => round((float) $entries->where('type', InternalStockEntry::TYPE_OUT)->sum('weight'), 3),
-        ])->setPaper('a4', 'portrait')
-            ->stream('internal-stock-'.now()->format('Y-m-d').'.pdf', ['Attachment' => false]);
+        ], 'internal-stock-'.now()->format('Y-m-d').'.pdf', PdfDocument::a4());
     }
 }

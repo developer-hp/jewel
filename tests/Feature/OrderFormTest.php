@@ -632,3 +632,117 @@ it('hides the module from a user with no permissions', function () {
     $this->actingAs($none)->get(route('dashboard'))->assertOk()->assertDontSee(route('order-forms.index'));
     $this->actingAs($none)->get(route('order-forms.index'))->assertForbidden();
 });
+
+// --- the office copy ---------------------------------------------------------------
+
+/** Highest /Count in the PDF's page tree. */
+function orderPdfPages(string $pdf): int
+{
+    preg_match_all('#/Count\s+(\d+)#', $pdf, $m);
+
+    return $m[1] ? max(array_map('intval', $m[1])) : 0;
+}
+
+/** The order print rendered as HTML, so its figures can be read back. */
+function orderPrintHtml(): string
+{
+    return view('order-forms.print', [
+        'forms' => OrderForm::with([
+            'lines.item.purity', 'lines.item.metalType',
+            'lines.sourceItem.purity', 'lines.sourceItem.metalType',
+            'lines.sourceItem.makingCharge', 'lines.sourceItem.itemStones.stoneMaster',
+        ])->get(),
+        'firm' => ['query_phone' => '9712406367', 'website' => ''],
+        'terms' => [],
+    ])->render();
+}
+
+it('prints a customer copy and an office copy for every order', function () {
+    postOrder($this, [orderLine()])->assertRedirect();
+    postOrder($this, [orderLine(['description' => 'Second'])])->assertRedirect();
+
+    $ids = OrderForm::pluck('id')->all();
+
+    $one = $this->actingAs($this->admin)
+        ->post(route('order-forms.print'), ['ids' => [$ids[0]]])->getContent();
+
+    $both = $this->actingAs($this->admin)
+        ->post(route('order-forms.print'), ['ids' => $ids])->getContent();
+
+    // Two pages per order, not one: ten line rows, the terms and the signatures
+    // already fill a page, so the copies cannot share one.
+    expect(orderPdfPages($one))->toBe(2)
+        ->and(orderPdfPages($both))->toBe(4);
+});
+
+it('keeps the delivery instruction off the copy that never leaves the shop', function () {
+    postOrder($this, [orderLine()])->assertRedirect();
+
+    $html = orderPrintHtml();
+
+    expect($html)->toContain('OFFICE COPY')
+        // Two pages, one instruction: it belongs only to the customer's copy.
+        ->and(substr_count($html, 'PLEASE BRING THIS ORDER FORM'))->toBe(1);
+});
+
+it('prints the whole piece on the office copy when a line has one', function () {
+    $piece = stockPiece('RNG', ['name' => 'Solitaire ring']);
+
+    postOrder($this, [orderLine(['source_item_id' => $piece->id])])->assertRedirect();
+
+    $html = orderPrintHtml();
+
+    // Enough to find and check the piece without opening the system — and only
+    // once, because the customer's copy does not carry it.
+    expect(substr_count($html, $piece->code))->toBe(1)
+        ->and($html)->toContain('GW ')
+        ->and($html)->toContain('NW ')
+        ->and($html)->toContain('22K');
+});
+
+it('still prints an order whose lines have no piece behind them', function () {
+    postOrder($this, [orderLine()])->assertRedirect();
+
+    $response = $this->actingAs($this->admin)
+        ->post(route('order-forms.print'), ['ids' => OrderForm::pluck('id')->all()]);
+
+    $response->assertOk();
+
+    expect($response->getContent())->toStartWith('%PDF-')
+        ->and(orderPrintHtml())->not->toContain('GW ');
+});
+
+it('renders the print without provoking a php warning', function () {
+    // The suite alone does not cover this: PHPUnit installs its own error handler
+    // and does not fail on PHP warnings, so an order print that raised one still
+    // passed assertOk() here while returning a 500 in the browser — Laravel turns
+    // that warning into an ErrorException. Nesting a <table> inside the lines table
+    // did exactly that, in Mpdf\Tag\Table. This asserts the render stays quiet.
+    $piece = stockPiece('RNG', ['name' => 'Solitaire ring']);
+
+    postOrder($this, [orderLine(['source_item_id' => $piece->id])])->assertRedirect();
+    postOrder($this, [orderLine(['description' => 'Second'])])->assertRedirect();
+
+    $raised = [];
+
+    set_error_handler(function (int $level, string $message) use (&$raised) {
+        // Deprecations are logged rather than thrown by Laravel, and the PDF
+        // package raises one of its own on PHP 8.4.
+        if (! in_array($level, [E_DEPRECATED, E_USER_DEPRECATED], true)) {
+            $raised[] = $message;
+        }
+
+        return true;
+    });
+
+    try {
+        $response = $this->actingAs($this->admin)
+            ->post(route('order-forms.print'), ['ids' => OrderForm::pluck('id')->all()]);
+    } finally {
+        restore_error_handler();
+    }
+
+    expect($raised)->toBe([]);
+
+    $response->assertOk();
+});

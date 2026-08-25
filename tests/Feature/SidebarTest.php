@@ -169,7 +169,9 @@ it('links every masters entry an admin can reach', function () {
         'rates.today', 'metal-types.index', 'purities.index', 'item-groups.index',
         'stock-groups.index', 'stones.index', 'diamonds.index', 'making-charges.index',
         'suppliers.index', 'customers.index', 'sales-persons.index',
-        'app-settings.edit', 'label-settings.edit',
+        // Label templates are a listing now, not a single row, so the menu points
+        // at the index — a parameterless route() on .edit would throw site-wide.
+        'app-settings.edit', 'label-settings.index',
     ] as $name) {
         $response->assertSee(route($name), false);
     }

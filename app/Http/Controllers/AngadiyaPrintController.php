@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Angadiya;
 use App\Models\AppSetting;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Support\PdfDocument;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -41,16 +41,16 @@ class AngadiyaPrintController extends Controller implements HasMiddleware
         $settings = AppSetting::current();
         $columns = max(1, (int) $settings->angadiya_columns);
 
-        $pdf = Pdf::loadView('angadiyas.sheet', [
+        $pdf = PdfDocument::render('angadiyas.sheet', [
             'rows' => $slips->chunk($columns),
             'columns' => $columns,
             'slipHeightMm' => (float) $settings->angadiya_slip_height_mm,
             'from' => $slips->first()->fromBlock(),
-        ])->setPaper('a4', 'portrait');
+        ], PdfDocument::a4());
 
         // Only stamp once the sheet actually rendered.
         $slips->each->markPrinted();
 
-        return $pdf->stream('angadiya-'.now()->format('Y-m-d-His').'.pdf', ['Attachment' => false]);
+        return PdfDocument::inline($pdf, 'angadiya-'.now()->format('Y-m-d-His').'.pdf');
     }
 }

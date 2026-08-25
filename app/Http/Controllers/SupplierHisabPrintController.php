@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\SupplierHisab;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Support\PdfDocument;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -47,11 +47,10 @@ class SupplierHisabPrintController extends Controller implements HasMiddleware
             return back()->with('error', 'Those entries no longer exist.');
         }
 
-        return Pdf::loadView('supplier-hisabs.slips', [
+        return PdfDocument::stream('supplier-hisabs.slips', [
             'rows' => $hisabs->chunk(self::COLUMNS),
             'columns' => self::COLUMNS,
-        ])->setPaper('a4', 'portrait')
-            ->stream('supplier-hisab-'.now()->format('Y-m-d-His').'.pdf', ['Attachment' => false]);
+        ], 'supplier-hisab-'.now()->format('Y-m-d-His').'.pdf', PdfDocument::a4());
     }
 
     public function summary(Request $request): Response
@@ -66,7 +65,7 @@ class SupplierHisabPrintController extends Controller implements HasMiddleware
             ->orderBy('id')
             ->get();
 
-        return Pdf::loadView('supplier-hisabs.summary', [
+        return PdfDocument::stream('supplier-hisabs.summary', [
             'date' => $date,
             'hisabs' => $hisabs,
             'totals' => [
@@ -75,7 +74,6 @@ class SupplierHisabPrintController extends Controller implements HasMiddleware
                 'fine_kapi' => round($hisabs->sum(fn (SupplierHisab $h) => $h->fineKapi()), 3),
                 'cash_apvi' => round($hisabs->sum(fn (SupplierHisab $h) => $h->cashApvi()), 2),
             ],
-        ])->setPaper('a4', 'portrait')
-            ->stream('supplier-hisab-summary-'.$date->format('Y-m-d').'.pdf', ['Attachment' => false]);
+        ], 'supplier-hisab-summary-'.$date->format('Y-m-d').'.pdf', PdfDocument::a4());
     }
 }

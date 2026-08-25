@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\PdfDocument;
 use DomainException;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
@@ -24,9 +25,6 @@ use Illuminate\Support\Facades\DB;
 ])]
 class LabelSetting extends Model
 {
-    /** One millimetre in PostScript points, for dompdf's paper box. */
-    public const MM_TO_POINTS = 2.83465;
-
     /** The identity block plus columns of KEY: value pairs — the original tag. */
     public const LAYOUT_STANDARD = 'standard';
 
@@ -240,17 +238,19 @@ class LabelSetting extends Model
     }
 
     /**
-     * Paper box for dompdf: [x0, y0, width, height] in points.
+     * What mPDF needs to print this tag: the cut size, the margins, and core fonts.
      *
-     * @return array{0: float, 1: float, 2: float, 3: float}
+     * Core-font mode is the point of the last line. A tag is a couple of KB with
+     * Helvetica and close to a megabyte once a Unicode face is embedded, and at
+     * this size nothing but Latin digits and letters is ever printed. It is also
+     * why amounts print without a rupee glyph.
+     *
+     * @return array<string, mixed>
      */
-    public function paperBox(): array
+    public function pdfConfig(): array
     {
-        return [
-            0.0,
-            0.0,
-            round((float) $this->tag_width_mm * self::MM_TO_POINTS, 2),
-            round((float) $this->tag_height_mm * self::MM_TO_POINTS, 2),
-        ];
+        return PdfDocument::size((float) $this->tag_width_mm, (float) $this->tag_height_mm)
+            + PdfDocument::margins((float) $this->margin_mm)
+            + ['mode' => 'c'];
     }
 }

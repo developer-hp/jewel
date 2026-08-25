@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AppSetting;
 use App\Models\SupplierOrder;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Support\PdfDocument;
 use Endroid\QrCode\Encoding\Encoding;
 use Endroid\QrCode\ErrorCorrectionLevel;
 use Endroid\QrCode\QrCode;
@@ -43,7 +43,7 @@ class SupplierOrderPrintController extends Controller implements HasMiddleware
             return back()->with('error', 'Those orders no longer exist.');
         }
 
-        return Pdf::loadView('supplier-orders.print', [
+        return PdfDocument::stream('supplier-orders.print', [
             'orders' => $orders,
             'header' => (string) (AppSetting::current()->supplier_order_header ?? ''),
             'qrMm' => self::QR_MM,
@@ -56,8 +56,7 @@ class SupplierOrderPrintController extends Controller implements HasMiddleware
             'photos' => $orders->mapWithKeys(fn (SupplierOrder $order) => [
                 $order->id => $order->photoDataUri(),
             ]),
-        ])->setPaper('a4', 'portrait')
-            ->stream('karigar-'.now()->format('Y-m-d-His').'.pdf', ['Attachment' => false]);
+        ], 'karigar-'.now()->format('Y-m-d-His').'.pdf', PdfDocument::a4());
     }
 
     /**

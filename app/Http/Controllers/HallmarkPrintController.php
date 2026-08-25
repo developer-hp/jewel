@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Hallmark;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Support\PdfDocument;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -24,11 +24,9 @@ class HallmarkPrintController extends Controller implements HasMiddleware
     {
         $hallmark->load(['lines.itemGroup', 'lines.purity', 'lines.supplier']);
 
-        return Pdf::loadView('hallmarks.docket', [
+        return PdfDocument::stream('hallmarks.docket', [
             'hallmark' => $hallmark,
             'photo' => $hallmark->photoDataUri(),
-        ])
-            ->setPaper('a4', 'portrait')
-            ->stream("hallmark-{$hallmark->lot_no}.pdf", ['Attachment' => false]);
+        ], "hallmark-{$hallmark->lot_no}.pdf", PdfDocument::a4());
     }
 }

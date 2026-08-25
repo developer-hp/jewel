@@ -73,7 +73,7 @@ it('creates the default template on first read, with usable defaults', function 
         ->and($settings->is_default)->toBeTrue()
         ->and((float) $settings->tag_width_mm)->toBe(110.0)
         ->and((float) $settings->tag_height_mm)->toBe(18.0)
-        ->and($settings->paperBox())->toBe([0.0, 0.0, 311.81, 51.02]);
+        ->and($settings->pdfConfig()['format'])->toBe([110.0, 18.0]);
 });
 
 it('reuses the existing default rather than creating another', function () {

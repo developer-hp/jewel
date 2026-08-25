@@ -60,6 +60,26 @@ function makeLabelItem(array $attributes = [], array $stones = []): Item
     });
 }
 
+/**
+ * The page size in millimetres, read off the PDF's MediaBox.
+ *
+ * The box is written in points and the exact formatting is the renderer's business
+ * — mPDF writes "0 0 311.811 51.024" where dompdf wrote "0.000 0.000 311.810
+ * 51.020" for the same page — so the numbers are parsed and converted rather than
+ * matched as a string.
+ *
+ * @return array{0: float, 1: float}
+ */
+function pdfPageSizeMm(string $pdf): array
+{
+    preg_match('#/MediaBox \[([\d.]+) ([\d.]+) ([\d.]+) ([\d.]+)\]#', $pdf, $m);
+
+    return [
+        round((float) ($m[3] ?? 0) / 2.83465, 1),
+        round((float) ($m[4] ?? 0) / 2.83465, 1),
+    ];
+}
+
 /** Highest /Count in the PDF's page tree. */
 function pdfPageCount(string $pdf): int
 {
@@ -77,9 +97,9 @@ it('streams the tag as a pdf sized to the configured stock', function () {
 
     $pdf = $response->getContent();
 
-    // 110 x 18 mm in points.
+    // The configured 110 x 18 mm stock.
     expect($pdf)->toStartWith('%PDF')
-        ->and($pdf)->toContain('MediaBox [0.000 0.000 311.810 51.020]')
+        ->and(pdfPageSizeMm($pdf))->toBe([110.0, 18.0])
         ->and(pdfPageCount($pdf))->toBe(1);
 });
 
@@ -91,7 +111,7 @@ it('follows the tag size from settings', function () {
         ->getContent();
 
     // 80 mm = 226.77 pt, 25 mm = 70.87 pt
-    expect($pdf)->toContain('MediaBox [0.000 0.000 226.770 70.870]');
+    expect(pdfPageSizeMm($pdf))->toBe([80.0, 25.0]);
 });
 
 it('builds the rows the sample tag calls for', function () {
@@ -258,7 +278,10 @@ it('prints with the template attached to the item metal type', function () {
     $diamondMetal = MetalType::where('code', 'DIAM')->firstOrFail();
     $diamondMetal->update(['label_setting_id' => $template->id]);
 
-    $item = makeLabelItem(['metal_type_id' => $diamondMetal->id, 'purity_id' => null]);
+    $item = makeLabelItem([
+        'metal_type_id' => $diamondMetal->id,
+        'purity_id' => $diamondMetal->purities()->firstOrFail()->id,
+    ]);
 
     expect($this->builder->build($item)['layout'])->toBe(LabelSetting::LAYOUT_DIAMOND_DETAIL);
 
@@ -266,8 +289,7 @@ it('prints with the template attached to the item metal type', function () {
     // size proves it resolved the same template.
     $pdf = $this->actingAs($this->admin)->get(route('items.label', $item))->getContent();
 
-    // 110 x 30 mm in points.
-    expect($pdf)->toContain('MediaBox [0.000 0.000 311.810 85.040]');
+    expect(pdfPageSizeMm($pdf))->toBe([110.0, 30.0]);
 });
 
 it('falls back to the default template when the metal type has none', function () {
@@ -409,8 +431,9 @@ it('prints the making charge code, falling back to its rate', function () {
         'code' => 'P', 'name' => 'Polish rate', 'charge_type' => 'per_gram', 'rate' => 350,
     ]);
 
+    // The column is NOT NULL and unique, so "no code" is the empty string.
     $uncoded = MakingCharge::create([
-        'code' => null, 'name' => 'Flat labour', 'charge_type' => 'per_gram', 'rate' => 2800,
+        'code' => '', 'name' => 'Flat labour', 'charge_type' => 'per_gram', 'rate' => 2800,
     ]);
 
     $template = stoneTemplate();

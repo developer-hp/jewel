@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\ItemGroup;
+use App\Models\LabelSetting;
 use App\Models\MakingCharge;
 use App\Models\MetalType;
 use App\Models\Purity;
@@ -191,4 +192,66 @@ it('shows the masters menu only to users who can read them', function () {
         ->assertOk()
         ->assertDontSee(route('metal-types.index'))
         ->assertDontSee(route('making-charges.index'));
+});
+
+// --- the label template a metal type prints with -------------------------------------
+
+it('renders the metal type form with the label templates to choose from', function () {
+    $template = LabelSetting::create([
+        'name' => 'Jadtar Tag',
+        'layout' => LabelSetting::LAYOUT_STONE_DETAIL,
+        'tag_height_mm' => 32,
+    ]);
+
+    // Both screens 500 if the controller forgets to pass $labelSettings.
+    $this->actingAs($this->admin)->get(route('metal-types.create'))
+        ->assertOk()
+        ->assertSee('Use the default template')
+        ->assertSee('Jadtar Tag');
+
+    $metalType = MetalType::firstOrFail();
+
+    $this->actingAs($this->admin)->get(route('metal-types.edit', $metalType))
+        ->assertOk()
+        ->assertSee($template->name);
+});
+
+it('saves the label template chosen for a metal type, and lets it be cleared', function () {
+    $template = LabelSetting::create([
+        'name' => 'Diamond Tag',
+        'layout' => LabelSetting::LAYOUT_DIAMOND_DETAIL,
+        'tag_height_mm' => 30,
+    ]);
+
+    $metalType = MetalType::where('code', 'DIAM')->firstOrFail();
+
+    $payload = fn (array $overrides = []) => array_merge([
+        'name' => $metalType->name,
+        'code' => $metalType->code,
+        'sort_order' => $metalType->sort_order,
+        'is_active' => '1',
+    ], $overrides);
+
+    $this->actingAs($this->admin)
+        ->put(route('metal-types.update', $metalType), $payload(['label_setting_id' => $template->id]))
+        ->assertRedirect();
+
+    expect($metalType->fresh()->label_setting_id)->toBe($template->id);
+
+    // Blank means "use the default", not "keep what was there".
+    $this->actingAs($this->admin)
+        ->put(route('metal-types.update', $metalType), $payload(['label_setting_id' => '']))
+        ->assertRedirect();
+
+    expect($metalType->fresh()->label_setting_id)->toBeNull();
+});
+
+it('rejects a label template that does not exist', function () {
+    $metalType = MetalType::firstOrFail();
+
+    $this->actingAs($this->admin)->put(route('metal-types.update', $metalType), [
+        'name' => $metalType->name,
+        'code' => $metalType->code,
+        'label_setting_id' => 999999,
+    ])->assertSessionHasErrors('label_setting_id');
 });

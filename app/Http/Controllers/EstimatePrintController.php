@@ -6,7 +6,7 @@ use App\Models\AppSetting;
 use App\Models\ItemEstimate;
 use App\Models\OgEstimate;
 use App\Models\Voucher;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Support\PdfDocument;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -41,14 +41,13 @@ class EstimatePrintController extends Controller implements HasMiddleware
 
         $settings = AppSetting::current();
 
-        return Pdf::loadView('og-estimates.print', [
+        return PdfDocument::stream('og-estimates.print', [
             'estimates' => $estimates,
             'firm' => [
                 'name' => (string) ($settings->firm_name ?? ''),
                 'phone' => (string) ($settings->firm_phone ?? ''),
             ],
-        ])->setPaper('a4', 'portrait')
-            ->stream('og-estimate-'.now()->format('Y-m-d-His').'.pdf', ['Attachment' => false]);
+        ], 'og-estimate-'.now()->format('Y-m-d-His').'.pdf', PdfDocument::a4());
     }
 
     public function itemEstimates(Request $request): Response|RedirectResponse
@@ -67,14 +66,13 @@ class EstimatePrintController extends Controller implements HasMiddleware
 
         $settings = AppSetting::current();
 
-        return Pdf::loadView('item-estimates.print', [
+        return PdfDocument::stream('item-estimates.print', [
             'estimates' => $estimates,
             'firm' => [
                 'name' => (string) ($settings->firm_name ?? ''),
                 'phone' => (string) ($settings->firm_phone ?? ''),
             ],
-        ])->setPaper('a4', 'portrait')
-            ->stream('item-estimate-'.now()->format('Y-m-d-His').'.pdf', ['Attachment' => false]);
+        ], 'item-estimate-'.now()->format('Y-m-d-His').'.pdf', PdfDocument::a4());
     }
 
     public function vouchers(Request $request): Response|RedirectResponse
@@ -85,9 +83,7 @@ class EstimatePrintController extends Controller implements HasMiddleware
             return $vouchers;
         }
 
-        return Pdf::loadView('vouchers.print', ['vouchers' => $vouchers])
-            ->setPaper('a4', 'portrait')
-            ->stream('voucher-'.now()->format('Y-m-d-His').'.pdf', ['Attachment' => false]);
+        return PdfDocument::stream('vouchers.print', ['vouchers' => $vouchers], 'voucher-'.now()->format('Y-m-d-His').'.pdf', PdfDocument::a4());
     }
 
     /**
