@@ -28,9 +28,20 @@ class StockFigures
      *
      * @return Collection<int, object>
      */
+    /**
+     * The day a piece left the shop: the earlier of when it was sold and when its
+     * record was removed, or a sentinel far in the future while it is still here.
+     *
+     * A date rather than a timestamp, because sold_at is one and the daily sheet is
+     * read a day at a time.
+     */
+    private const LEFT_ON = "LEAST(COALESCE(sold_at, '9999-12-31'), COALESCE(DATE(deleted_at), '9999-12-31'))";
+
     public function byItemGroup(?int $metalTypeId = null): Collection
     {
         $totals = Item::query()
+            // A sold piece is gone; only what is still here is stock.
+            ->inStock()
             ->when($metalTypeId, fn ($q) => $q->where('metal_type_id', $metalTypeId))
             ->selectRaw('item_group_id')
             ->selectRaw('count(*) as pcs')
@@ -86,9 +97,15 @@ class StockFigures
     /**
      * How each item group moved on one day.
      *
-     * One query over withTrashed(), so a piece created and removed the same day lands
-     * in both Add and Less and contributes nothing to Closing — right, and it falls
-     * out of the arithmetic rather than needing a special case.
+     * A piece leaves stock in one of two ways — it is sold, or the record is removed —
+     * and it has to leave exactly once. LEFT_ON is the earlier of the two dates, so a
+     * piece sold in March and deleted in June is a deduction in March and nothing at
+     * all in June, and one sold and deleted the same day counts once.
+     *
+     * One query over withTrashed(), so a piece created and gone the same day lands in
+     * both Add and Less and contributes nothing to Closing — right, and it falls out
+     * of the arithmetic rather than needing a special case. It is also why Opening
+     * counts a piece that left *on* the day: it was there when the day started.
      *
      * Closing is computed from the other three, never queried on its own: a rounding
      * difference between two queries would print a sheet that does not add up.
@@ -99,20 +116,21 @@ class StockFigures
     {
         $start = $date->copy()->startOfDay();
         $end = $date->copy()->addDay()->startOfDay();
+        $day = $date->toDateString();
 
-        $opening = 'created_at < ? and (deleted_at is null or deleted_at >= ?)';
+        $opening = 'created_at < ? and '.self::LEFT_ON.' >= ?';
         $added = 'created_at >= ? and created_at < ?';
-        $less = 'deleted_at is not null and deleted_at >= ? and deleted_at < ?';
+        $less = self::LEFT_ON.' = ? and created_at < ?';
 
         $totals = Item::withTrashed()
             ->when($metalTypeId, fn ($q) => $q->where('metal_type_id', $metalTypeId))
             ->selectRaw('item_group_id')
-            ->selectRaw("coalesce(sum(case when {$opening} then 1 else 0 end), 0) as opening_pcs", [$start, $start])
-            ->selectRaw("coalesce(sum(case when {$opening} then net_weight else 0 end), 0) as opening_wt", [$start, $start])
+            ->selectRaw("coalesce(sum(case when {$opening} then 1 else 0 end), 0) as opening_pcs", [$start, $day])
+            ->selectRaw("coalesce(sum(case when {$opening} then net_weight else 0 end), 0) as opening_wt", [$start, $day])
             ->selectRaw("coalesce(sum(case when {$added} then 1 else 0 end), 0) as add_pcs", [$start, $end])
             ->selectRaw("coalesce(sum(case when {$added} then net_weight else 0 end), 0) as add_wt", [$start, $end])
-            ->selectRaw("coalesce(sum(case when {$less} then 1 else 0 end), 0) as less_pcs", [$start, $end])
-            ->selectRaw("coalesce(sum(case when {$less} then net_weight else 0 end), 0) as less_wt", [$start, $end])
+            ->selectRaw("coalesce(sum(case when {$less} then 1 else 0 end), 0) as less_pcs", [$day, $end])
+            ->selectRaw("coalesce(sum(case when {$less} then net_weight else 0 end), 0) as less_wt", [$day, $end])
             ->groupBy('item_group_id')
             ->get()
             ->keyBy('item_group_id');

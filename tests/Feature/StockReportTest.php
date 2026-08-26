@@ -377,3 +377,87 @@ it('will not let a sales user change what the report shows', function () {
         ->post(route('stock.daily.groups'), ['item_group_ids' => []])
         ->assertForbidden();
 });
+
+// --- a sold piece leaves on the day it was sold ---------------------------------------
+
+it('deducts a sold piece on its sold date, not when the record goes', function () {
+    $this->travelTo(today()->subDays(3)->setHour(9));
+    $item = stockItem($this->ring, net: 9);
+    $this->travelBack();
+
+    // Sold yesterday.
+    $item->forceFill(['sold_at' => today()->subDay()])->save();
+
+    $yesterday = rowFor($this->figures->daily(today()->subDay()), 'RNG');
+
+    expect($yesterday->opening_pcs)->toBe(1)
+        // It was there when the day started, and gone by the end of it.
+        ->and($yesterday->less_pcs)->toBe(1)
+        ->and($yesterday->less_wt)->toBe(9.0)
+        ->and($yesterday->closing_pcs)->toBe(0);
+
+    $today = rowFor($this->figures->daily(today()), 'RNG');
+
+    // Already gone, so today knows nothing about it.
+    expect($today->opening_pcs)->toBe(0)
+        ->and($today->less_pcs)->toBe(0)
+        ->and($today->closing_pcs)->toBe(0);
+});
+
+it('lets a piece leave only once, however it leaves', function () {
+    $this->travelTo(today()->subDays(5)->setHour(9));
+    $item = stockItem($this->ring, net: 9);
+    $this->travelBack();
+
+    // Sold three days ago, and the record removed today.
+    $item->forceFill(['sold_at' => today()->subDays(3)])->save();
+    $item->delete();
+
+    $sold = rowFor($this->figures->daily(today()->subDays(3)), 'RNG');
+    $deleted = rowFor($this->figures->daily(today()), 'RNG');
+
+    // It left when it was sold. Deleting the record afterwards is bookkeeping, not a
+    // second deduction — counting it twice would take the same ring out of stock two
+    // times over.
+    expect($sold->less_pcs)->toBe(1)
+        ->and($deleted->less_pcs)->toBe(0)
+        ->and($deleted->opening_pcs)->toBe(0);
+});
+
+it('nets out a piece sold the day it arrived', function () {
+    $this->travelTo(today()->setHour(9));
+    $item = stockItem($this->ring, net: 7);
+    $this->travelBack();
+
+    $item->forceFill(['sold_at' => today()])->save();
+
+    $row = rowFor($this->figures->daily(today()), 'RNG');
+
+    expect($row->opening_pcs)->toBe(0)
+        ->and($row->add_pcs)->toBe(1)
+        ->and($row->less_pcs)->toBe(1)
+        ->and($row->closing_pcs)->toBe(0)
+        ->and($row->closing_wt)->toBe(0.0);
+});
+
+it('keeps the daily sheet adding up once pieces are sold', function () {
+    $this->travelTo(today()->subDay()->setHour(9));
+    $sold = stockItem($this->ring, net: 9);
+    stockItem($this->ring, net: 4);
+    $this->travelBack();
+
+    $sold->forceFill(['sold_at' => today()])->save();
+
+    foreach ($this->figures->daily(today()) as $row) {
+        expect($row->closing_pcs)->toBe($row->opening_pcs + $row->add_pcs - $row->less_pcs)
+            ->and($row->closing_wt)
+            ->toBe(round($row->opening_wt + $row->add_wt - $row->less_wt, 3));
+    }
+
+    $row = rowFor($this->figures->daily(today()), 'RNG');
+
+    expect($row->opening_pcs)->toBe(2)
+        ->and($row->less_pcs)->toBe(1)
+        ->and($row->closing_pcs)->toBe(1)
+        ->and($row->closing_wt)->toBe(4.0);
+});

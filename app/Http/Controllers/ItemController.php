@@ -59,7 +59,11 @@ class ItemController extends Controller implements HasMiddleware
             ->when($request->filled('item_group_id'), fn ($q) => $q->where('item_group_id', $request->integer('item_group_id')))
             ->when($request->filled('supplier_id'), fn ($q) => $q->where('supplier_id', $request->integer('supplier_id')))
             ->when($request->filled('metal_type_id'), fn ($q) => $q->where('metal_type_id', $request->integer('metal_type_id')))
-            ->when($request->filled('status'), fn ($q) => $q->where('is_active', $request->string('status')->toString() === 'active'));
+            ->when($request->filled('status'), fn ($q) => $q->where('is_active', $request->string('status')->toString() === 'active'))
+            // Sold pieces are out of the shop, so they are out of the listing
+            // unless someone asks for them. "all" shows both.
+            ->when($request->string('stock')->toString() !== 'all',
+                fn ($q) => $request->string('stock')->toString() === 'sold' ? $q->sold() : $q->inStock());
 
         // Resolved once: refPrefix() reads the settings singleton, and inside a
         // per-row closure that would be one lookup per item on the page.
@@ -226,6 +230,8 @@ class ItemController extends Controller implements HasMiddleware
 
         $items = Item::query()
             ->active()
+            // Gone from the shop, so it cannot be promised again.
+            ->inStock()
             ->with(['metalType:id,name', 'purity:id,name', 'makingCharge', 'itemStones'])
             ->when($request->boolean('include_reserved') === false, fn ($q) => $q->whereNull('order_form_line_id'))
             ->when($term !== '', fn ($q) => $q->where(fn ($sub) => $sub

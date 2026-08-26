@@ -3,12 +3,16 @@
 use App\Models\AppSetting;
 use App\Models\CashDrawer;
 use App\Models\CashEntry;
+use App\Models\Item;
 use App\Models\ItemEstimate;
+use App\Models\ItemGroup;
 use App\Models\OgEstimate;
+use App\Models\Purity;
 use App\Models\SalesPerson;
 use App\Models\User;
 use App\Models\Voucher;
 use App\Services\CashMath;
+use App\Services\StockFigures;
 use Database\Seeders\MasterDataSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Database\QueryException;
@@ -654,4 +658,144 @@ it('keeps the export behind the view permission', function () {
     $this->actingAs(User::factory()->create())
         ->get(route('cash-entries.export'))
         ->assertForbidden();
+});
+
+// --- writing a settled piece out of stock ------------------------------------------
+
+/** A stock piece quoted on an estimate that a cash entry then settles. */
+function settledStockItem($test): Item
+{
+    $group = ItemGroup::where('prefix', 'NCK')->firstOrFail();
+    $purity = Purity::whereRelation('metalType', 'code', 'GOLD')->where('name', '22K')->firstOrFail();
+
+    $item = new Item([
+        'item_group_id' => $group->id,
+        'metal_type_id' => $purity->metal_type_id,
+        'purity_id' => $purity->id,
+        'name' => 'Necklace',
+        'gross_weight' => 20,
+        'other_deduction' => 0,
+        'is_active' => true,
+    ]);
+    $item->code = $group->nextItemCode();
+    $item->net_weight = 20;
+    $item->save();
+
+    $estimate = cashEstimate($test, 25000);
+    $estimate->lines()->first()->update(['item_id' => $item->id]);
+
+    postCashEntry($test, ['document_reference' => 'estimate:'.$estimate->id])->assertRedirect();
+
+    return $item->fresh();
+}
+
+/** A piece sitting in stock with nothing behind it. */
+function looseStockItem(string $name = 'Loose'): Item
+{
+    $group = ItemGroup::where('prefix', 'NCK')->firstOrFail();
+    $purity = Purity::whereRelation('metalType', 'code', 'GOLD')->where('name', '22K')->firstOrFail();
+
+    $item = new Item([
+        'item_group_id' => $group->id,
+        'metal_type_id' => $purity->metal_type_id,
+        'purity_id' => $purity->id,
+        'name' => $name,
+        'gross_weight' => 5,
+        'other_deduction' => 0,
+        'is_active' => true,
+    ]);
+
+    // code is NOT NULL, so it has to be there before the insert.
+    $item->code = $group->nextItemCode();
+    $item->net_weight = 5;
+    $item->save();
+
+    return $item;
+}
+
+it('lists only the pieces a cash entry has settled', function () {
+    $settled = settledStockItem($this);
+
+    // A piece on no estimate at all has no business on this screen.
+    $loose = looseStockItem('Unsold');
+
+    $rows = $this->actingAs($this->admin)
+        ->getJson(route('sold-items.index', dtParams(['code', 'group']) + ['state' => '']))
+        ->json('data');
+
+    expect(collect($rows)->pluck('code')->implode(' '))
+        ->toContain($settled->code)
+        ->not->toContain($loose->code);
+});
+
+it('marks a settled piece sold today and takes it off the stock figures', function () {
+    $item = settledStockItem($this);
+
+    $before = app(StockFigures::class)->byItemGroup()
+        ->firstWhere('id', $item->item_group_id)->pcs;
+
+    $this->actingAs($this->admin)->post(route('sold-items.sold', $item))
+        ->assertRedirect()
+        ->assertSessionHas('success');
+
+    expect($item->fresh()->sold_at->toDateString())->toBe(today()->toDateString());
+
+    $after = app(StockFigures::class)->byItemGroup()
+        ->firstWhere('id', $item->item_group_id)->pcs;
+
+    expect($after)->toBe($before - 1);
+});
+
+it('puts a piece back into stock', function () {
+    $item = settledStockItem($this);
+
+    $this->actingAs($this->admin)->post(route('sold-items.sold', $item))->assertRedirect();
+    $this->actingAs($this->admin)->post(route('sold-items.available', $item))
+        ->assertRedirect()
+        ->assertSessionHas('success');
+
+    expect($item->fresh()->sold_at)->toBeNull();
+});
+
+it('refuses to sell a piece nothing has been paid for', function () {
+    $item = looseStockItem();
+
+    $this->actingAs($this->admin)->post(route('sold-items.sold', $item))
+        ->assertRedirect()
+        ->assertSessionHas('error');
+
+    expect($item->fresh()->sold_at)->toBeNull();
+});
+
+it('keeps a sold piece out of the items listing and the picker', function () {
+    $item = settledStockItem($this);
+
+    $this->actingAs($this->admin)->post(route('sold-items.sold', $item))->assertRedirect();
+
+    $listed = $this->actingAs($this->admin)
+        ->getJson(route('items.index', dtParams(['code'])))
+        ->json('data');
+
+    expect(collect($listed)->pluck('code')->implode(' '))->not->toContain($item->code);
+
+    $picker = $this->actingAs($this->admin)->getJson(route('items.lookup'))->json('items');
+
+    expect(collect($picker)->pluck('code'))->not->toContain($item->code);
+
+    // Still findable when asked for.
+    $sold = $this->actingAs($this->admin)
+        ->getJson(route('items.index', dtParams(['code']) + ['stock' => 'sold']))
+        ->json('data');
+
+    expect(collect($sold)->pluck('code')->implode(' '))->toContain($item->code);
+});
+
+it('lets sales look at the sold list but not change it', function () {
+    $item = settledStockItem($this);
+
+    $sales = User::factory()->create();
+    $sales->assignRole('Sales');
+
+    $this->actingAs($sales)->get(route('sold-items.index'))->assertOk();
+    $this->actingAs($sales)->post(route('sold-items.sold', $item))->assertForbidden();
 });

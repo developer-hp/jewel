@@ -43,6 +43,7 @@ class Item extends Model
             'extra_charge_1' => 'decimal:2',
             'extra_charge_2' => 'decimal:2',
             'is_active' => 'boolean',
+            'sold_at' => 'date',
         ];
     }
 
@@ -217,8 +218,48 @@ class Item extends Model
         return round($this->stoneValue(), 2);
     }
 
+    /**
+     * Every estimate line this piece has been quoted on. A piece can be quoted more
+     * than once, so this is a hasMany even though only one estimate is ever settled.
+     */
+    public function estimateLines(): HasMany
+    {
+        return $this->hasMany(ItemEstimateLine::class);
+    }
+
     public function scopeActive(Builder $query): void
     {
         $query->where('is_active', true);
+    }
+
+    /**
+     * Still in the shop. Every stock figure counts these and only these.
+     *
+     * sold_at is deliberately not fillable: a piece changes hands through
+     * markSold() and markAvailable(), never through a form post.
+     */
+    public function scopeInStock(Builder $query): void
+    {
+        $query->whereNull('sold_at');
+    }
+
+    public function scopeSold(Builder $query): void
+    {
+        $query->whereNotNull('sold_at');
+    }
+
+    public function isSold(): bool
+    {
+        return $this->sold_at !== null;
+    }
+
+    public function markSold(): void
+    {
+        $this->forceFill(['sold_at' => today()])->save();
+    }
+
+    public function markAvailable(): void
+    {
+        $this->forceFill(['sold_at' => null])->save();
     }
 }

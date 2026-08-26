@@ -145,6 +145,12 @@ return [
                         'can' => 'cash_entry.view',
                     ],
                     [
+                        'label' => 'Sold Items',
+                        'route' => 'sold-items.index',
+                        'active' => 'sold-items.*',
+                        'can' => 'item.view',
+                    ],
+                    [
                         'label' => 'Cash Drawers',
                         'route' => 'cash-drawers.index',
                         'active' => 'cash-drawers.*',

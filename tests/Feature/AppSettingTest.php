@@ -489,7 +489,7 @@ it('sets the gst rate estimates snapshot from', function () {
 it('shows all three on the appearance page', function () {
     $this->actingAs($this->admin)->get(route('app-settings.edit'))
         ->assertOk()
-        ->assertSee('Estimates &amp; Vouchers', false)
+        ->assertSee('Estimates, Vouchers &amp; Cash', false)
         ->assertSee('name="og_estimate_ref_prefix"', false)
         ->assertSee('name="og_estimate_next_ref_no"', false)
         ->assertSee('name="item_estimate_ref_prefix"', false)

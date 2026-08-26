@@ -41,6 +41,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SalesPersonController;
 use App\Http\Controllers\SecuritySettingController;
 use App\Http\Controllers\SessionHeartbeatController;
+use App\Http\Controllers\SoldItemController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\StockGroupController;
 use App\Http\Controllers\StockReportController;
@@ -138,6 +139,11 @@ Route::middleware('auth')->group(function () {
         ->name('cash-entries.lookup.documents');
     Route::get('cash-entries-lookup/og-estimates', [CashLookupController::class, 'ogEstimates'])
         ->name('cash-entries.lookup.og-estimates');
+    // Pieces paid for and on their way out of stock.
+    Route::get('sold-items', [SoldItemController::class, 'index'])->name('sold-items.index');
+    Route::post('sold-items/{item}/sold', [SoldItemController::class, 'markSold'])->name('sold-items.sold');
+    Route::post('sold-items/{item}/available', [SoldItemController::class, 'markAvailable'])->name('sold-items.available');
+
     Route::get('cash-entries/export', [CashEntryController::class, 'export'])->name('cash-entries.export');
     Route::resource('cash-entries', CashEntryController::class)->except('show')
         ->parameters(['cash-entries' => 'cash_entry']);
