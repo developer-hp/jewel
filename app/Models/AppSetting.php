@@ -29,6 +29,7 @@ use Illuminate\Support\Facades\Storage;
     'og_estimate_next_ref_no', 'og_estimate_ref_prefix',
     'voucher_next_ref_no', 'voucher_ref_prefix',
     'item_estimate_next_ref_no', 'item_estimate_ref_prefix', 'gst_percent',
+    'cash_entry_next_ref_no', 'cash_entry_ref_prefix',
 ])]
 class AppSetting extends Model
 {
@@ -74,6 +75,8 @@ class AppSetting extends Model
         'item_estimate_next_ref_no' => 1,
         'item_estimate_ref_prefix' => '',
         'gst_percent' => 3,
+        'cash_entry_next_ref_no' => 1,
+        'cash_entry_ref_prefix' => '',
     ];
 
     /**
@@ -134,6 +137,7 @@ class AppSetting extends Model
             'og_estimate_next_ref_no' => 'integer',
             'voucher_next_ref_no' => 'integer',
             'item_estimate_next_ref_no' => 'integer',
+            'cash_entry_next_ref_no' => 'integer',
             'gst_percent' => 'decimal:2',
         ];
     }

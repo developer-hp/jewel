@@ -132,6 +132,26 @@ return [
                     ],
                 ],
             ],
+            // Money over the counter. Drawers live here rather than under Masters
+            // because their balance is read daily, not maintained occasionally.
+            [
+                'label' => 'Cash',
+                'icon' => 'ri-cash-fill',
+                'children' => [
+                    [
+                        'label' => 'Cash Entries',
+                        'route' => 'cash-entries.index',
+                        'active' => 'cash-entries.*',
+                        'can' => 'cash_entry.view',
+                    ],
+                    [
+                        'label' => 'Cash Drawers',
+                        'route' => 'cash-drawers.index',
+                        'active' => 'cash-drawers.*',
+                        'can' => 'cash_drawer.view',
+                    ],
+                ],
+            ],
             [
                 'label' => 'Repairs',
                 'icon' => 'ri-tools-fill',

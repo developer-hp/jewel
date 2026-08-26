@@ -610,16 +610,17 @@
                     <div class="col-lg-12">
                         <div class="card">
                             <div class="card-header py-2">
-                                <h5 class="mb-0">Estimates &amp; Vouchers</h5>
+                                <h5 class="mb-0">Estimates, Vouchers &amp; Cash</h5>
                             </div>
                             <div class="card-body">
                                 <div class="row">
-                                    {{-- Three counters, kept apart on purpose: each
+                                    {{-- A counter each, kept apart on purpose: every
                                          document numbers independently. --}}
                                     @foreach ([
                                         ['key' => 'og_estimate', 'title' => 'OG Estimate', 'placeholder' => 'OG'],
                                         ['key' => 'item_estimate', 'title' => 'Rough Estimate', 'placeholder' => 'ES'],
                                         ['key' => 'voucher', 'title' => 'Voucher', 'placeholder' => 'VC'],
+                                        ['key' => 'cash_entry', 'title' => 'Cash Entry', 'placeholder' => 'CS'],
                                     ] as $doc)
                                         @php($prefixField = $doc['key'] . '_ref_prefix')
                                         @php($counterField = $doc['key'] . '_next_ref_no')

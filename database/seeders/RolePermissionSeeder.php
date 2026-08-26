@@ -46,6 +46,8 @@ class RolePermissionSeeder extends Seeder
         'order_form' => ['view', 'create', 'edit', 'delete', 'print'],
         'supplier_order' => ['view', 'create', 'edit', 'delete', 'print'],
         'internal_stock_entry' => ['view', 'create', 'edit', 'delete', 'print'],
+        'cash_drawer' => ['view', 'create', 'edit', 'delete'],
+        'cash_entry' => ['view', 'create', 'edit', 'delete'],
         'item' => ['view', 'create', 'edit', 'delete', 'print'],
         'stock' => ['view', 'adjust', 'report'],
         'customer' => ['view', 'create', 'edit', 'delete'],
@@ -63,6 +65,7 @@ class RolePermissionSeeder extends Seeder
     private const MASTER_MODULES = [
         'metal_type', 'purity', 'metal_rate', 'item_group', 'stock_group', 'stone', 'making_charge',
         'supplier', 'sales_person', 'order_type', 'internal_stock', 'label_setting', 'app_setting',
+        'cash_drawer',
     ];
 
     public function run(): void
@@ -92,7 +95,7 @@ class RolePermissionSeeder extends Seeder
             ['user.view'],
             $this->modulePermissions(...self::MASTER_MODULES),
             $this->modulePermissions('item_lot', 'angadiya', 'hallmark', 'supplier_hisab', 'repair_form', 'order_form', 'supplier_order', 'internal_stock_entry',
-                'og_estimate', 'voucher', 'item_estimate', 'item', 'stock', 'customer'),
+                'og_estimate', 'voucher', 'item_estimate', 'cash_entry', 'item', 'stock', 'customer'),
             ['quotation.view', 'quotation.create', 'quotation.edit', 'quotation.approve', 'quotation.print'],
         ));
 
@@ -115,7 +118,10 @@ class RolePermissionSeeder extends Seeder
                 // Estimates and vouchers are written at the counter too.
                 'og_estimate.view', 'og_estimate.create', 'og_estimate.print',
                 'voucher.view', 'voucher.create', 'voucher.print',
-                'item_estimate.view', 'item_estimate.create', 'item_estimate.print'],
+                'item_estimate.view', 'item_estimate.create', 'item_estimate.print',
+                // Cash is taken at the counter; correcting or removing a booked
+                // entry is a manager's job, as with the internal stock ledger.
+                'cash_entry.view', 'cash_entry.create'],
             // Sales reads the masters so quotation screens can resolve rates and names.
             array_map(fn (string $module) => "{$module}.view", self::MASTER_MODULES),
             $this->modulePermissions('customer'),

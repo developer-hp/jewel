@@ -71,6 +71,8 @@ class AppSettingController extends Controller implements HasMiddleware
             'item_estimate_ref_prefix',
             'item_estimate_next_ref_no',
             'gst_percent',
+            'cash_entry_ref_prefix',
+            'cash_entry_next_ref_no',
             'supplier_order_next_form_no',
             'supplier_order_header',
             'sidebar_user_bg_from',

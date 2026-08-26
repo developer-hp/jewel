@@ -4,6 +4,9 @@ use App\Http\Controllers\AngadiyaController;
 use App\Http\Controllers\AngadiyaPrintController;
 use App\Http\Controllers\AppSettingController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\CashDrawerController;
+use App\Http\Controllers\CashEntryController;
+use App\Http\Controllers\CashLookupController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EstimatePrintController;
@@ -129,6 +132,17 @@ Route::middleware('auth')->group(function () {
 
     Route::get('send-document', [WhatsAppDocumentController::class, 'create'])->name('whatsapp-documents.create');
     Route::post('send-document', [WhatsAppDocumentController::class, 'send'])->name('whatsapp-documents.send');
+
+    // Hyphenated, like items-lookup, so neither can be read as an id.
+    Route::get('cash-entries-lookup/documents', [CashLookupController::class, 'documents'])
+        ->name('cash-entries.lookup.documents');
+    Route::get('cash-entries-lookup/og-estimates', [CashLookupController::class, 'ogEstimates'])
+        ->name('cash-entries.lookup.og-estimates');
+    Route::get('cash-entries/export', [CashEntryController::class, 'export'])->name('cash-entries.export');
+    Route::resource('cash-entries', CashEntryController::class)->except('show')
+        ->parameters(['cash-entries' => 'cash_entry']);
+    Route::resource('cash-drawers', CashDrawerController::class)->except('show')
+        ->parameters(['cash-drawers' => 'cash_drawer']);
 
     Route::get('app-settings', [AppSettingController::class, 'edit'])->name('app-settings.edit');
     Route::put('app-settings', [AppSettingController::class, 'update'])->name('app-settings.update');

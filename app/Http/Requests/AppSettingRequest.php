@@ -61,6 +61,9 @@ class AppSettingRequest extends FormRequest
             // never rewrites a quote already given.
             'gst_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
 
+            'cash_entry_ref_prefix' => ['nullable', 'string', 'alpha_num', 'max:10'],
+            'cash_entry_next_ref_no' => ['nullable', 'integer', 'min:1', 'max:99999999'],
+
             'supplier_order_next_form_no' => ['nullable', 'integer', 'min:1', 'max:99999999'],
             'supplier_order_header' => ['nullable', 'string', 'max:150'],
 
@@ -164,7 +167,7 @@ class AppSettingRequest extends FormRequest
     private function normaliseNumbering(): void
     {
         $prefixes = ['repair_ref_prefix', 'order_ref_prefix', 'og_estimate_ref_prefix',
-            'voucher_ref_prefix', 'item_estimate_ref_prefix'];
+            'voucher_ref_prefix', 'item_estimate_ref_prefix', 'cash_entry_ref_prefix'];
 
         foreach ($prefixes as $field) {
             if ($this->has($field) && blank($this->input($field))) {
@@ -173,7 +176,7 @@ class AppSettingRequest extends FormRequest
         }
 
         $numbers = ['repair_next_ref_no', 'order_next_ref_no', 'og_estimate_next_ref_no',
-            'voucher_next_ref_no', 'item_estimate_next_ref_no', 'supplier_order_next_form_no',
+            'voucher_next_ref_no', 'item_estimate_next_ref_no', 'cash_entry_next_ref_no', 'supplier_order_next_form_no',
             'gst_percent'];
 
         foreach ($numbers as $field) {

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use NumberFormatter;
 
@@ -42,6 +43,19 @@ class Voucher extends Model
             'ref_no' => 'integer',
             'amount' => 'decimal:2',
         ];
+    }
+
+    /**
+     * The cash entry that settled this, if any.
+     *
+     * Exists so the cash lookup can say whereDoesntHave('cashEntry'). Because
+     * CashEntry soft-deletes, that query carries deleted_at IS NULL for free — which
+     * is what makes deleting an entry release its documents, with no extra clause
+     * anywhere.
+     */
+    public function cashEntry(): HasOne
+    {
+        return $this->hasOne(CashEntry::class);
     }
 
     public function salesPerson(): BelongsTo
