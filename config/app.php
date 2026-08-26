@@ -65,7 +65,10 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    // The shop is in India and every date in this app is a shop date — what sold
+    // today, what the daily sheet covers, when the day opening runs. On UTC a sale
+    // rung up after 5:30pm IST carried the next day's date.
+    'timezone' => env('APP_TIMEZONE', 'Asia/Kolkata'),
 
     /*
     |--------------------------------------------------------------------------

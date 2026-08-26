@@ -451,6 +451,27 @@
                                     whenever they are saved.
                                 </small>
 
+                                <hr>
+
+                                {{-- Off by default and deliberately so: the opening deletes the
+                                     day's estimates, angadiya, hisab and cash entries for good. --}}
+                                <div class="form-check form-switch">
+                                    <input type="hidden" name="auto_opening_enabled" value="0">
+                                    <input class="form-check-input" type="checkbox" id="auto_opening_enabled"
+                                        name="auto_opening_enabled" value="1"
+                                        @checked(old('auto_opening_enabled', $settings->auto_opening_enabled))>
+                                    <label class="form-check-label" for="auto_opening_enabled">
+                                        Open the day automatically
+                                    </label>
+                                </div>
+                                <small class="text-muted d-block">
+                                    Runs the day opening at 11:30 every day, which sends the reports and
+                                    then <strong>permanently deletes</strong> the day's estimates, angadiya
+                                    slips, hisab and cash entries. Off, it only runs from the
+                                    <a href="{{ route('day-opening.show') }}">Day Opening</a> screen.
+                                    Either way it needs <code>php artisan schedule:work</code> running.
+                                </small>
+
                                 @error('dashboard_sections')
                                     <div class="text-danger fs-13 mt-2">{{ $message }}</div>
                                 @enderror

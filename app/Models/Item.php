@@ -43,7 +43,7 @@ class Item extends Model
             'extra_charge_1' => 'decimal:2',
             'extra_charge_2' => 'decimal:2',
             'is_active' => 'boolean',
-            'sold_at' => 'date',
+            'sold_at' => 'datetime',
         ];
     }
 
@@ -255,7 +255,7 @@ class Item extends Model
 
     public function markSold(): void
     {
-        $this->forceFill(['sold_at' => today()])->save();
+        $this->forceFill(['sold_at' => now()])->save();
     }
 
     public function markAvailable(): void

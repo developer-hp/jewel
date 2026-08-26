@@ -9,6 +9,7 @@ use App\Http\Controllers\CashEntryController;
 use App\Http\Controllers\CashLookupController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DayOpeningController;
 use App\Http\Controllers\EstimatePrintController;
 use App\Http\Controllers\HallmarkController;
 use App\Http\Controllers\HallmarkPrintController;
@@ -56,6 +57,7 @@ use App\Http\Controllers\SupplierOrderScanController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VoucherController;
 use App\Http\Controllers\WhatsAppDocumentController;
+use App\Http\Controllers\WhatsAppReceiverController;
 use App\Http\Controllers\WhatsAppTemplateController;
 use Illuminate\Support\Facades\Route;
 
@@ -130,6 +132,13 @@ Route::middleware('auth')->group(function () {
     Route::get('whatsapp-templates', [WhatsAppTemplateController::class, 'index'])->name('whatsapp-templates.index');
     Route::get('whatsapp-templates/{event}', [WhatsAppTemplateController::class, 'edit'])->name('whatsapp-templates.edit');
     Route::put('whatsapp-templates/{event}', [WhatsAppTemplateController::class, 'update'])->name('whatsapp-templates.update');
+
+    Route::resource('whatsapp-receivers', WhatsAppReceiverController::class)->except('show')
+        ->parameters(['whatsapp-receivers' => 'whatsapp_receiver']);
+
+    // Destructive and irreversible; the POST is what actually closes the day.
+    Route::get('day-opening', [DayOpeningController::class, 'show'])->name('day-opening.show');
+    Route::post('day-opening', [DayOpeningController::class, 'run'])->name('day-opening.run');
 
     Route::get('send-document', [WhatsAppDocumentController::class, 'create'])->name('whatsapp-documents.create');
     Route::post('send-document', [WhatsAppDocumentController::class, 'send'])->name('whatsapp-documents.send');

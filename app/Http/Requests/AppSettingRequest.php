@@ -86,6 +86,7 @@ class AppSettingRequest extends FormRequest
             // The sections to SHOW; what gets stored is the complement. Keys are
             // checked against the registry, so a stale or invented one is refused.
             'settings_cache_enabled' => ['boolean'],
+            'auto_opening_enabled' => ['boolean'],
             'dashboard_sections' => ['sometimes', 'array'],
             'dashboard_sections.*' => [Rule::in(array_column(config('dashboard', []), 'key'))],
         ];
@@ -130,7 +131,10 @@ class AppSettingRequest extends FormRequest
         //
         // The form posts one empty value so "none ticked" still arrives as an array;
         // drop it before the key rule sees it.
-        $this->merge(['settings_cache_enabled' => $this->boolean('settings_cache_enabled')]);
+        $this->merge([
+            'settings_cache_enabled' => $this->boolean('settings_cache_enabled'),
+            'auto_opening_enabled' => $this->boolean('auto_opening_enabled'),
+        ]);
 
         if ($this->has('dashboard_sections')) {
             $this->merge([

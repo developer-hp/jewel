@@ -338,6 +338,18 @@ return [
                         'can' => 'app_setting.view',
                     ],
                     [
+                        'label' => 'Report Receivers',
+                        'route' => 'whatsapp-receivers.index',
+                        'active' => 'whatsapp-receivers.*',
+                        'can' => 'app_setting.view',
+                    ],
+                    [
+                        'label' => 'Day Opening',
+                        'route' => 'day-opening.show',
+                        'active' => 'day-opening.*',
+                        'can' => 'app_setting.view',
+                    ],
+                    [
                         'label' => 'Security',
                         'route' => 'security-settings.edit',
                         'active' => 'security-settings.*',

@@ -35,7 +35,7 @@ class StockFigures
      * A date rather than a timestamp, because sold_at is one and the daily sheet is
      * read a day at a time.
      */
-    private const LEFT_ON = "LEAST(COALESCE(sold_at, '9999-12-31'), COALESCE(DATE(deleted_at), '9999-12-31'))";
+    private const LEFT_ON = "LEAST(COALESCE(DATE(sold_at), '9999-12-31'), COALESCE(DATE(deleted_at), '9999-12-31'))";
 
     public function byItemGroup(?int $metalTypeId = null): Collection
     {

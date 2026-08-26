@@ -81,6 +81,7 @@ class AppSettingController extends Controller implements HasMiddleware
             'table_header_bg_light',
             'table_header_bg_dark',
             'settings_cache_enabled',
+            'auto_opening_enabled',
         ]));
 
         // Stored as what is hidden, so a section added later shows up by default
