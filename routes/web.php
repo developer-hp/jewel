@@ -51,6 +51,8 @@ use App\Http\Controllers\SupplierOrderPrintController;
 use App\Http\Controllers\SupplierOrderScanController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VoucherController;
+use App\Http\Controllers\WhatsAppDocumentController;
+use App\Http\Controllers\WhatsAppTemplateController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route(auth()->check() ? 'dashboard' : 'login'));
@@ -111,12 +113,22 @@ Route::middleware('auth')->group(function () {
 
     // Lookup sits above the resource so `customers/lookup` is not read as an id.
     Route::get('customers/lookup', [CustomerController::class, 'lookup'])->name('customers.lookup');
+    Route::get('customers/search', [CustomerController::class, 'search'])->name('customers.search');
     Route::resource('customers', CustomerController::class)->except('show');
 
     Route::resource('suppliers', SupplierController::class)->except('show');
 
     Route::get('security-settings', [SecuritySettingController::class, 'edit'])->name('security-settings.edit');
     Route::put('security-settings', [SecuritySettingController::class, 'update'])->name('security-settings.update');
+
+    // {event} is a WhatsAppEvent case, not an id — the enum is what says which
+    // templates exist, so an unknown one is a 404 rather than a missing row.
+    Route::get('whatsapp-templates', [WhatsAppTemplateController::class, 'index'])->name('whatsapp-templates.index');
+    Route::get('whatsapp-templates/{event}', [WhatsAppTemplateController::class, 'edit'])->name('whatsapp-templates.edit');
+    Route::put('whatsapp-templates/{event}', [WhatsAppTemplateController::class, 'update'])->name('whatsapp-templates.update');
+
+    Route::get('send-document', [WhatsAppDocumentController::class, 'create'])->name('whatsapp-documents.create');
+    Route::post('send-document', [WhatsAppDocumentController::class, 'send'])->name('whatsapp-documents.send');
 
     Route::get('app-settings', [AppSettingController::class, 'edit'])->name('app-settings.edit');
     Route::put('app-settings', [AppSettingController::class, 'update'])->name('app-settings.update');

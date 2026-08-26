@@ -81,6 +81,36 @@ class CustomerController extends Controller implements HasMiddleware
         ]);
     }
 
+    /**
+     * Customers matching what has been typed, for a select2.
+     *
+     * lookup() above answers "who has this exact number"; this answers "who did I
+     * mean", which is what a picker needs.
+     */
+    public function search(Request $request): JsonResponse
+    {
+        $term = $request->string('q')->toString();
+
+        $customers = Customer::query()
+            ->where('is_active', true)
+            ->when($term !== '', fn ($q) => $q->where(fn ($sub) => $sub
+                ->where('name', 'like', "%{$term}%")
+                ->orWhere('phone', 'like', "%{$term}%")
+                // The digits-only key, so "9712 40" finds "9712406367".
+                ->orWhere('phone_key', 'like', '%'.Customer::phoneKey($term).'%')))
+            ->orderBy('name')
+            ->limit(30)
+            ->get();
+
+        return response()->json([
+            'customers' => $customers->map(fn (Customer $customer) => [
+                'id' => $customer->id,
+                'name' => $customer->name,
+                'phone' => $customer->phone,
+            ])->all(),
+        ]);
+    }
+
     public function create(): View
     {
         return view('customers.create', ['customer' => new Customer(['is_active' => true])]);

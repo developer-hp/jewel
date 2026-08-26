@@ -300,6 +300,18 @@ return [
                         'can' => 'label_setting.view',
                     ],
                     [
+                        'label' => 'WhatsApp',
+                        'route' => 'whatsapp-templates.index',
+                        'active' => 'whatsapp-templates.*',
+                        'can' => 'app_setting.view',
+                    ],
+                    [
+                        'label' => 'Send Document',
+                        'route' => 'whatsapp-documents.create',
+                        'active' => 'whatsapp-documents.*',
+                        'can' => 'app_setting.view',
+                    ],
+                    [
                         'label' => 'Security',
                         'route' => 'security-settings.edit',
                         'active' => 'security-settings.*',

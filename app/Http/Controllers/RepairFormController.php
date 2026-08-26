@@ -8,6 +8,7 @@ use App\Models\Customer;
 use App\Models\RepairForm;
 use App\Models\SalesPerson;
 use App\Services\ItemPhotoStore;
+use App\Services\WhatsAppNotifier;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,7 +20,10 @@ use Yajra\DataTables\Facades\DataTables;
 
 class RepairFormController extends Controller implements HasMiddleware
 {
-    public function __construct(private readonly ItemPhotoStore $photos) {}
+    public function __construct(
+        private readonly ItemPhotoStore $photos,
+        private readonly WhatsAppNotifier $whatsapp,
+    ) {}
 
     public static function middleware(): array
     {
@@ -113,6 +117,10 @@ class RepairFormController extends Controller implements HasMiddleware
 
             return $form;
         });
+
+        // After the commit, like the photo below: the customer is only told about a
+        // repair that is definitely on disk. Never throws — see WhatsAppNotifier.
+        $this->whatsapp->repairCreated($form);
 
         if ($request->hasFile('photo')) {
             $this->photos->put($form, $request->file('photo'));

@@ -35,4 +35,22 @@ return [
         ],
     ],
 
+    /*
+     * WhatsApp Cloud API.
+     *
+     * The token is a Meta System User token, so it lives here and never in the
+     * database — the same rule AppSetting::MEDIA_DISKS states for S3. What the
+     * shop chooses (which template, in which language, and whether to send at
+     * all) is in whatsapp_templates; what authenticates is in .env.
+     */
+    'whatsapp' => [
+        'base_url' => env('WA_BASE_URL', 'https://graph.facebook.com'),
+        'api_version' => env('WA_API_VERSION', 'v23.0'),
+        'phone_number_id' => env('WA_PHONE_ID'),
+        'token' => env('WA_TOKEN'),
+        // Numbers are typed bare at the counter; this is what completes them.
+        'country_code' => env('WA_COUNTRY_CODE', '91'),
+        'timeout' => (int) env('WA_TIMEOUT', 10),
+    ],
+
 ];

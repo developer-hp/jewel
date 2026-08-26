@@ -14,6 +14,7 @@ use App\Models\SalesPerson;
 use App\Models\StoneMaster;
 use App\Services\ItemCalculator;
 use App\Services\ItemPhotoStore;
+use App\Services\WhatsAppNotifier;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -36,6 +37,7 @@ class OrderFormController extends Controller implements HasMiddleware
     public function __construct(
         private readonly ItemPhotoStore $photos,
         private readonly ItemCalculator $calculator,
+        private readonly WhatsAppNotifier $whatsapp,
     ) {}
 
     public static function middleware(): array
@@ -144,6 +146,10 @@ class OrderFormController extends Controller implements HasMiddleware
 
             return $form;
         });
+
+        // After the commit, like the photo below: the customer is only told about an
+        // order that is definitely on disk. Never throws — see WhatsAppNotifier.
+        $this->whatsapp->orderCreated($form);
 
         if ($request->hasFile('photo')) {
             $this->photos->put($form, $request->file('photo'));
