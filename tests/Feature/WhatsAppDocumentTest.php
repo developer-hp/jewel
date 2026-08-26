@@ -25,7 +25,6 @@ beforeEach(function () {
         'services.whatsapp.token' => 'test-token',
         'services.whatsapp.phone_number_id' => '1051600000',
         'services.whatsapp.country_code' => '91',
-        'app.url' => 'https://jewel.example.com',
     ]);
 });
 
@@ -80,7 +79,10 @@ it('queues the document with a link meta can fetch', function () {
             // The header is the PDF, so there are no text header parameters.
             && $job->header === []
             && $job->body === ['RAVIBHAI', 'Ledger Report']
-            && str_starts_with($job->document['link'], 'https://jewel.example.com/storage/whatsapp-documents/')
+            // Absolute, rooted at the app: Meta fetches this from its own network,
+            // so the relative path the local disk hands back is no use.
+            && str_starts_with($job->document['link'], url('/storage/whatsapp-documents/'))
+            && str_starts_with($job->document['link'], 'http')
             // The name the customer sees is the one they were sent, tidied.
             && $job->document['filename'] === 'ledger august.pdf';
     });
