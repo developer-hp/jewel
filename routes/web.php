@@ -187,6 +187,8 @@ Route::middleware('auth')->group(function () {
     Route::post('order-forms/print', [OrderFormPrintController::class, 'forms'])->name('order-forms.print');
     Route::post('order-forms/stickers', [OrderFormPrintController::class, 'stickers'])->name('order-forms.stickers');
     Route::get('order-forms/sticker-by-ref', [OrderFormPrintController::class, 'stickerByRef'])->name('order-forms.sticker-by-ref');
+    // Feeds the picker on that screen. Hyphenated so it can never be read as an id.
+    Route::get('order-forms/sticker-search', [OrderFormPrintController::class, 'search'])->name('order-forms.sticker-search');
     Route::post('order-forms/lines/{line}/fix-rate', [OrderFormController::class, 'fixRate'])->name('order-forms.fix-rate');
     Route::resource('order-forms', OrderFormController::class)->except('show')
         ->parameters(['order-forms' => 'order_form']);

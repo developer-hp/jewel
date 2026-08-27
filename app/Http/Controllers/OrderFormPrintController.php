@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AppSetting;
 use App\Models\OrderForm;
 use App\Support\PdfDocument;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -60,24 +61,82 @@ class OrderFormPrintController extends Controller implements HasMiddleware
     }
 
     /**
-     * The small screen where a reference is typed and that one sticker prints.
+     * The small screen where orders are picked and their stickers print.
+     *
+     * The screen itself uses a multi-select, so several bags can be labelled in one
+     * pass. `ref_no` is still honoured because the counter sometimes has the paper in
+     * hand rather than the row on screen, and because a typed reference is a link
+     * anyone may have bookmarked.
      */
     public function stickerByRef(Request $request): View|Response|RedirectResponse
     {
-        if (! $request->filled('ref_no')) {
-            return view('order-forms.sticker-by-ref', ['prefix' => OrderForm::refPrefix()]);
+        if ($request->filled('ids')) {
+            $validated = $request->validate([
+                'ids' => ['array', 'min:1', 'max:200'],
+                'ids.*' => ['integer', 'exists:order_forms,id'],
+            ]);
+
+            $forms = OrderForm::with('lines')
+                ->whereIn('id', $validated['ids'])
+                ->orderBy('ref_no')
+                ->get();
+
+            if ($forms->isEmpty()) {
+                return back()->with('error', 'Those orders no longer exist.');
+            }
+
+            return $this->stickerPdf($forms);
         }
 
-        // Accept "CF 159", "cf159" or plain "159" — whatever is to hand.
-        $number = (int) preg_replace('/\D+/', '', $request->string('ref_no')->toString());
+        if ($request->filled('ref_no')) {
+            // Accept "CF 159", "cf159" or plain "159" — whatever is to hand.
+            $number = (int) preg_replace('/\D+/', '', $request->string('ref_no')->toString());
 
-        $form = OrderForm::with('lines')->where('ref_no', $number)->first();
+            $form = OrderForm::with('lines')->where('ref_no', $number)->first();
 
-        if (! $form) {
-            return back()->with('error', 'No order with that reference.');
+            if (! $form) {
+                return back()->with('error', 'No order with that reference.');
+            }
+
+            return $this->stickerPdf(collect([$form]));
         }
 
-        return $this->stickerPdf(collect([$form]));
+        return view('order-forms.sticker-by-ref', ['prefix' => OrderForm::refPrefix()]);
+    }
+
+    /**
+     * Orders matching what has been typed, for the sticker screen's picker.
+     *
+     * Matches on the reference with or without its prefix — "CF 159", "cf159" and
+     * "159" all find the same order — and on the customer's name, which is what the
+     * counter actually remembers.
+     */
+    public function search(Request $request): JsonResponse
+    {
+        $term = trim($request->string('q')->toString());
+
+        // Read once, outside the mapping: refPrefix() goes to AppSetting, and calling
+        // it per row would be twenty settings lookups per keystroke.
+        $prefix = OrderForm::refPrefix();
+
+        $digits = preg_replace('/\D+/', '', $term);
+
+        $forms = OrderForm::query()
+            ->when($term !== '', fn ($query) => $query->where(fn ($sub) => $sub
+                ->where('customer_name', 'like', "%{$term}%")
+                ->orWhere('contact_no', 'like', "%{$term}%")
+                ->when($digits !== '', fn ($q) => $q->orWhere('ref_no', 'like', "%{$digits}%"))))
+            ->orderByDesc('ref_no')
+            ->limit(20)
+            ->get(['id', 'ref_no', 'customer_name', 'delivery_date']);
+
+        return response()->json([
+            'results' => $forms->map(fn (OrderForm $form) => [
+                'id' => $form->id,
+                'text' => trim($prefix.' '.$form->ref_no).' — '.$form->customer_name
+                    .' ('.$form->delivery_date->format('d-m-Y').')',
+            ])->all(),
+        ]);
     }
 
     private function stickerPdf($forms): Response
