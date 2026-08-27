@@ -22,7 +22,7 @@
             @foreach (['customer', 'office'] as $copy)
                 <div class="copy-title">{{ $copy === 'office' ? 'FOR OFFICE USE' : 'OG ROUGH ESTIMATE' }}</div>
 
-                <table class="pdf-table no-border who mt5">
+                <table class="pdf-table no-border who mt5 font13">
                     <tr>
                         <td class="no-border" style="width: 52%;">
                             <span class="text-bold">Name</span>&nbsp;&nbsp;&nbsp;{{ $estimate->customer_name }}
@@ -35,7 +35,7 @@
                         </td>
                         <td class="no-border text-right" style="width: 18%;">
                             @if ($copy === 'office')
-                                <span class="text-bold font10">{{ $estimate->sales_person_name }}</span><br>
+                                <span class="text-bold font12">{{ $estimate->sales_person_name }}</span><br>
                                 <span class="text-bold">Ref No:{{ $estimate->reference() }}</span><br>
                             @endif
                             <span class="text-bold font14">{{ $estimate->estimate_date->format('d-m-Y') }}</span>
@@ -103,7 +103,7 @@
                 @endif
             @endforeach
 
-            <table class="pdf-table pd3 signoff font11">
+            <table class="pdf-table pd3 signoff font13">
                 <tr>
                     <th class="text-center">Date</th>
                     <th class="text-center">Gross</th>
