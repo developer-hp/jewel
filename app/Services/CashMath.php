@@ -27,8 +27,22 @@ class CashMath
      */
     public const SETTLED_SQL = '(cash_amount + cheque_amount + gold_amount)';
 
-    /** The same, signed by the event — what a drawer's balance sums. */
-    public const SIGNED_SQL = "(CASE WHEN cash_event = 'in' THEN 1 ELSE -1 END) * ".self::SETTLED_SQL;
+    /** IN adds, OUT subtracts. Reused by both signed expressions below. */
+    private const SIGN_SQL = "(CASE WHEN cash_event = 'in' THEN 1 ELSE -1 END)";
+
+    /** The settled figure signed by the event. */
+    public const SIGNED_SQL = self::SIGN_SQL.' * '.self::SETTLED_SQL;
+
+    /**
+     * What a drawer's balance moves by: the cash, and nothing else.
+     *
+     * Deliberately NOT SIGNED_SQL. A cheque never goes in the till and old gold
+     * certainly does not, so counting either against a drawer makes the balance
+     * disagree with the notes in it. This is also the expression the day opening
+     * rolls the opening figure by — one statement of the rule, so a drawer cannot
+     * read one figure all day and be rolled forward by another.
+     */
+    public const CASH_SIGNED_SQL = self::SIGN_SQL.' * cash_amount';
 
     /**
      * What the document says is payable.
@@ -108,7 +122,7 @@ class CashMath
         $opening = (float) CashDrawer::query()->sum('opening_balance');
 
         $movement = CashEntry::query()
-            ->selectRaw('COALESCE(SUM('.self::SIGNED_SQL.'), 0) as cash')
+            ->selectRaw('COALESCE(SUM('.self::CASH_SIGNED_SQL.'), 0) as cash')
             ->selectRaw("COALESCE(SUM((CASE WHEN cash_event = 'in' THEN 1 ELSE -1 END) * gold_weight), 0) as gold")
             ->first();
 
@@ -127,7 +141,7 @@ class CashMath
     public function balance(CashDrawer $drawer): float
     {
         $movement = (float) $drawer->entries()
-            ->selectRaw('COALESCE(SUM('.self::SIGNED_SQL.'), 0) as movement')
+            ->selectRaw('COALESCE(SUM('.self::CASH_SIGNED_SQL.'), 0) as movement')
             ->value('movement');
 
         return round((float) $drawer->opening_balance + $movement, 2);

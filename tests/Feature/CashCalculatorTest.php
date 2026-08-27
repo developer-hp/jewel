@@ -42,14 +42,15 @@ it('reports the drawer position and an empty count to start with', function () {
         ->assertOk()
         ->json();
 
-    expect($data['expected']['cash'])->toBe(25000.0)
-        ->and($data['expected']['gold'])->toBe(0.0)
-        ->and($data['totals']['total'])->toBe(0.0)
+    expect($data['expected']['cash'])->toEqual(25000)
+        ->and($data['expected']['gold'])->toEqual(0)
+        ->and($data['totals']['total'])->toEqual(0)
         ->and($data['saved_at'])->toBeNull()
         // Every denomination is present even before anything is saved, so the modal
-        // never has to invent a row.
+        // never has to invent a row. The keys come back as ints: PHP casts numeric
+        // string keys on decode, whatever the wire said.
         ->and(array_keys($data['counts']['counter']))
-        ->toBe(array_map('strval', CashCalculator::DENOMINATIONS));
+        ->toBe(CashCalculator::DENOMINATIONS);
 });
 
 // The figures from the screenshot this was built from, which is the arithmetic the
@@ -65,9 +66,9 @@ it('totals each column and the two together', function () {
         ->assertOk()
         ->json();
 
-    expect($data['totals']['columns']['counter'])->toBe(18140.0)
-        ->and($data['totals']['columns']['safe'])->toBe(734000.0)
-        ->and($data['totals']['total'])->toBe(752140.0);
+    expect($data['totals']['columns']['counter'])->toEqual(18140)
+        ->and($data['totals']['columns']['safe'])->toEqual(734000)
+        ->and($data['totals']['total'])->toEqual(752140);
 });
 
 it('keeps the count for the user who saved it', function () {
@@ -78,7 +79,7 @@ it('keeps the count for the user who saved it', function () {
     $data = $this->actingAs($this->admin)->getJson(route('cash-calculator.show'))->assertOk()->json();
 
     expect($data['counts']['counter']['500'])->toBe(4)
-        ->and($data['totals']['total'])->toBe(2000.0)
+        ->and($data['totals']['total'])->toEqual(2000)
         ->and($data['saved_at'])->not->toBeNull();
 });
 
@@ -119,7 +120,7 @@ it('drops a denomination it does not offer', function () {
 
     expect($data['counts']['counter'])->not->toHaveKey('2000')
         ->and($data['counts'])->not->toHaveKey('vault')
-        ->and($data['totals']['total'])->toBe(1000.0);
+        ->and($data['totals']['total'])->toEqual(1000);
 });
 
 it('refuses a negative or non-integer count', function () {

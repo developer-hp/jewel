@@ -125,7 +125,9 @@ class DayOpening
         foreach ($drawers as $drawer) {
             $cash = (float) CashEntry::query()
                 ->where('cash_drawer_id', $drawer->id)
-                ->selectRaw("COALESCE(SUM((CASE WHEN cash_event = 'in' THEN 1 ELSE -1 END) * cash_amount), 0) as moved")
+                // The same expression the balance is read from, so a drawer is never
+                // rolled forward by a figure it never showed.
+                ->selectRaw('COALESCE(SUM('.CashMath::CASH_SIGNED_SQL.'), 0) as moved')
                 ->value('moved');
 
             $drawer->forceFill([

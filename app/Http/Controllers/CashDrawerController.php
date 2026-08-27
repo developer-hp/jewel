@@ -46,7 +46,7 @@ class CashDrawerController extends Controller implements HasMiddleware
         $query = CashDrawer::query()
             ->select('cash_drawers.*')
             ->addSelect(['movement' => CashEntry::query()
-                ->selectRaw('COALESCE(SUM('.CashMath::SIGNED_SQL.'), 0)')
+                ->selectRaw('COALESCE(SUM('.CashMath::CASH_SIGNED_SQL.'), 0)')
                 ->whereColumn('cash_drawer_id', 'cash_drawers.id'),
             ]);
 
