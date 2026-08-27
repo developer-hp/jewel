@@ -76,7 +76,7 @@
                     <i class="ri-megaphone-line" aria-hidden="true"></i>
                     {{ $settings->landing_announcement }}
                 @else
-                    Updated {{ now()->format('d M Y, h:i A') }}
+                    Updated {{ now()->format('d-m-Y, h:i A') }}
                 @endif
             </p>
 
@@ -84,7 +84,7 @@
 
             <p class="hero-p">
                 Live gold and silver rates, straight from the counter.
-                <b>{{ now()->format('d M Y, h:i A') }}</b>
+                <b>{{ now()->format('d-m-Y, h:i A') }}</b>
             </p>
 
             @include('landing.partials._rates')

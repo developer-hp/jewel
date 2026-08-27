@@ -41,7 +41,7 @@
 @section('content')
     <h1>Angadiya</h1>
 
-    <div class="meta">Date: {{ now()->format('d/m/Y') }}</div>
+    <div class="meta">Date: {{ now()->format('d-m-Y') }}</div>
 
     <table class="pdf-table pd2 slips font12">
         <thead>

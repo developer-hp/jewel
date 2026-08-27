@@ -51,7 +51,7 @@ class AngadiyaController extends Controller implements HasMiddleware
 
         return DataTables::eloquent($query)
             ->addColumn('select', fn (Angadiya $a) => view('angadiyas.partials.select-cell', ['angadiya' => $a])->render())
-            ->editColumn('created_at', fn (Angadiya $a) => $a->created_at->format('d M Y'))
+            ->editColumn('created_at', fn (Angadiya $a) => $a->created_at->format('d-m-Y'))
             ->addColumn('recipient', fn (Angadiya $a) => view('angadiyas.partials.recipient-cell', ['angadiya' => $a])->render())
             ->editColumn('insurance_amount', fn (Angadiya $a) => number_format((float) $a->insurance_amount, 2))
             ->editColumn('remark', fn (Angadiya $a) => e(Str::limit($a->remark, 40) ?: '—'))

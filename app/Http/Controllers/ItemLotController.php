@@ -57,7 +57,7 @@ class ItemLotController extends Controller implements HasMiddleware
 
         return DataTables::eloquent($query)
             ->editColumn('code', fn (ItemLot $lot) => '<code>'.e($lot->code).'</code>')
-            ->editColumn('lot_date', fn (ItemLot $lot) => $lot->lot_date->format('d M Y'))
+            ->editColumn('lot_date', fn (ItemLot $lot) => $lot->lot_date->format('d-m-Y'))
             ->addColumn('supplier', fn (ItemLot $lot) => e($lot->supplier?->short_name ?: ($lot->supplier?->name ?? 'In-house')))
             ->addColumn('groups', fn (ItemLot $lot) => view('lots.partials.groups-cell', compact('lot'))->render())
             ->addColumn('progress', fn (ItemLot $lot) => view('lots.partials.progress-cell', compact('lot'))->render())

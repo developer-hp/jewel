@@ -67,7 +67,7 @@
                     <h1 class="hero-h1">{{ $settings->firm_name }}</h1>
                 @endif
 
-                <p class="hero-p">Today's Rate <b>&middot; {{ now()->format('d M Y, h:i A') }}</b></p>
+                <p class="hero-p">Today's Rate <b>&middot; {{ now()->format('d-m-Y, h:i A') }}</b></p>
 
                 @include('landing.partials._rates')
             </div>

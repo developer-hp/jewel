@@ -147,7 +147,7 @@
                                         @if ($rate = $item->purity?->rateOn())
                                             <div class="text-muted fs-12">
                                                 @ ₹{{ number_format((float) $rate->rate_per_gram, 2) }}/g
-                                                · {{ $rate->effective_date->format('d M Y') }}
+                                                · {{ $rate->effective_date->format('d-m-Y') }}
                                             </div>
                                         @endif
                                     </td>

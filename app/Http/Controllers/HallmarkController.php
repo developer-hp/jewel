@@ -51,7 +51,7 @@ class HallmarkController extends Controller implements HasMiddleware
 
         return DataTables::eloquent($query)
             ->editColumn('lot_no', fn (Hallmark $h) => '<code>'.e($h->lot_no).'</code>')
-            ->editColumn('hallmark_date', fn (Hallmark $h) => $h->hallmark_date->format('d M Y'))
+            ->editColumn('hallmark_date', fn (Hallmark $h) => $h->hallmark_date->format('d-m-Y'))
             ->addColumn('pieces', fn (Hallmark $h) => number_format($h->totalPieces()))
             ->addColumn('gross', fn (Hallmark $h) => number_format((float) $h->gross_weight, 3))
             ->addColumn('cost', fn (Hallmark $h) => number_format($h->totalCost(), 2))

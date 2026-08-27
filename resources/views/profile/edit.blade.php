@@ -27,7 +27,7 @@
                     <div class="text-start">
                         <p class="mb-1"><strong>Email:</strong> {{ $user->email ?: '—' }}</p>
                         <p class="mb-1"><strong>Phone:</strong> {{ $user->phone ?: '—' }}</p>
-                        <p class="mb-0"><strong>Member since:</strong> {{ $user->created_at->format('d M Y') }}</p>
+                        <p class="mb-0"><strong>Member since:</strong> {{ $user->created_at->format('d-m-Y') }}</p>
                     </div>
                 </div>
             </div>

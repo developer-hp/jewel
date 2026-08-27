@@ -48,7 +48,7 @@ it('renders every column the list is asked for', function () {
 
     expect($html)
         ->toContain('Angadiya')
-        ->toContain(now()->format('d/m/Y'))
+        ->toContain(now()->format('d-m-Y'))
         ->toContain('Surat')
         ->toContain('S.PAL')
         ->toContain('7567280980')

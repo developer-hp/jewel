@@ -20,7 +20,7 @@
 @section('content')
     <h1>Daily Stock Report</h1>
     <div class="meta">
-        {{ $metalTypeName ?? 'All metal types' }} &nbsp;|&nbsp; Date: {{ $date->format('d/m/Y') }}
+        {{ $metalTypeName ?? 'All metal types' }} &nbsp;|&nbsp; Date: {{ $date->format('d-m-Y') }}
     </div>
 
     <table class="pdf-table pd2 sheet font11">

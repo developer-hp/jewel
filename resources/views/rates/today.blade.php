@@ -3,7 +3,7 @@
 @section('title', "Today's Rates")
 
 @section('content')
-    <x-page-title :title="'Rates for ' . $date->format('d M Y')">
+    <x-page-title :title="'Rates for ' . $date->format('d-m-Y')">
         <x-slot:actions>
             <a href="{{ route('rates.index') }}" class="btn btn-light">
                 <i class="ri-history-line"></i> Rate History

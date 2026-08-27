@@ -38,7 +38,7 @@
 
 @section('content')
     <h1>Internal Stock</h1>
-    <div class="date">Date: {{ now()->format('d/m/Y') }}</div>
+    <div class="date">Date: {{ now()->format('d-m-Y') }}</div>
 
     @if ($entries->isEmpty())
         <div class="empty">No stock entries to show.</div>

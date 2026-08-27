@@ -49,7 +49,7 @@ class MetalRateController extends Controller implements HasMiddleware
 
         return DataTables::eloquent($query)
             ->addColumn('purity', fn (MetalRate $rate) => e($rate->purity?->label() ?? '—'))
-            ->editColumn('effective_date', fn (MetalRate $rate) => $rate->effective_date->format('d M Y'))
+            ->editColumn('effective_date', fn (MetalRate $rate) => $rate->effective_date->format('d-m-Y'))
             ->addColumn('entered', fn (MetalRate $rate) => number_format((float) $rate->rate, 2).' / '.rtrim(rtrim(number_format((float) $rate->per_grams, 3, '.', ''), '0'), '.').' g')
             ->editColumn('rate_per_gram', fn (MetalRate $rate) => '<strong>'.number_format((float) $rate->rate_per_gram, 4).'</strong>')
             ->addColumn('by', fn (MetalRate $rate) => e($rate->createdBy?->username ?? '—'))
@@ -125,7 +125,7 @@ class MetalRateController extends Controller implements HasMiddleware
 
         return redirect()->route('rates.today', ['date' => $date])
             ->with('success', $saved > 0
-                ? "Saved {$saved} rate(s) for ".Carbon::parse($date)->format('d M Y').'.'
+                ? "Saved {$saved} rate(s) for ".Carbon::parse($date)->format('d-m-Y').'.'
                 : 'No rates were entered.');
     }
 

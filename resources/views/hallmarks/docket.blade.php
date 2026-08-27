@@ -92,7 +92,7 @@
         <tr>
             <td class="no-border text-left"><h1>Hallmark</h1></td>
             <td class="no-border text-right text-bold font14 meta">
-                Date: {{ $hallmark->hallmark_date->format('d/m/Y') }}<br>
+                Date: {{ $hallmark->hallmark_date->format('d-m-Y') }}<br>
                 Lot No: {{ $hallmark->lot_no }}
             </td>
         </tr>

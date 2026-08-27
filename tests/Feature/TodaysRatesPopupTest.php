@@ -102,7 +102,7 @@ it('names the last day that had rates', function () {
     $this->actingAs($this->admin)->get(route('rates.snapshot'))
         ->assertOk()
         ->assertSee('The last day with rates was')
-        ->assertSee(today()->subDays(3)->format('d M Y'));
+        ->assertSee(today()->subDays(3)->format('d-m-Y'));
 });
 
 it('refuses the fragment to a user who cannot see rates', function () {

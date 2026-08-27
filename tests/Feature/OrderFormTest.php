@@ -597,7 +597,11 @@ it('prints the order and the sticker, one and several', function () {
 it('prints a sticker from a reference typed however it is written', function () {
     postOrder($this, [orderLine()])->assertRedirect();
 
-    $this->actingAs($this->admin)->get(route('order-forms.sticker-by-ref'))->assertOk()->assertSee('Ref No');
+    // The screen itself is now a picker, but a typed reference still resolves — the
+    // counter often has the paper in hand rather than the row on screen.
+    $this->actingAs($this->admin)->get(route('order-forms.sticker-by-ref'))
+        ->assertOk()
+        ->assertSee('id="order-picker"', false);
 
     foreach (['CF 160', 'cf160', '160'] as $typed) {
         $response = $this->actingAs($this->admin)
@@ -608,6 +612,58 @@ it('prints a sticker from a reference typed however it is written', function () 
 
     $this->actingAs($this->admin)->get(route('order-forms.sticker-by-ref', ['ref_no' => '9999']))
         ->assertRedirect();
+});
+
+it('prints stickers for several picked orders at once', function () {
+    postOrder($this, [orderLine()])->assertRedirect();
+    postOrder($this, [orderLine()])->assertRedirect();
+
+    $ids = OrderForm::orderBy('ref_no')->pluck('id')->all();
+
+    expect($ids)->toHaveCount(2);
+
+    $response = $this->actingAs($this->admin)
+        ->get(route('order-forms.sticker-by-ref', ['ids' => $ids]));
+
+    $response->assertOk()->assertHeader('content-type', 'application/pdf');
+    expect($response->getContent())->toStartWith('%PDF-');
+});
+
+it('refuses an order id that does not exist', function () {
+    $this->actingAs($this->admin)
+        ->get(route('order-forms.sticker-by-ref', ['ids' => [9999]]))
+        ->assertSessionHasErrors('ids.0');
+});
+
+it('finds orders for the picker by reference and by customer', function () {
+    postOrder($this, [orderLine()])->assertRedirect();
+
+    $form = OrderForm::firstOrFail();
+
+    // With the prefix, without it, and by the customer's name — all the same order.
+    foreach (['CF 160', '160', $form->customer_name] as $term) {
+        $results = $this->actingAs($this->admin)
+            ->getJson(route('order-forms.sticker-search', ['q' => $term]))
+            ->assertOk()
+            ->json('results');
+
+        expect(collect($results)->pluck('id'))->toContain($form->id);
+    }
+
+    // The label carries the reference, the customer and the delivery date, because a
+    // bare number is not enough to pick the right bag from a list.
+    $first = $this->actingAs($this->admin)
+        ->getJson(route('order-forms.sticker-search'))
+        ->assertOk()
+        ->json('results.0');
+
+    expect($first['text'])->toContain('CF 160')->toContain($form->customer_name);
+});
+
+it('keeps the picker lookup behind the print permission', function () {
+    $this->actingAs(User::factory()->create())
+        ->getJson(route('order-forms.sticker-search'))
+        ->assertForbidden();
 });
 
 // --- permissions -------------------------------------------------------------------------

@@ -67,8 +67,7 @@
             $('#order-picker').closest('form').on('submit', function (event) {
                 if (($('#order-picker').val() || []).length === 0) {
                     event.preventDefault();
-                    $.NotificationApp.send('Nothing picked', 'Choose at least one order to print.',
-                        'top-right', '#ff5b5b', 'error');
+                    window.appToast('error', 'Choose at least one order to print.');
                 }
             });
         });

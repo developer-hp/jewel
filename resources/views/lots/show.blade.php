@@ -29,7 +29,7 @@
                         <div>
                             <h4 class="mb-1">{{ $lot->supplier?->label() ?? 'In-house' }}</h4>
                             <code class="fs-14">{{ $lot->code }}</code>
-                            <span class="text-muted ms-2">{{ $lot->lot_date->format('d M Y') }}</span>
+                            <span class="text-muted ms-2">{{ $lot->lot_date->format('d-m-Y') }}</span>
                         </div>
                         <span class="badge bg-{{ $lot->statusVariant() }} fs-13">{{ $lot->statusLabel() }}</span>
                     </div>

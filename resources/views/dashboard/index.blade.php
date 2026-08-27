@@ -7,7 +7,7 @@
         <x-slot:actions>
             <span class="text-muted fs-13">
                 {{ auth()->user()->name }} &middot; {{ auth()->user()->roleLabel() }}
-                &middot; {{ now()->format('d M Y') }}
+                &middot; {{ now()->format('d-m-Y') }}
             </span>
         </x-slot:actions>
     </x-page-title>

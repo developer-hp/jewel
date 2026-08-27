@@ -22,7 +22,7 @@
 @section('content')
     <h1>Stock</h1>
     <div class="meta">
-        {{ $metalTypeName ?? 'All metal types' }} &nbsp;|&nbsp; {{ now()->format('d/m/Y') }}
+        {{ $metalTypeName ?? 'All metal types' }} &nbsp;|&nbsp; {{ now()->format('d-m-Y') }}
     </div>
 
     @foreach ([

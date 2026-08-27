@@ -8,7 +8,7 @@
 @php($money = fn (?float $v, int $dp = 2) => $v === null ? '—' : number_format($v, $dp))
 
 <div class="d-flex align-items-center justify-content-between mb-2">
-    <div class="fw-semibold">{{ $date->format('d M Y') }}</div>
+    <div class="fw-semibold">{{ $date->format('d-m-Y') }}</div>
 
     @can('metal_rate.edit')
         <a href="{{ route('rates.today', ['date' => $date->toDateString()]) }}" class="btn btn-sm btn-soft-primary"
@@ -21,10 +21,10 @@
 @if ($rates->isEmpty())
     <div class="alert alert-warning mb-3 py-2">
         <i class="ri-error-warning-fill me-1"></i>
-        No rates entered for {{ $date->format('d M Y') }}.
+        No rates entered for {{ $date->format('d-m-Y') }}.
         @if ($lastEntered)
             The last day with rates was
-            {{ \Illuminate\Support\Carbon::parse($lastEntered)->format('d M Y') }}.
+            {{ \Illuminate\Support\Carbon::parse($lastEntered)->format('d-m-Y') }}.
         @endif
     </div>
 @endif
