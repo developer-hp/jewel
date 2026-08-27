@@ -42,6 +42,11 @@
                                 </button>
                             </div>
                             <div class="col-md-auto">
+                                <button type="button" class="btn btn-soft-primary" id="print-list" disabled>
+                                    <i class="ri-file-list-line"></i> Print List
+                                </button>
+                            </div>
+                            <div class="col-md-auto">
                                 <button type="button" class="btn btn-link text-muted d-none" id="clear-selection">
                                     Clear
                                 </button>
@@ -78,6 +83,13 @@
             @csrf
             <div id="print-ids"></div>
         </form>
+
+        {{-- The despatch list. Same selection, different document — and unlike the
+             slip sheet it does not stamp printed_at, so nothing needs reloading after. --}}
+        <form method="POST" action="{{ route('angadiyas.print-list') }}" target="_blank" id="print-list-form">
+            @csrf
+            <div id="print-list-ids"></div>
+        </form>
     @endcan
 @endsection
 
@@ -109,7 +121,7 @@
 
             function refreshControls() {
                 $('#selected-count').text(selected.size);
-                $('#print-selected').prop('disabled', selected.size === 0);
+                $('#print-selected, #print-list').prop('disabled', selected.size === 0);
                 $('#clear-selection').toggleClass('d-none', selected.size === 0);
 
                 const boxes = $('#angadiyas-table tbody .slip-check');
@@ -162,6 +174,12 @@
             }
 
             $('#print-selected').on('click', () => submitPrint([...selected]));
+
+            $('#print-list').on('click', function () {
+                const $box = $('#print-list-ids').empty();
+                selected.forEach(id => $box.append($('<input type="hidden" name="ids[]">').val(id)));
+                $('#print-list-form').trigger('submit');
+            });
             $(document).on('click', '.print-one', function () { submitPrint([$(this).data('id')]); });
 
             $('#filter-printed').on('change', () => table.ajax.reload());

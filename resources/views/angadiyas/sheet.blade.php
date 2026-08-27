@@ -1,9 +1,13 @@
 {{--
     A4 sheet of angadiya slips.
 
-    Laid out with a <table>, not flexbox or CSS grid: dompdf's support for modern
-    layout is poor, and the item tag already taught us that lesson. Each row avoids
-    an internal page break so a slip is never split across sheets.
+    Tables all the way down, and the slip's box is a table cell rather than a bordered
+    <div>. That is not decoration: given a <div> with a border wrapping block children,
+    mPDF paints the border around *every child*, each sized to its own text — which is
+    what turned this sheet into a stack of underlined lines. A cell border it renders
+    once, as a box.
+
+    Each row avoids an internal page break so a slip is never split across sheets.
 --}}
 <!DOCTYPE html>
 <html lang="en">
@@ -16,7 +20,8 @@
             margin: 8mm;
         }
 
-        html, body {
+        html,
+        body {
             margin: 0;
             padding: 0;
         }
@@ -31,36 +36,40 @@
 
         table.sheet {
             width: 100%;
-            border-collapse: separate;
-            border-spacing: 3mm;
+            border-collapse: collapse;
         }
 
-        table.sheet > tr,
         table.sheet tr {
             page-break-inside: avoid;
         }
 
+        /* The gap between slips is padding on the slot, not border-spacing — mPDF
+           handles collapsed borders far more predictably than separated ones. */
         td.slot {
             width: {{ round(100 / $columns, 4) }}%;
             vertical-align: top;
-            padding: 0;
-        }
-
-        td.empty {
+            padding: 0 1.5mm 3mm 1.5mm;
             border: none;
         }
 
-        .slip {
+        table.slip {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        td.slipbox {
             border: 1.2pt solid #000;
             padding: 2.5mm;
             height: {{ $slipHeightMm }}mm;
+            vertical-align: top;
         }
 
-        .insurance {
-            font-weight: bold;
-            font-size: 11pt;
+        /* Every line inside the box is borderless, explicitly. */
+        .slipbox div {
+            border: none;
         }
 
+        .insurance,
         .to {
             font-weight: bold;
             font-size: 11pt;
@@ -71,9 +80,10 @@
             font-size: 10.5pt;
         }
 
-        hr {
-            border: none;
+        .rule {
             border-top: 0.8pt solid #000;
+            font-size: 1pt;
+            line-height: 1;
             margin: 2mm 0 1.5mm;
         }
 
@@ -100,28 +110,34 @@
             <tr>
                 @foreach ($row as $slip)
                     <td class="slot">
-                        <div class="slip">
-                            <div class="insurance">INSURANCE : {{ number_format((float) $slip->insurance_amount, 0) }}</div>
-                            <div class="to">TO : {{ $slip->city }}</div>
-                            <div class="line">{{ $slip->name }}</div>
-                            <div class="line">{{ $slip->mobile }}</div>
+                        <table class="slip">
+                            <tr>
+                                <td class="slipbox">
+                                    <div class="insurance">INSURANCE : {{ number_format((float) $slip->insurance_amount, 0) }}</div>
+                                    <div class="to">TO : {{ $slip->city }}</div>
+                                    <div class="line">{{ $slip->name }}</div>
+                                    <div class="line">{{ $slip->mobile }}</div>
 
-                            <hr>
-
-                            <div class="from-label">FROM</div>
-                            @if ($from)
-                                <div class="from-line">{{ $from['name'] }}</div>
-                                <div class="from-line">{{ $from['phone'] }}</div>
-                            @else
-                                <div class="missing">Set Firm Details under Appearance</div>
-                            @endif
-                        </div>
+                                    {{-- A bordered empty block, not <hr>: mPDF gives an
+                                         <hr> a margin of its own that this cannot control. --}}
+                                    <div class="rule">&nbsp;</div><br><br>
+                                    <hr>
+                                    <div class="from-label">FROM</div>
+                                    @if ($from)
+                                        <div class="from-line">{{ $from['name'] }}</div>
+                                        <div class="from-line">{{ $from['phone'] }}</div>
+                                    @else
+                                        <div class="missing">Set Firm Details under Appearance</div>
+                                    @endif
+                                </td>
+                            </tr>
+                        </table>
                     </td>
                 @endforeach
 
                 {{-- Pad the last row so the remaining slips keep their column width. --}}
                 @for ($i = $row->count(); $i < $columns; $i++)
-                    <td class="slot empty"></td>
+                    <td class="slot"></td>
                 @endfor
             </tr>
         @endforeach

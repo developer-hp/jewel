@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AngadiyaController;
+use App\Http\Controllers\AngadiyaListPrintController;
 use App\Http\Controllers\AngadiyaPrintController;
 use App\Http\Controllers\AppSettingController;
 use App\Http\Controllers\Auth\LoginController;
@@ -264,6 +265,7 @@ Route::middleware('auth')->group(function () {
 
     // Print sits above the resource so `angadiyas/print` is not read as a slip id.
     Route::post('angadiyas/print', AngadiyaPrintController::class)->name('angadiyas.print');
+    Route::post('angadiyas/print-list', AngadiyaListPrintController::class)->name('angadiyas.print-list');
     Route::resource('angadiyas', AngadiyaController::class)->except('show');
 
     // Entry screen sits above the resource so `lots/{lot}/items` is not a lot route.
