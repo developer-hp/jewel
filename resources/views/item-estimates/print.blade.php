@@ -11,7 +11,7 @@
 @extends('layouts.pdf')
 
 @php
-    $rowsPerCopy = 8;
+    $rowsPerCopy = 10;
     $wt = fn ($v) => number_format((float) $v, 3);
     $money = fn ($v) => number_format((float) $v, 0);
 @endphp
@@ -38,30 +38,6 @@
             margin-top: 2mm;
         }
 
-        table.lines {
-            width: 100%;
-            table-layout: fixed;
-            margin-top: 2mm;
-        }
-
-        table.lines td {
-            vertical-align: top;
-        }
-
-        /* pdf.css kills borders with a DESCENDANT selector — `.no-border th, td` —
-           so the plain layout table these sit inside strips the rules off them too.
-           Put them back explicitly; without this the whole document prints flat. */
-        table.lines > thead > tr > th,
-        table.lines > tbody > tr > td,
-        table.lines > tfoot > tr > td,
-        table.summary th,
-        table.summary td {
-            border: 0.8pt solid #000 !important;
-        }
-
-        table.lines > thead > tr > th {
-            background: #cdcdcd !important;
-        }
 
         /* The stone breakdown sits inside the item cell, small and borderless.
 
@@ -87,11 +63,6 @@
         /* The name leads the row, so nothing sits to its left. */
         table.breakdown td.name {
             padding-left: 0 !important;
-        }
-
-        .photo img {
-            max-width: 16mm;
-            max-height: 16mm;
         }
 
         table.summary th {
@@ -145,11 +116,8 @@
                         </td>
                     </tr>
                 </table>
-
-                <table class="pdf-table no-border" style="width: 100%;">
-                    <tr>
-                        <td class="no-border" style="width: 80%; vertical-align: top;">
-                            <table class="pdf-table pd2 lines font11">
+                <div style="width: 80%;float: left;">
+                <table class="pdf-table no-border">
                                 <thead>
                                     <tr>
                                         <th style="width: 5%" class="text-center">#</th>
@@ -167,7 +135,7 @@
                                             <td class="text-center">
                                                 {{-- Photos are opt-in; off, the row simply carries the number. --}}
                                                 @if ($estimate->show_photo && $line->item?->photoDataUri())
-                                                    <div class="photo"><img src="{{ $line->item->photoDataUri() }}" alt=""></div>
+                                                    <div class="photo"><img width="60px" height="60px" src="{{ $line->item->photoDataUri() }}" alt=""></div>
                                                 @else
                                                     {{ $i + 1 }}
                                                 @endif
@@ -226,21 +194,21 @@
                                 </tbody>
                                 <tfoot>
                                     <tr>
-                                        <td colspan="2" class="text-center text-bold">
+                                        <th colspan="2" class="text-center text-bold">
                                             TOTAL : {{ $money($totals->charges) }}
-                                        </td>
-                                        <td class="text-right text-bold">{{ $wt($totals->gross) }}</td>
-                                        <td class="text-right text-bold">{{ $wt($totals->net) }}</td>
-                                        <td class="text-right text-bold">{{ $money($totals->metal) }}</td>
-                                        <td class="text-right text-bold">{{ $money($totals->labour) }}</td>
-                                        <td class="text-right text-bold">{{ $money($totals->total) }}</td>
+                                        </th>
+                                        <th class="text-right text-bold">{{ $wt($totals->gross) }}</td>
+                                        <th class="text-right text-bold">{{ $wt($totals->net) }}</td>
+                                        <th class="text-right text-bold">{{ $money($totals->metal) }}</td>
+                                        <th class="text-right text-bold">{{ $money($totals->labour) }}</td>
+                                        <th class="text-right text-bold">{{ $money($totals->total) }}</td>
                                     </tr>
                                 </tfoot>
                             </table>
-                        </td>
+                        </div>
+                        <div style="width: 16%;float: right;">
 
-                        <td class="no-border" style="width: 15%; vertical-align: top; padding-left: 3mm !important;">
-                            <table class="pdf-table pd2 summary font11">
+                            <table class="pdf-table pd2 summary font14">
                                 <tr>
                                     <th class="text-left">Amount</th>
                                     <td class="text-right">{{ $money($summary->amount) }}</td>
@@ -262,12 +230,10 @@
                                     <td class="text-right">{{ $money($summary->total) }}</td>
                                 </tr>
                             </table>
-                        </td>
-                    </tr>
-                </table>
+                        </div>
 
                 @if ($copy === 'customer')
-                    <div style="height: 5mm;"></div>
+                    <div style="height: 15mm; width: 100%;"></div>
                 @endif
             @endforeach
 
