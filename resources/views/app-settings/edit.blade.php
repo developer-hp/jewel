@@ -57,6 +57,12 @@
                     <i class="ri-file-list-3-line me-1"></i> Documents
                 </a>
             </li>
+            <li class="nav-item" role="presentation">
+                <a href="#tab-landing" data-bs-toggle="tab" aria-expanded="false" role="tab"
+                    class="nav-link">
+                    <i class="ri-global-line me-1"></i> Landing Page
+                </a>
+            </li>
         </ul>
 
         <div class="tab-content">
@@ -790,6 +796,243 @@
                 </div>
             </div>
 
+            <div class="tab-pane fade" id="tab-landing" role="tabpanel">
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header py-2">
+                                <h5 class="mb-0">Landing Page</h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted fs-13">
+                                    The public page customers see at
+                                    <a href="{{ url('/') }}" target="_blank">{{ url('/') }}</a>.
+                                    Off by default; while it is off that address redirects to the
+                                    login screen as it always has. Everything on the page is optional
+                                    &mdash; a field left blank simply does not appear.
+                                </p>
+
+                                <div class="form-check form-switch mb-3">
+                                    <input type="hidden" name="landing_enabled" value="0">
+                                    <input class="form-check-input" type="checkbox" role="switch"
+                                        id="landing_enabled" name="landing_enabled" value="1"
+                                        @checked(old('landing_enabled', $settings->landing_enabled))>
+                                    <label class="form-check-label" for="landing_enabled">
+                                        Show the landing page publicly
+                                        <small class="text-muted d-block fs-12">
+                                            Anyone with the address can see it, including the bank
+                                            details and phone numbers below.
+                                        </small>
+                                    </label>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="landing_announcement" class="form-label">Announcement</label>
+                                    <input type="text" id="landing_announcement" name="landing_announcement"
+                                        class="form-control @error('landing_announcement') is-invalid @enderror"
+                                        maxlength="255" placeholder="Diwali offer — free polish on all repairs this week"
+                                        value="{{ old('landing_announcement', $settings->landing_announcement) }}">
+                                    <small class="text-muted">One sentence, shown as a banner. Leave blank for none.</small>
+                                    @error('landing_announcement')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="landing_rate_note" class="form-label">Rate Note</label>
+                                    <input type="text" id="landing_rate_note" name="landing_rate_note"
+                                        class="form-control @error('landing_rate_note') is-invalid @enderror"
+                                        maxlength="20" placeholder="+GST"
+                                        value="{{ old('landing_rate_note', $settings->landing_rate_note) }}">
+                                    <small class="text-muted">Printed beside every rate, e.g. <code>+GST</code>.</small>
+                                    @error('landing_rate_note')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="landing_phones" class="form-label">Contact Numbers</label>
+                                    <textarea id="landing_phones" name="landing_phones" rows="3"
+                                        class="form-control @error('landing_phones') is-invalid @enderror"
+                                        placeholder="7874655115&#10;07926925755">{{ old('landing_phones', $settings->landing_phones) }}</textarea>
+                                    <small class="text-muted">
+                                        One per line, shown as tap-to-call buttons. Blank falls back to
+                                        the firm phone numbers on the General tab.
+                                    </small>
+                                    @error('landing_phones')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="mb-0">
+                                    <label for="firm_address" class="form-label">Shop Address</label>
+                                    <textarea id="firm_address" name="firm_address" rows="2"
+                                        class="form-control @error('firm_address') is-invalid @enderror"
+                                        placeholder="Shop No.1, Abhishree Complex, Satellite Rd, Ahmedabad 380015">{{ old('firm_address', $settings->firm_address) }}</textarea>
+                                    <small class="text-muted">Shown in the page footer.</small>
+                                    @error('firm_address')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header py-2">
+                                <h5 class="mb-0">Rates to Show</h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted fs-13">
+                                    Which rates the landing page may publish. A rate appears only when
+                                    it is ticked here <em>and</em> entered on
+                                    <a href="{{ route('rates.today') }}">Rates &rarr; Today</a> &mdash;
+                                    yesterday's figure is never shown as today's.
+                                </p>
+
+                                {{-- Present even when every box is unticked, so the server is told
+                                     "none" rather than nothing at all. --}}
+                                <input type="hidden" name="landing_rate_purities[]" value="">
+
+                                @forelse ($landingPurities as $metal => $group)
+                                    <p class="fw-semibold mb-1 mt-2">{{ $metal }}</p>
+                                    <div class="row row-cols-1 row-cols-md-2 g-2 mb-2">
+                                        @foreach ($group as $purity)
+                                            <div class="col">
+                                                <div class="form-check">
+                                                    <input class="form-check-input landing-rate-pick" type="checkbox"
+                                                        name="landing_rate_purities[]" value="{{ $purity->id }}"
+                                                        id="landing-purity-{{ $purity->id }}"
+                                                        @checked($purity->show_on_landing)>
+                                                    <label class="form-check-label" for="landing-purity-{{ $purity->id }}">
+                                                        {{ $purity->name }}
+                                                        @if (in_array($purity->id, $pricedToday, true))
+                                                            <span class="badge bg-success-subtle text-success ms-1">priced today</span>
+                                                        @else
+                                                            <span class="badge bg-light text-muted ms-1">no rate today</span>
+                                                        @endif
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @empty
+                                    <p class="text-muted mb-0">No active purities to choose from.</p>
+                                @endforelse
+
+                                <div class="d-flex gap-2 mt-3">
+                                    <button type="button" class="btn btn-sm btn-light" id="landing-rates-all">Select all</button>
+                                    <button type="button" class="btn btn-sm btn-light" id="landing-rates-none">Select none</button>
+                                </div>
+
+                                @error('landing_rate_purities.*')
+                                    <div class="text-danger fs-13 mt-2">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header py-2">
+                                <h5 class="mb-0">Social Media</h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted fs-13">
+                                    Full addresses, including <code>https://</code>. Only the ones you
+                                    fill in appear.
+                                </p>
+
+                                @foreach (App\Models\AppSetting::SOCIAL_PLATFORMS as $column => [$label, $icon])
+                                    <div class="mb-3">
+                                        <label for="{{ $column }}" class="form-label">{{ $label }}</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="{{ $icon }}"></i></span>
+                                            <input type="url" id="{{ $column }}" name="{{ $column }}"
+                                                class="form-control @error($column) is-invalid @enderror"
+                                                maxlength="200" placeholder="https://"
+                                                value="{{ old($column, $settings->{$column}) }}">
+                                            @error($column)
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header py-2">
+                                <h5 class="mb-0">Bank Details</h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted fs-13">
+                                    Shown publicly on the landing page. Leave anything you would rather
+                                    not publish blank &mdash; it will not be printed.
+                                </p>
+
+                                <div class="row g-3">
+                                    @foreach (App\Models\AppSetting::BANK_FIELDS as $column => $label)
+                                        <div class="col-md-6">
+                                            <label for="{{ $column }}" class="form-label">{{ $label }}</label>
+                                            <input type="text" id="{{ $column }}" name="{{ $column }}"
+                                                class="form-control @error($column) is-invalid @enderror"
+                                                maxlength="150" value="{{ old($column, $settings->{$column}) }}">
+                                            @error($column)
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header py-2">
+                                <h5 class="mb-0">Payment QR</h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted fs-13">
+                                    PNG, JPG, WEBP or SVG, up to 1 MB. Leave empty to hide the QR panel.
+                                </p>
+
+                                @php($qrUrl = $settings->paymentQrUrl())
+
+                                <div class="d-flex align-items-center gap-3 mb-2">
+                                    <div class="bg-light rounded p-2 text-center" style="min-width: 140px;">
+                                        @if ($qrUrl)
+                                            <img src="{{ $qrUrl }}" alt="Payment QR" style="max-height: 110px; max-width: 120px;">
+                                        @else
+                                            <span class="text-muted fs-12">None</span>
+                                        @endif
+                                    </div>
+
+                                    <div class="flex-grow-1">
+                                        <input type="file" id="payment_qr" name="payment_qr"
+                                            class="form-control @error('payment_qr') is-invalid @enderror"
+                                            accept="image/png,image/jpeg,image/webp,image/svg+xml">
+                                        <small class="text-muted">A square image reads best.</small>
+                                        @error('payment_qr')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                @if ($qrUrl)
+                                    <div class="form-check">
+                                        <input type="hidden" name="remove_payment_qr" value="0">
+                                        <input class="form-check-input" type="checkbox" id="remove_payment_qr"
+                                            name="remove_payment_qr" value="1">
+                                        <label class="form-check-label text-danger" for="remove_payment_qr">
+                                            Remove this QR code
+                                        </label>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         @can('app_setting.edit')
@@ -920,6 +1163,9 @@
         $(function () {
             $('#sections-all').on('click', () => $('.dashboard-pick').prop('checked', true));
             $('#sections-none').on('click', () => $('.dashboard-pick').prop('checked', false));
+
+            $('#landing-rates-all').on('click', () => $('.landing-rate-pick').prop('checked', true));
+            $('#landing-rates-none').on('click', () => $('.landing-rate-pick').prop('checked', false));
         });
     </script>
 @endpush

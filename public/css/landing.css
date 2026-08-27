@@ -1,0 +1,825 @@
+/*
+    Styles for the public landing page (resources/views/landing/index.blade.php).
+
+    Standalone. Nothing here is shared with app-custom.css or pdf.css, and the page
+    loads neither — so no descendant selector from those files can reach in here, and
+    nothing here can leak into the admin.
+
+    The palette, spacing and motion are lifted from the talent-ai.io reference: a
+    near-black purple-tinted ground, drifting blurred colour blobs behind a faint
+    grid, translucent glass cards with a hairline border, purple-gradient calls to
+    action, and a small pill label above every section heading. The variable names
+    below are the reference's own, kept so the two can be compared line for line.
+*/
+
+:root {
+    /* Brand */
+    --p: #7239ea;
+    --p2: #9f5cf0;
+    --teal: #00c4d4;
+    --grn: #12ce5d;
+
+    /* Grounds, darkest first */
+    --d0: #07081a;
+    --d1: #0b0c20;
+    --d2: #0f1128;
+    --d3: #141630;
+    --footer: #040512;
+
+    /* Glass */
+    --card: rgba(255, 255, 255, 0.035);
+    --cb: rgba(255, 255, 255, 0.065);
+
+    --shell: 1200px;
+
+    /* The rate palette. One list, cycled by position in the template. */
+    --card-0: #12ce5d;
+    --card-1: #00c4d4;
+    --card-2: #7239ea;
+    --card-3: #f1416c;
+    --card-4: #ffa800;
+    --card-5: #e854b8;
+}
+
+/* ── Keyframes ── */
+
+@keyframes blobDrift {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(55px, -45px) scale(1.07); }
+    66% { transform: translate(-35px, 55px) scale(0.94); }
+}
+
+@keyframes shimmerGrad {
+    0% { background-position: 0% center; }
+    100% { background-position: 200% center; }
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(48px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes pulseRing {
+    0% { box-shadow: 0 0 0 0 rgba(18, 206, 93, 0.5); }
+    70% { box-shadow: 0 0 0 8px rgba(18, 206, 93, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(18, 206, 93, 0); }
+}
+
+/* ── Scroll reveal ── */
+
+.sr {
+    opacity: 0;
+    transform: translateY(38px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.sr.d1 { transition-delay: 0.08s; }
+.sr.d2 { transition-delay: 0.16s; }
+.sr.d3 { transition-delay: 0.24s; }
+.sr.d4 { transition-delay: 0.32s; }
+.sr.d5 { transition-delay: 0.40s; }
+
+.sr.on {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Motion is decoration here. Anyone who has asked for less of it gets the page with
+   everything already in place and nothing moving. */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation: none !important;
+        transition: none !important;
+    }
+
+    .sr {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+/* ── Base ── */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    margin: 0;
+    background: var(--d0);
+    color: rgba(255, 255, 255, 0.52);
+    /* Inter if the browser can reach Google Fonts, the system stack if not — a shop
+       counter on a local network must not wait on a font that will never arrive. */
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.72;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+.shell {
+    max-width: var(--shell);
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+.grad-text {
+    background: linear-gradient(135deg, #7239ea 0%, #00c4d4 50%, #12ce5d 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    animation: shimmerGrad 4s linear infinite;
+}
+
+/* ── Nav ── */
+
+.ta-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 999;
+    padding: 20px 0;
+    border-bottom: 1px solid transparent;
+    transition: background 0.35s, backdrop-filter 0.35s, padding 0.35s, border-color 0.35s;
+}
+
+.ta-nav.stuck {
+    background: rgba(7, 8, 26, 0.88);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    padding: 13px 0;
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+.nav-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.brand img {
+    display: block;
+    max-height: 38px;
+    width: auto;
+}
+
+.brand-text {
+    font-size: 21px;
+    font-weight: 800;
+    color: #fff;
+    text-decoration: none;
+    letter-spacing: -0.5px;
+}
+
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.socials {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.social {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 18px;
+    text-decoration: none;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: all 0.2s;
+}
+
+.social:hover {
+    background: rgba(114, 57, 234, 0.28);
+    border-color: rgba(114, 57, 234, 0.55);
+    box-shadow: 0 8px 28px rgba(114, 57, 234, 0.3);
+    color: #fff;
+}
+
+.btn-glow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 22px;
+    border: none;
+    border-radius: 9px;
+    background: linear-gradient(135deg, var(--p), var(--p2));
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-glow:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(114, 57, 234, 0.45);
+    color: #fff;
+}
+
+/* ── Announcement ── */
+
+.ribbon {
+    position: relative;
+    z-index: 3;
+    background: linear-gradient(135deg, rgba(114, 57, 234, 0.18), rgba(0, 196, 212, 0.14));
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ribbon-inner {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding-top: 13px;
+    padding-bottom: 13px;
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 14.5px;
+    font-weight: 500;
+}
+
+.ribbon i {
+    flex: none;
+    font-size: 19px;
+    color: var(--p2);
+}
+
+/* ── Hero ── */
+
+.hero {
+    position: relative;
+    background: var(--d0);
+    padding: 168px 0 96px;
+    overflow: hidden;
+}
+
+.hero-grid {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+    background-size: 64px 64px;
+}
+
+.hero-glow {
+    position: absolute;
+    top: -120px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 900px;
+    height: 600px;
+    max-width: 100%;
+    pointer-events: none;
+    background: radial-gradient(ellipse, rgba(114, 57, 234, 0.22) 0%, transparent 70%);
+}
+
+.blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(90px);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 1.2s;
+}
+
+.blob.on {
+    opacity: 1;
+}
+
+.blob-1 {
+    width: 680px;
+    height: 680px;
+    top: -200px;
+    left: -160px;
+    background: radial-gradient(circle, rgba(114, 57, 234, 0.35) 0%, transparent 70%);
+    animation: blobDrift 20s ease-in-out infinite;
+}
+
+.blob-2 {
+    width: 560px;
+    height: 560px;
+    bottom: -120px;
+    right: -80px;
+    background: radial-gradient(circle, rgba(0, 196, 212, 0.28) 0%, transparent 70%);
+    animation: blobDrift 24s ease-in-out infinite reverse;
+}
+
+.blob-3 {
+    width: 380px;
+    height: 380px;
+    top: 45%;
+    left: 55%;
+    background: radial-gradient(circle, rgba(18, 206, 93, 0.18) 0%, transparent 70%);
+    animation: blobDrift 16s ease-in-out infinite 5s;
+}
+
+.hero-inner {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+}
+
+.hero-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 30px;
+    padding: 6px 18px;
+    border: 1px solid rgba(114, 57, 234, 0.3);
+    border-radius: 100px;
+    background: rgba(114, 57, 234, 0.1);
+    color: #b394f7;
+    font-size: 13px;
+    font-weight: 600;
+    animation: fadeIn 1s ease 0.2s both;
+}
+
+.hero-pill .dot {
+    width: 7px;
+    height: 7px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--grn);
+    animation: pulseRing 2s ease infinite;
+}
+
+.hero-h1 {
+    margin: 0 0 22px;
+    color: #fff;
+    font-size: clamp(40px, 6.5vw, 78px);
+    font-weight: 900;
+    line-height: 1.06;
+    letter-spacing: -2.5px;
+    animation: fadeInUp 1s ease 0.3s both;
+}
+
+.hero-p {
+    max-width: 600px;
+    margin: 0 auto 56px;
+    color: rgba(255, 255, 255, 0.52);
+    font-size: 18px;
+    animation: fadeInUp 1s ease 0.4s both;
+}
+
+.hero-p strong {
+    color: rgba(255, 255, 255, 0.86);
+    font-weight: 600;
+}
+
+/* ── Rate cards ── */
+
+.rates {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(232px, 1fr));
+    gap: 18px;
+    text-align: left;
+}
+
+.rate {
+    position: relative;
+    overflow: hidden;
+    padding: 30px 26px;
+    border: 1px solid var(--cb);
+    border-radius: 16px;
+    background: var(--card);
+    transition: all 0.3s ease;
+    /* min-width:0 lets a long number shrink instead of widening the grid track. */
+    min-width: 0;
+}
+
+/* The reference's hairline highlight, which fades in across the top on hover. */
+.rate::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.rate:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(114, 57, 234, 0.28);
+    transform: translateY(-5px);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.35);
+}
+
+.rate:hover::after {
+    opacity: 1;
+}
+
+.rate--0 { --rate-colour: var(--card-0); }
+.rate--1 { --rate-colour: var(--card-1); }
+.rate--2 { --rate-colour: var(--card-2); }
+.rate--3 { --rate-colour: var(--card-3); }
+.rate--4 { --rate-colour: var(--card-4); }
+.rate--5 { --rate-colour: var(--card-5); }
+
+.rate-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    margin-bottom: 18px;
+    border-radius: 12px;
+    /* colour-mix keeps one hue per card doing both the tint and the ink; browsers
+       without it fall back to the flat rule above. */
+    background: rgba(255, 255, 255, 0.06);
+    background: color-mix(in srgb, var(--rate-colour) 16%, transparent);
+    color: var(--rate-colour);
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.rate-value {
+    margin: 0 0 8px;
+    color: #fff;
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -1.2px;
+    word-break: break-word;
+}
+
+.rate-note {
+    margin-left: 4px;
+    color: var(--rate-colour);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0;
+}
+
+.rate-label {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.38);
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.quiet {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.32);
+    font-size: 15px;
+}
+
+/* ── Sections ── */
+
+.section {
+    padding: 108px 0;
+}
+
+.section--d0 { background: var(--d0); }
+.section--d1 { background: var(--d1); }
+
+.section-head {
+    text-align: center;
+    margin-bottom: 62px;
+}
+
+.sec-label {
+    display: inline-block;
+    margin-bottom: 20px;
+    padding: 5px 16px;
+    border: 1px solid rgba(114, 57, 234, 0.22);
+    border-radius: 100px;
+    background: rgba(114, 57, 234, 0.1);
+    color: var(--p);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+}
+
+.sec-h {
+    margin: 0 0 16px;
+    color: #fff;
+    font-size: clamp(30px, 4vw, 48px);
+    font-weight: 800;
+    line-height: 1.14;
+    letter-spacing: -1.2px;
+}
+
+.sec-p {
+    max-width: 540px;
+    margin: 0 auto;
+    color: rgba(255, 255, 255, 0.45);
+    font-size: 16.5px;
+}
+
+/* ── Bank / QR panels ── */
+
+.panels {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 18px;
+    align-items: start;
+}
+
+/* One panel left standing takes the whole width rather than half of it. */
+.panels--single {
+    grid-template-columns: 1fr;
+}
+
+.panel {
+    position: relative;
+    overflow: hidden;
+    padding: 32px 30px;
+    border: 1px solid var(--cb);
+    border-radius: 16px;
+    background: var(--card);
+    transition: all 0.3s ease;
+}
+
+.panel:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(114, 57, 234, 0.28);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.35);
+}
+
+.panel h3 {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 0 0 24px;
+    color: #fff;
+    font-size: 16.5px;
+    font-weight: 700;
+}
+
+.panel h3 i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    flex: none;
+    border-radius: 12px;
+    background: rgba(114, 57, 234, 0.14);
+    color: var(--p2);
+    font-size: 22px;
+}
+
+.bank {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 13px 26px;
+    margin: 0;
+    font-size: 14.5px;
+}
+
+.bank dt {
+    align-self: center;
+    color: rgba(255, 255, 255, 0.32);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.6px;
+}
+
+.bank dd {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.88);
+    font-weight: 600;
+    /* Account numbers and UPI ids are long and unbreakable; let them wrap rather
+       than push the panel past the page. */
+    word-break: break-word;
+}
+
+.panel--qr {
+    text-align: center;
+}
+
+.panel--qr h3 {
+    justify-content: center;
+}
+
+.panel--qr img {
+    width: 224px;
+    max-width: 100%;
+    padding: 12px;
+    border: 1px solid var(--cb);
+    border-radius: 14px;
+    background: #fff;
+}
+
+.panel--qr .quiet {
+    margin-top: 18px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2.5px;
+    color: var(--p2);
+}
+
+/* ── Touch to call ── */
+
+.call-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(248px, 1fr));
+    gap: 18px;
+}
+
+.call-btn {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 22px 24px;
+    border: 1px solid var(--cb);
+    border-radius: 16px;
+    background: var(--card);
+    color: #fff;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.call-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: var(--call-colour);
+    transform: translateY(-5px);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.35);
+}
+
+.call-btn--0 { --call-colour: rgba(0, 196, 212, 0.55); --call-ink: var(--teal); }
+.call-btn--1 { --call-colour: rgba(114, 57, 234, 0.55); --call-ink: var(--p2); }
+.call-btn--2 { --call-colour: rgba(18, 206, 93, 0.55); --call-ink: var(--grn); }
+
+.call-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    flex: none;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--call-ink);
+    font-size: 21px;
+}
+
+.call-number {
+    min-width: 0;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    word-break: break-word;
+}
+
+/* ── Footer ── */
+
+.site-footer {
+    background: var(--footer);
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+    padding: 56px 0 0;
+}
+
+.footer-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 26px;
+    flex-wrap: wrap;
+    padding-bottom: 42px;
+}
+
+.footer-name {
+    margin: 0 0 10px;
+    color: #fff;
+    font-size: 21px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+}
+
+.address {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    max-width: 420px;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.28);
+    font-size: 13.5px;
+}
+
+.address i {
+    flex: none;
+    color: var(--p2);
+    line-height: 1.72;
+}
+
+.fbot {
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+    padding: 22px 0;
+    color: rgba(255, 255, 255, 0.2);
+    font-size: 12.5px;
+}
+
+.fbot p {
+    margin: 0;
+}
+
+/* ── Narrow screens ── */
+
+@media (max-width: 991px) {
+    .panels {
+        grid-template-columns: 1fr;
+    }
+
+    .section {
+        padding: 76px 0;
+    }
+
+    .hero {
+        padding: 140px 0 72px;
+    }
+}
+
+@media (max-width: 575px) {
+    .shell {
+        padding: 0 16px;
+    }
+
+    .nav-inner {
+        justify-content: center;
+        gap: 12px;
+    }
+
+    .hero {
+        padding: 150px 0 60px;
+    }
+
+    .hero-h1 {
+        letter-spacing: -1.2px;
+    }
+
+    .section {
+        padding: 60px 0;
+    }
+
+    .section-head {
+        margin-bottom: 40px;
+    }
+
+    .rate-value {
+        font-size: 28px;
+    }
+
+    .call-number {
+        font-size: 18px;
+    }
+
+    .footer-top {
+        justify-content: center;
+        text-align: center;
+    }
+
+    .address {
+        justify-content: center;
+        text-align: center;
+    }
+
+    .fbot {
+        text-align: center;
+    }
+}

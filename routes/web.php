@@ -24,6 +24,7 @@ use App\Http\Controllers\ItemLabelController;
 use App\Http\Controllers\ItemLotController;
 use App\Http\Controllers\ItemPhotoController;
 use App\Http\Controllers\LabelSettingController;
+use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LotItemEntryController;
 use App\Http\Controllers\MakingChargeController;
 use App\Http\Controllers\MetalRateController;
@@ -62,7 +63,10 @@ use App\Http\Controllers\WhatsAppReceiverController;
 use App\Http\Controllers\WhatsAppTemplateController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', fn () => redirect()->route(auth()->check() ? 'dashboard' : 'login'));
+// The shop's public front page. No middleware: it is the one route a customer
+// reaches. When the landing page is switched off it redirects the way it always
+// did, so nothing changes until somebody enables it on the Appearance screen.
+Route::get('/', LandingController::class)->name('landing');
 
 Route::middleware('guest')->group(function () {
     Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\AppSettingRequest;
 use App\Models\AppSetting;
+use App\Models\MetalRate;
 use App\Models\MetalType;
 use App\Models\Purity;
 use Illuminate\Http\RedirectResponse;
@@ -14,11 +15,17 @@ use Illuminate\View\View;
 
 class AppSettingController extends Controller implements HasMiddleware
 {
-    /** Form field name => the column it is stored in. */
-    private const LOGO_SLOTS = [
+    /**
+     * Form field name => the column it is stored in.
+     *
+     * Not only logos any more: the landing page's payment QR is stored and replaced
+     * by exactly the same rules, so it goes through the same loop.
+     */
+    private const IMAGE_SLOTS = [
         'logo' => 'logo_path',
         'logo_dark' => 'logo_dark_path',
         'logo_small' => 'logo_small_path',
+        'payment_qr' => 'payment_qr_path',
     ];
 
     public static function middleware(): array
@@ -31,11 +38,18 @@ class AppSettingController extends Controller implements HasMiddleware
 
     public function edit(): View
     {
+        $purities = Purity::active()->with('metalType')->ordered()->get();
+
         return view('app-settings.edit', [
             'settings' => AppSetting::current(),
             'metalTypes' => MetalType::active()->ordered()->pluck('name', 'id'),
-            'purities' => Purity::active()->with('metalType')->ordered()->get()
-                ->mapWithKeys(fn (Purity $purity) => [$purity->id => $purity->label()]),
+            'purities' => $purities->mapWithKeys(fn (Purity $purity) => [$purity->id => $purity->label()]),
+
+            // The landing-page rate picker, grouped the way the rate screens group.
+            'landingPurities' => $purities->groupBy(fn (Purity $purity) => $purity->metalType?->name ?? '—'),
+            // Which of them the shop has actually priced today, so the picker can say
+            // so — ticking a purity with no rate publishes nothing.
+            'pricedToday' => MetalRate::whereDate('effective_date', today())->pluck('purity_id')->all(),
         ]);
     }
 
@@ -82,6 +96,13 @@ class AppSettingController extends Controller implements HasMiddleware
             'table_header_bg_dark',
             'settings_cache_enabled',
             'auto_opening_enabled',
+            'firm_address',
+            'landing_enabled',
+            'landing_announcement',
+            'landing_rate_note',
+            'landing_phones',
+            ...array_keys(AppSetting::SOCIAL_PLATFORMS),
+            ...array_keys(AppSetting::BANK_FIELDS),
         ]));
 
         // Stored as what is hidden, so a section added later shows up by default
@@ -97,7 +118,19 @@ class AppSettingController extends Controller implements HasMiddleware
                 ->all();
         }
 
-        foreach (self::LOGO_SLOTS as $field => $column) {
+        // Stored as what is SHOWN, the opposite of the dashboard's hidden list: a
+        // purity added later must not appear on a public page until somebody says so.
+        // Left alone entirely when the form did not send the field.
+        if ($request->has('landing_rate_purities')) {
+            $chosen = $request->safe()->input('landing_rate_purities', []);
+
+            Purity::whereIn('id', $chosen)->update(['show_on_landing' => true]);
+            // The `?: [0]` is load-bearing — whereNotIn('id', []) matches no rows, so
+            // clearing every box would otherwise clear nothing.
+            Purity::whereNotIn('id', $chosen ?: [0])->update(['show_on_landing' => false]);
+        }
+
+        foreach (self::IMAGE_SLOTS as $field => $column) {
             $this->applyLogo($request, $settings, $field, $column);
         }
 

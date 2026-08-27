@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
-#[Fillable(['metal_type_id', 'name', 'touch', 'default_per_grams', 'sort_order', 'is_active'])]
+#[Fillable(['metal_type_id', 'name', 'touch', 'default_per_grams', 'sort_order', 'is_active', 'show_on_landing'])]
 class Purity extends Model
 {
     use SoftDeletes;
@@ -21,6 +21,7 @@ class Purity extends Model
             'touch' => 'decimal:3',
             'default_per_grams' => 'decimal:3',
             'is_active' => 'boolean',
+            'show_on_landing' => 'boolean',
             'sort_order' => 'integer',
         ];
     }

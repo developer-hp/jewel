@@ -70,10 +70,12 @@ class AppSettingRequest extends FormRequest
             'logo' => $image,
             'logo_dark' => $image,
             'logo_small' => $image,
+            'payment_qr' => $image,
 
             'remove_logo' => ['boolean'],
             'remove_logo_dark' => ['boolean'],
             'remove_logo_small' => ['boolean'],
+            'remove_payment_qr' => ['boolean'],
 
             'sidebar_user_bg_from' => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'sidebar_user_bg_to' => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
@@ -89,7 +91,48 @@ class AppSettingRequest extends FormRequest
             'auto_opening_enabled' => ['boolean'],
             'dashboard_sections' => ['sometimes', 'array'],
             'dashboard_sections.*' => [Rule::in(array_column(config('dashboard', []), 'key'))],
+
+            // --- landing page ---------------------------------------------------
+            // All nullable, never required: the Appearance form is submitted whole,
+            // and a new required field here silently breaks every caller that posts it.
+            'landing_enabled' => ['boolean'],
+            'landing_announcement' => ['nullable', 'string', 'max:255'],
+            'landing_rate_note' => ['nullable', 'string', 'max:20'],
+            'landing_phones' => ['nullable', 'string', 'max:300'],
+            'firm_address' => ['nullable', 'string', 'max:500'],
+
+            // The purities to publish. Same shape as dashboard_sections: `sometimes`,
+            // so a caller that omits the field leaves the flags alone.
+            'landing_rate_purities' => ['sometimes', 'array'],
+            'landing_rate_purities.*' => ['integer', 'exists:purities,id'],
+
+            ...$this->socialRules(),
+            ...$this->bankRules(),
         ];
+    }
+
+    /**
+     * Built from the model's platform list rather than restated here, so adding a
+     * seventh platform is one edit rather than two that can drift apart.
+     *
+     * @return array<string, array<int, string>>
+     */
+    private function socialRules(): array
+    {
+        return collect(array_keys(AppSetting::SOCIAL_PLATFORMS))
+            ->mapWithKeys(fn (string $column) => [$column => ['nullable', 'url', 'max:200']])
+            ->all();
+    }
+
+    /**
+     * @return array<string, array<int, string>>
+     */
+    private function bankRules(): array
+    {
+        return collect(AppSetting::BANK_FIELDS)
+            ->keys()
+            ->mapWithKeys(fn (string $column) => [$column => ['nullable', 'string', 'max:150']])
+            ->all();
     }
 
     /**
@@ -145,8 +188,21 @@ class AppSettingRequest extends FormRequest
             ]);
         }
 
-        foreach (['remove_logo', 'remove_logo_dark', 'remove_logo_small'] as $flag) {
+        foreach (['remove_logo', 'remove_logo_dark', 'remove_logo_small', 'remove_payment_qr'] as $flag) {
             $this->merge([$flag => $this->boolean($flag)]);
+        }
+
+        $this->merge(['landing_enabled' => $this->boolean('landing_enabled')]);
+
+        // The form posts one empty value so "none ticked" still arrives as an array;
+        // drop it before the exists rule sees it.
+        if ($this->has('landing_rate_purities')) {
+            $this->merge([
+                'landing_rate_purities' => array_values(array_filter(
+                    (array) $this->input('landing_rate_purities'),
+                    fn ($id) => $id !== '' && $id !== null,
+                )),
+            ]);
         }
 
         // Ticking "use the theme default" clears the colour rather than storing one.

@@ -31,6 +31,12 @@ use Illuminate\Support\Facades\Storage;
     'voucher_next_ref_no', 'voucher_ref_prefix',
     'item_estimate_next_ref_no', 'item_estimate_ref_prefix', 'gst_percent',
     'cash_entry_next_ref_no', 'cash_entry_ref_prefix',
+    'landing_enabled', 'landing_announcement', 'landing_rate_note', 'landing_phones',
+    'firm_address', 'payment_qr_path',
+    'social_facebook', 'social_instagram', 'social_youtube',
+    'social_whatsapp', 'social_x', 'social_linkedin',
+    'bank_ac_no', 'bank_ac_name', 'bank_ifsc', 'bank_branch', 'bank_ac_type',
+    'bank_name', 'bank_swift_code', 'bank_purpose_code', 'bank_upi_id',
 ])]
 class AppSetting extends Model
 {
@@ -79,6 +85,8 @@ class AppSetting extends Model
         'gst_percent' => 3,
         'cash_entry_next_ref_no' => 1,
         'cash_entry_ref_prefix' => '',
+        'landing_enabled' => false,
+        'landing_rate_note' => '+GST',
     ];
 
     /**
@@ -143,7 +151,127 @@ class AppSetting extends Model
             'item_estimate_next_ref_no' => 'integer',
             'cash_entry_next_ref_no' => 'integer',
             'gst_percent' => 'decimal:2',
+            'landing_enabled' => 'boolean',
         ];
+    }
+
+    /**
+     * The social platforms the landing page can link to.
+     *
+     * Fixed rather than a master table: six is the whole realistic set for a shop,
+     * and this keeps them on the Appearance form with no extra screen to maintain.
+     *
+     * `ri-twitter-fill`, not `ri-twitter-x-line` — the bundled Remix set predates
+     * the rename and does not carry the newer glyph.
+     *
+     * column => [label, icon]
+     */
+    public const SOCIAL_PLATFORMS = [
+        'social_facebook' => ['Facebook', 'ri-facebook-fill'],
+        'social_instagram' => ['Instagram', 'ri-instagram-line'],
+        'social_youtube' => ['YouTube', 'ri-youtube-fill'],
+        'social_whatsapp' => ['WhatsApp', 'ri-whatsapp-line'],
+        'social_x' => ['X', 'ri-twitter-fill'],
+        'social_linkedin' => ['LinkedIn', 'ri-linkedin-fill'],
+    ];
+
+    /**
+     * Bank rows, in the order the printed reference shows them.
+     *
+     * column => label
+     */
+    public const BANK_FIELDS = [
+        'bank_ac_no' => 'AC NO',
+        'bank_ac_name' => 'AC Name',
+        'bank_ifsc' => 'IFSC',
+        'bank_branch' => 'BRANCH',
+        'bank_ac_type' => 'AC TYPE',
+        'bank_name' => 'BANK',
+        'bank_swift_code' => 'SWIFT CODE',
+        'bank_purpose_code' => 'PURPOSE CODE',
+        'bank_upi_id' => 'UPI ID',
+    ];
+
+    /**
+     * Numbers for the landing page's "Touch to Call" buttons, one per line.
+     *
+     * Falls back to the firm's own numbers, so the page has something to dial before
+     * anyone thinks to fill this in.
+     *
+     * @return array<int, string>
+     */
+    public function landingPhones(): array
+    {
+        $lines = collect(preg_split('/\r\n|\r|\n/', (string) $this->landing_phones))
+            ->map(fn (string $line) => trim($line))
+            ->filter()
+            ->values();
+
+        if ($lines->isNotEmpty()) {
+            return $lines->all();
+        }
+
+        return collect([$this->firm_phone, $this->firm_office_phone])
+            ->map(fn (?string $phone) => trim((string) $phone))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * The social links that have actually been filled in.
+     *
+     * @return array<int, array{key: string, label: string, icon: string, url: string}>
+     */
+    public function socialLinks(): array
+    {
+        $links = [];
+
+        foreach (self::SOCIAL_PLATFORMS as $column => [$label, $icon]) {
+            $url = trim((string) $this->{$column});
+
+            if ($url !== '') {
+                $links[] = ['key' => $column, 'label' => $label, 'icon' => $icon, 'url' => $url];
+            }
+        }
+
+        return $links;
+    }
+
+    /**
+     * The bank rows that have been filled in, label => value.
+     *
+     * Filtering here rather than in the template is what makes "a blank field simply
+     * does not render" one rule instead of nine @if blocks.
+     *
+     * @return array<string, string>
+     */
+    public function bankRows(): array
+    {
+        $rows = [];
+
+        foreach (self::BANK_FIELDS as $column => $label) {
+            $value = trim((string) $this->{$column});
+
+            if ($value !== '') {
+                $rows[$label] = $value;
+            }
+        }
+
+        return $rows;
+    }
+
+    /**
+     * The payment QR image, or null when there is none to show.
+     */
+    public function paymentQrUrl(): ?string
+    {
+        if (! filled($this->payment_qr_path) || ! Storage::disk('public')->exists($this->payment_qr_path)) {
+            return null;
+        }
+
+        return Storage::disk('public')->url($this->payment_qr_path);
     }
 
     /** Where the cached copy lives, on whatever store CACHE_STORE names. */
