@@ -59,10 +59,28 @@ class RepairFormPrintController extends Controller implements HasMiddleware
             return $forms;
         }
 
-        // 105 x 160 mm. dompdf wanted that as a box of points; mPDF takes the
-        // millimetres directly.
-        return PdfDocument::stream('repair-forms.stickers', ['forms' => $forms],
-            'repair-stickers-'.now()->format('Y-m-d-His').'.pdf', PdfDocument::size(105, 160));
+        $filename = 'repair-stickers-'.now()->format('Y-m-d-His').'.pdf';
+
+        // More than one sticker goes four-up on plain A4, to be guillotined apart:
+        // 210 x 297 less a 4mm margin all round gives four 101 x 144.5mm cells,
+        // near enough the cut size that the artwork does not have to change.
+        if ($forms->count() > 1) {
+            return PdfDocument::stream('repair-forms.stickers', [
+                'forms' => $forms,
+                'columns' => 2,
+                'perSheet' => 4,
+                'cellHeightMm' => 130,
+            ], $filename, PdfDocument::paper('A4', 'P') + PdfDocument::margins(4));
+        }
+
+        // A single sticker prints on its own cut-to-size stock: 105 x 160 mm.
+        // dompdf wanted that as a box of points; mPDF takes the millimetres directly.
+        return PdfDocument::stream('repair-forms.stickers', [
+            'forms' => $forms,
+            'columns' => 1,
+            'perSheet' => 1,
+            'cellHeightMm' => 152.0,
+        ], $filename, PdfDocument::size(105, 160) + PdfDocument::margins(4));
     }
 
     /**

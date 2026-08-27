@@ -82,10 +82,27 @@ class OrderFormPrintController extends Controller implements HasMiddleware
 
     private function stickerPdf($forms): Response
     {
-        // 105 x 160 mm. dompdf wanted that as a box of points; mPDF takes the
-        // millimetres directly.
-        return PdfDocument::stream('order-forms.stickers', ['forms' => $forms],
-            'order-stickers-'.now()->format('Y-m-d-His').'.pdf', PdfDocument::size(105, 160));
+        $filename = 'order-stickers-'.now()->format('Y-m-d-His').'.pdf';
+
+        // More than one sticker goes four-up on plain A4, to be guillotined apart.
+        // Matches the repair sticker, which is the same job on the same paper.
+        if ($forms->count() > 1) {
+            return PdfDocument::stream('order-forms.stickers', [
+                'forms' => $forms,
+                'columns' => 2,
+                'perSheet' => 4,
+                'cellHeightMm' => 130,
+            ], $filename, PdfDocument::paper('A4', 'P') + PdfDocument::margins(4));
+        }
+
+        // A single sticker prints on its own cut-to-size stock: 105 x 160 mm.
+        // dompdf wanted that as a box of points; mPDF takes the millimetres directly.
+        return PdfDocument::stream('order-forms.stickers', [
+            'forms' => $forms,
+            'columns' => 1,
+            'perSheet' => 1,
+            'cellHeightMm' => 152.0,
+        ], $filename, PdfDocument::size(105, 160) + PdfDocument::margins(4));
     }
 
     /**
