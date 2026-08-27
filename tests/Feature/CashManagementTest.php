@@ -391,8 +391,10 @@ it('adds money in and takes money out', function () {
         'cash_amount' => '400',
     ])->assertRedirect();
 
-    // 1,000 opening + (500 + 200 + 300 in) − 400 out.
-    expect($this->drawer->fresh()->balance())->toBe(1600.0);
+    // 1,000 opening + 500 cash in − 400 cash out. The 200 cheque and the 300 of old
+    // gold settled the estimate but never went into the till, so the drawer does not
+    // move by them — see CashMath::CASH_SIGNED_SQL.
+    expect($this->drawer->fresh()->balance())->toBe(1100.0);
 
     // The listing's aggregate has to agree with the model, or CashMath owns the
     // rule twice for nothing.
@@ -400,10 +402,28 @@ it('adds money in and takes money out', function () {
         ->getJson(route('cash-drawers.index', dtParams(['name'])))
         ->json('data.0.balance');
 
-    expect($rendered)->toContain('1,600.00');
+    expect($rendered)->toContain('1,100.00');
 });
 
-it('moves the drawer by what was settled, not by what was asked', function () {
+// The counterpart to the above: a drawer must never be rolled forward by a figure it
+// did not show all day.
+it('rolls the drawer forward by the same figure it displayed', function () {
+    postCashEntry($this, [
+        'document_reference' => 'estimate:'.cashEstimate($this, 1000)->id,
+        'cash_amount' => '500',
+        'cheque_amount' => '200',
+        'cheque_number' => '1', 'cheque_name' => 'R', 'cheque_bank' => 'HDFC',
+        'og_estimate_id' => cashOgEstimate($this, 1, 100, 3000)->id,
+    ])->assertRedirect();
+
+    $balance = $this->drawer->fresh()->balance();
+
+    app(App\Services\DayOpening::class)->run();
+
+    expect((float) $this->drawer->fresh()->opening_balance)->toBe($balance);
+});
+
+it('moves the drawer by the cash taken, not by what was asked', function () {
     postCashEntry($this, [
         'document_reference' => 'estimate:'.cashEstimate($this, 25000)->id,
         'cash_amount' => '20000',
@@ -609,16 +629,18 @@ it('shows what is in the tills and the gold that came in', function () {
 
     $position = app(CashMath::class)->position();
 
-    // 1,000 opening + (5,000 cash + 300 gold in) − 2,000 out.
-    expect($position->cash)->toBe(4300.0)
-        // Signed too: gold paid back out would count against this.
+    // 1,000 opening + 5,000 cash in − 2,000 cash out. The 300 that the old gold was
+    // worth settled the estimate but never went into a till, so it is not counted
+    // here — the gold is reported as weight, on its own, below.
+    expect($position->cash)->toBe(4000.0)
+        // Weight, not value, and signed: gold paid back out counts against this.
         ->and($position->gold)->toBe(10.0);
 
     $this->actingAs($this->admin)->get(route('cash-entries.index'))
         ->assertOk()
         ->assertSee('Total Cash')
         ->assertSee('Total Gold')
-        ->assertSee('4,300');
+        ->assertSee('4,000');
 });
 
 it('exports the ledger as a pdf that adds up', function () {

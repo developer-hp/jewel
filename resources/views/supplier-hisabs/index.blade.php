@@ -45,9 +45,6 @@
                                 <input type="text" class="form-control bg-light" value="{{ $ratePer10g }}" readonly>
                             </div>
                         @endcan
-                    </div>
-
-                    <div class="row g-2 align-items-center mb-3">
                         @can('supplier_hisab.create')
                             <div class="col-auto">
                                 <button type="button" class="btn btn-success" id="hisab-add">

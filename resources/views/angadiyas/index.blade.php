@@ -31,19 +31,13 @@
 
                         @can('angadiya.print')
                             <div class="col-md-auto">
-                                <button type="button" class="btn btn-soft-secondary" id="select-unprinted">
-                                    <i class="ri-checkbox-multiple-line"></i>
-                                    Select all unprinted ({{ $unprintedCount }})
-                                </button>
-                            </div>
-                            <div class="col-md-auto">
                                 <button type="button" class="btn btn-primary" id="print-selected" disabled>
                                     <i class="ri-printer-line"></i> Print Selected (<span id="selected-count">0</span>)
                                 </button>
                             </div>
                             <div class="col-md-auto">
-                                <button type="button" class="btn btn-soft-primary" id="print-list" disabled>
-                                    <i class="ri-file-list-line"></i> Print List
+                                <button type="button" class="btn btn-warning" id="print-list">
+                                    <i class="ri-file-list-line"></i> Export
                                 </button>
                             </div>
                             <div class="col-md-auto">
@@ -121,7 +115,7 @@
 
             function refreshControls() {
                 $('#selected-count').text(selected.size);
-                $('#print-selected, #print-list').prop('disabled', selected.size === 0);
+                $('#print-selected').prop('disabled', selected.size === 0);
                 $('#clear-selection').toggleClass('d-none', selected.size === 0);
 
                 const boxes = $('#angadiyas-table tbody .slip-check');
@@ -176,8 +170,6 @@
             $('#print-selected').on('click', () => submitPrint([...selected]));
 
             $('#print-list').on('click', function () {
-                const $box = $('#print-list-ids').empty();
-                selected.forEach(id => $box.append($('<input type="hidden" name="ids[]">').val(id)));
                 $('#print-list-form').trigger('submit');
             });
             $(document).on('click', '.print-one', function () { submitPrint([$(this).data('id')]); });

@@ -26,14 +26,13 @@ class AngadiyaListPrintController extends Controller implements HasMiddleware
 
     public function __invoke(Request $request): Response|RedirectResponse
     {
-        $validated = $request->validate([
-            'ids' => ['required', 'array', 'min:1', 'max:500'],
-            'ids.*' => ['integer', 'exists:angadiyas,id'],
-        ]);
 
         // Ordered by id, so the list reads in the order they were entered — the same
         // order the slip sheet uses.
-        $slips = Angadiya::whereIn('id', $validated['ids'])->orderBy('id')->get();
+        if($request->ids)
+        $slips = Angadiya::whereIn('id', $request->ids)->orderBy('id')->get();
+        else
+        $slips = Angadiya::orderBy('id')->get();
 
         if ($slips->isEmpty()) {
             return back()->with('error', 'Those slips no longer exist.');
