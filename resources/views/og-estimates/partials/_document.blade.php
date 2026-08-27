@@ -22,7 +22,7 @@
             @foreach (['customer', 'office'] as $copy)
                 <div class="copy-title">{{ $copy === 'office' ? 'FOR OFFICE USE' : 'OG ROUGH ESTIMATE' }}</div>
 
-                <table class="pdf-table no-border who">
+                <table class="pdf-table no-border who mt5">
                     <tr>
                         <td class="no-border" style="width: 52%;">
                             <span class="text-bold">Name</span>&nbsp;&nbsp;&nbsp;{{ $estimate->customer_name }}
@@ -43,18 +43,18 @@
                     </tr>
                 </table>
 
-                <table class="" style="width: 100%;">
+                <table class="layout" style="width: 100%;">
                     <tr>
-                        <td class="" style="width: 86%;">
-                            <table class="pdf-table no-border pd2 lines font11">
+                        <td class="og-cell" style="width: 86%;">
+                            <table class="no-border font13" style="text-align: center;border: 0px;" width="100%">
                                 <thead>
                                     <tr>
                                         <th class="text-center">ITEM</th>
-                                        <th style="width: 15%" class="text-center">GROSS</th>
-                                        <th style="width: 15%" class="text-center">NET WT</th>
-                                        <th style="width: 12%" class="text-center">%</th>
-                                        <th style="width: 15%" class="text-center">RATE</th>
-                                        <th style="width: 16%" class="text-center">TOTAL</th>
+                                        <th style="width: 15%" class="text-right">GROSS</th>
+                                        <th style="width: 15%" class="text-right">NET WT</th>
+                                        <th style="width: 12%" class="text-right">%</th>
+                                        <th style="width: 15%" class="text-right">RATE</th>
+                                        <th style="width: 16%" class="text-right">TOTAL</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -79,25 +79,27 @@
                                 </tbody>
                                 <tfoot>
                                     <tr>
-                                        <td class="text-center text-bold">TOTAL</td>
-                                        <td class="text-right text-bold">{{ $wt($totals->gross) }}</td>
-                                        <td class="text-right text-bold">{{ $wt($totals->net) }}</td>
+                                        <th class="text-center text-bold">TOTAL</th>
+                                        <th class="text-right text-bold">{{ $wt($totals->gross) }}</th>
+                                        <th class="text-right text-bold">{{ $wt($totals->net) }}</th>
                                         {{-- The fine weight, not an average percentage. --}}
-                                        <td class="text-right text-bold">{{ $wt($totals->fine) }}</td>
-                                        <td>&nbsp;</td>
-                                        <td class="text-right text-bold">{{ $money($totals->value) }}</td>
+                                        <th class="text-right text-bold">{{ $wt($totals->fine) }}</th>
+                                        <th>&nbsp;</td>
+                                        <th class="text-right text-bold">{{ $money($totals->value) }}</th>
                                     </tr>
                                 </tfoot>
                             </table>
                         </td>
-                        <td class="no-border grand" style="width: 14%; vertical-align: top;">
-                            {{ $money($totals->value) }}
+                        <td class="og-cell grand" style="width: 14%; vertical-align: top;">
+                            <div class="grandbox text-center">{{ $money($totals->value) }}</div>
                         </td>
                     </tr>
                 </table>
 
+                {{-- An empty div has no height in mPDF, so the gap between the two
+                     copies needs something in it to hold the line box open. --}}
                 @if ($copy === 'customer')
-                    <div style="height: 6mm;"></div>
+                    <div class="copy-gap">&nbsp;</div>
                 @endif
             @endforeach
 

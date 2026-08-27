@@ -20,9 +20,17 @@
         body {
             font-size: 15px;
         }
-        /* Each form is a page of its own — one repair, one sheet. */
-        
-        
+
+        /* Each form is a page of its own — one repair, one sheet. This was an empty
+           stub, so a two-form print ran both down the same page. */
+        table.form-page {
+            page-break-after: always;
+        }
+
+        table.form-page.last {
+            page-break-after: auto;
+        }
+
         table.sheet {
             width: 100%;
             border-collapse: separate;
@@ -33,19 +41,24 @@
             page-break-inside: avoid;
         }
 
+        /* The slot's own border (from pdf.css's `th,td`) is the frame around each
+           copy. Fixed height so the pair fills the sheet instead of huddling at the
+           top: A4 landscape less the layout's 15mm margins leaves ~180mm. */
         td.slot {
             width: 50%;
+            height: 176mm;
             vertical-align: top;
             padding: 0;
         }
 
         .copy {
-            padding: 2mm;
+            padding: 3mm;
         }
 
         .title {
             font-size: 24px;
             font-weight: bold;
+            line-height: 1.1;
         }
 
         .office-band {
@@ -53,10 +66,41 @@
             margin-bottom: 1.5mm;
         }
 
+        /* Right-aligned so the reference block hugs the edge of the copy rather than
+           starting at the 55% mark and leaving a band of dead paper beside it. */
         .refbox {
-            padding: 1.5mm;
+            padding: 1.5mm 0 1.5mm 1.5mm;
+            line-height: 1.5;
         }
 
+        table.lines {
+            margin-top: 2mm;
+        }
+
+        /* Blank ruled rows pad the table out to a usable depth. The counter writes
+           on this form, so the empty space is the point — and it is what keeps the
+           terms block anchored near the foot of the copy. */
+        table.lines tbody tr.filler td {
+            height: 8mm;
+        }
+
+        /* The whole reason this was asked for: the terms ran flush against the frame
+           on every side. */
+        .terms {
+            margin-top: 3mm;
+            padding: 2.5mm 3mm;
+            border: 1px solid;
+        }
+
+        .terms .head {
+            font-weight: bold;
+            margin-bottom: 1.5mm;
+        }
+
+        .terms .line {
+            font-size: 13px;
+            line-height: 1.6;
+        }
     </style>
 @endsection
 
@@ -101,7 +145,7 @@
                                             @endforeach
                                         @endif
                                     </td>
-                                    <td class="no-border" style="width: 45%;">
+                                    <td class="no-border text-right" style="width: 45%;">
                                         <div class="refbox text-bold font16">
                                             R. No. : {{ $form->reference() }}<br>
                                             Date : {{ $form->form_date->format('d-m-Y') }}<br>
@@ -127,6 +171,17 @@
                                             <td class="text-right">{{ $weight($line->net_weight) }}</td>
                                         </tr>
                                     @endforeach
+
+                                    {{-- Ruled space to write in, and what stops a
+                                         one-line repair leaving the copy two thirds
+                                         empty. --}}
+                                    @for ($i = $form->lines->count(); $i < 6; $i++)
+                                        <tr class="filler">
+                                            <td>&nbsp;</td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                    @endfor
                                 </tbody>
                                 <tfoot>
                                     <tr>
