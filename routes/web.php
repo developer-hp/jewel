@@ -5,6 +5,7 @@ use App\Http\Controllers\AngadiyaListPrintController;
 use App\Http\Controllers\AngadiyaPrintController;
 use App\Http\Controllers\AppSettingController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\CashCalculatorController;
 use App\Http\Controllers\CashDrawerController;
 use App\Http\Controllers\CashEntryController;
 use App\Http\Controllers\CashLookupController;
@@ -82,6 +83,11 @@ Route::middleware('auth')->group(function () {
     Route::post('session/heartbeat', SessionHeartbeatController::class)->name('session.heartbeat');
 
     Route::get('dashboard', DashboardController::class)->name('dashboard');
+
+    // The till calculator in the topbar. Available from every page, so it lives
+    // here rather than under the cash module's own routes.
+    Route::get('cash-calculator', [CashCalculatorController::class, 'show'])->name('cash-calculator.show');
+    Route::post('cash-calculator', [CashCalculatorController::class, 'store'])->name('cash-calculator.store');
 
     Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');

@@ -43,6 +43,15 @@
                 </a>
             </li>
 
+            @can('cash_entry.view')
+                <li class="d-none d-sm-inline-block">
+                    <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#cashCalculatorModal"
+                        title="Cash calculator">
+                        <i class="ri-calculator-line fs-22"></i>
+                    </a>
+                </li>
+            @endcan
+
             <li class="d-none d-sm-inline-block">
                 <div class="nav-link" id="light-dark-mode">
                     <i class="ri-moon-fill fs-22"></i>

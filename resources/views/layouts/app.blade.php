@@ -76,6 +76,7 @@
     {{-- Ctrl+M. Below the page so its markup never sits inside anything, and it
          pushes only scripts, which the stack below still picks up. --}}
     @include('layouts.partials.command-palette')
+    @include('layouts.partials.cash-calculator')
 
     <script src="{{ asset('theme/assets/js/vendor.min.js') }}"></script>
     <script src="{{ asset('theme/assets/js/app.min.js') }}"></script>
