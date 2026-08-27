@@ -106,16 +106,6 @@
             font-size: 10px;
         }
 
-        table.linecard td.cardphoto {
-            width: 18mm;
-            text-align: center;
-        }
-
-        table.linecard td.cardphoto img {
-            max-width: 16mm;
-            max-height: 16mm;
-            display: block;
-        }
 
         .itemdetail {
             margin-top: 0.8mm;
@@ -161,14 +151,14 @@
 
             <table class="pdf-table no-border" style="width: 100%; margin-top: 2mm;">
                 <tr>
-                    <td class="no-border" style="width: 58%; vertical-align: bottom;">
+                    <td class="no-border" style="width: 73%; vertical-align: bottom;">
                         <div class="text-bold font16">M/S. : {{ $form->customer_name }}</div>
                         <div class="text-bold font16">Contact No. : {{ $form->contact_no }}</div>
                         @if ($copy === 'office' && $form->address)
                             <div class="text-bold font11">{{ $form->address }}</div>
                         @endif
                     </td>
-                    <td class="no-border" style="width: 42%;">
+                    <td class="no-border" style="width: 27%;">
                         <div class="refbox text-bold font13">
                             Order No. : {{ $form->reference() }}<br>
                             Date : {{ $form->form_date->format('d-m-Y') }}<br>
@@ -200,7 +190,7 @@
                                 {{ $line->description }}
                             </td>
                             @if ($photo)
-                                <td class="cardphoto"><img src="{{ $photo }}" alt=""></td>
+                                <td class="cardphoto"><img height="100px" src="{{ $photo }}" alt=""></td>
                             @endif
                         </tr>
 
