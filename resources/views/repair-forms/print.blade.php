@@ -23,13 +23,6 @@
 
         /* Each form is a page of its own — one repair, one sheet. This was an empty
            stub, so a two-form print ran both down the same page. */
-        table.form-page {
-            page-break-after: always;
-        }
-
-        table.form-page.last {
-            page-break-after: auto;
-        }
 
         table.sheet {
             width: 100%;
@@ -51,9 +44,7 @@
             padding: 0;
         }
 
-        .copy {
-            padding: 3mm;
-        }
+        
 
         .title {
             font-size: 24px;
@@ -61,10 +52,7 @@
             line-height: 1.1;
         }
 
-        .office-band {
-            padding: 1mm;
-            margin-bottom: 1.5mm;
-        }
+        
 
         /* Right-aligned so the reference block hugs the edge of the copy rather than
            starting at the 55% mark and leaving a band of dead paper beside it. */
@@ -89,7 +77,6 @@
         .terms {
             margin-top: 3mm;
             padding: 2.5mm 3mm;
-            border: 1px solid;
         }
 
         .terms .head {
@@ -117,7 +104,9 @@
                         <div class="copy">
 
                             @if ($copy === 'office')
-                                <div class="office-band text-center text-bold">For Office Use</div>
+                                <div class="office-band text-right text-bold">For Office Use</div>
+                            @else
+                                <div class="office-band text-right text-bold">&nbsp;</div>
                             @endif
 
                             <table class="pdf-table no-border" style="width: 100%;">
@@ -136,7 +125,7 @@
 
                             <table class="pdf-table no-border" style="width: 100%; margin-top: 2mm;">
                                 <tr>
-                                    <td class="no-border" style="width: 55%; vertical-align: bottom;">
+                                    <td class="no-border" style="width: 60%; vertical-align: bottom;">
                                         <div class="text-bold font16">M/S. : {{ $form->customer_name }}</div>
                                         <div class="text-bold font16">Contact No. : {{ $form->contact_no }}</div>
                                         @if ($copy === 'office')
@@ -145,11 +134,11 @@
                                             @endforeach
                                         @endif
                                     </td>
-                                    <td class="no-border text-right" style="width: 45%;">
+                                    <td class="no-border text-left" style="width: 25%;">
                                         <div class="refbox text-bold font16">
                                             R. No. : {{ $form->reference() }}<br>
                                             Date : {{ $form->form_date->format('d-m-Y') }}<br>
-                                            Delivery Date :<br>{{ $form->delivery_date->format('d-m-Y') }}
+                                            Delivery Date : {{ $form->delivery_date->format('d-m-Y') }}
                                         </div>
                                     </td>
                                 </tr>
@@ -205,7 +194,7 @@
                                     <td class="no-border mb5">
                                         @if ($terms !== [])
                                             <div class="terms">
-                                                <div class="head">Terms and Conditions:</div>
+                                                <div class="text-bold">Terms and Conditions:</div>
                                                 @foreach ($terms as $term)
                                                     <div class="line">{{ $term }}</div>
                                                 @endforeach

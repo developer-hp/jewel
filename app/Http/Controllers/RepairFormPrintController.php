@@ -48,7 +48,7 @@ class RepairFormPrintController extends Controller implements HasMiddleware
             // ~130mm each, which is readable, and portrait squeezes both into
             // unusable columns. It was A3, which no counter printer takes and
             // which left the pair stranded in the corner of the sheet.
-        ], 'repair-'.now()->format('Y-m-d-His').'.pdf', PdfDocument::paper('A4', 'L'));
+        ], 'repair-'.now()->format('Y-m-d-His').'.pdf', PdfDocument::paper('A3', 'L'));
     }
 
     public function stickers(Request $request): Response|RedirectResponse
