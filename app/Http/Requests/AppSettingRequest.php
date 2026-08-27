@@ -96,6 +96,7 @@ class AppSettingRequest extends FormRequest
             // All nullable, never required: the Appearance form is submitted whole,
             // and a new required field here silently breaks every caller that posts it.
             'landing_enabled' => ['boolean'],
+            'landing_layout' => ['nullable', Rule::in(array_keys(AppSetting::LANDING_LAYOUTS))],
             'landing_announcement' => ['nullable', 'string', 'max:255'],
             'landing_rate_note' => ['nullable', 'string', 'max:20'],
             'landing_phones' => ['nullable', 'string', 'max:300'],

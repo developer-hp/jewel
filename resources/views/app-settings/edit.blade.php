@@ -827,6 +827,24 @@
                                 </div>
 
                                 <div class="mb-3">
+                                    <label class="form-label d-block">Look</label>
+                                    @foreach (App\Models\AppSetting::LANDING_LAYOUTS as $value => [$label, $hint])
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="landing_layout"
+                                                id="landing_layout_{{ $value }}" value="{{ $value }}"
+                                                @checked(old('landing_layout', $settings->landingLayout()) === $value)>
+                                            <label class="form-check-label" for="landing_layout_{{ $value }}">
+                                                {{ $label }}
+                                                <small class="text-muted d-block fs-12">{{ $hint }}</small>
+                                            </label>
+                                        </div>
+                                    @endforeach
+                                    @error('landing_layout')
+                                        <div class="text-danger fs-13 mt-1">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="mb-3">
                                     <label for="landing_announcement" class="form-label">Announcement</label>
                                     <input type="text" id="landing_announcement" name="landing_announcement"
                                         class="form-control @error('landing_announcement') is-invalid @enderror"

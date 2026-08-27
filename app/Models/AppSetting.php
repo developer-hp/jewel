@@ -31,7 +31,7 @@ use Illuminate\Support\Facades\Storage;
     'voucher_next_ref_no', 'voucher_ref_prefix',
     'item_estimate_next_ref_no', 'item_estimate_ref_prefix', 'gst_percent',
     'cash_entry_next_ref_no', 'cash_entry_ref_prefix',
-    'landing_enabled', 'landing_announcement', 'landing_rate_note', 'landing_phones',
+    'landing_enabled', 'landing_layout', 'landing_announcement', 'landing_rate_note', 'landing_phones',
     'firm_address', 'payment_qr_path',
     'social_facebook', 'social_instagram', 'social_youtube',
     'social_whatsapp', 'social_x', 'social_linkedin',
@@ -86,6 +86,7 @@ class AppSetting extends Model
         'cash_entry_next_ref_no' => 1,
         'cash_entry_ref_prefix' => '',
         'landing_enabled' => false,
+        'landing_layout' => self::LAYOUT_FANCY,
         'landing_rate_note' => '+GST',
     ];
 
@@ -153,6 +154,34 @@ class AppSetting extends Model
             'gst_percent' => 'decimal:2',
             'landing_enabled' => 'boolean',
         ];
+    }
+
+    /**
+     * The two landing-page looks.
+     *
+     * Fancy is the dark, animated one; simple is the light, plain one. They share
+     * every content partial under resources/views/landing/partials — only the page
+     * chrome and the stylesheet differ, so a field added to the settings screen shows
+     * up on both without being written twice.
+     */
+    public const LAYOUT_SIMPLE = 'simple';
+
+    public const LAYOUT_FANCY = 'fancy';
+
+    /** value => [label, hint] */
+    public const LANDING_LAYOUTS = [
+        self::LAYOUT_FANCY => ['Fancy', 'Dark, animated: drifting colour, glass cards, gradient headings.'],
+        self::LAYOUT_SIMPLE => ['Simple', 'Light and plain: white cards, one accent, no motion.'],
+    ];
+
+    /**
+     * The chosen look, falling back to fancy if the stored value is not one we serve.
+     */
+    public function landingLayout(): string
+    {
+        return array_key_exists((string) $this->landing_layout, self::LANDING_LAYOUTS)
+            ? (string) $this->landing_layout
+            : self::LAYOUT_FANCY;
     }
 
     /**

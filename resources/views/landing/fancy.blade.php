@@ -1,18 +1,17 @@
 {{--
-    The shop's public front page.
+    The "fancy" landing page: dark, purple-tinted, animated.
+
+    Laid out after the talent-ai.io reference — near-black ground, drifting colour
+    blobs behind a faint grid, glass cards with a hairline border, a pill label above
+    every section heading — with that page's own class names and variables kept so the
+    two can be compared side by side.
 
     Standalone on purpose: it extends no layout and pulls none of the Jidox admin
     bundle. A customer loading this should not be downloading app.min.css, jQuery and
-    the sidebar. Only the icon font (for the glyphs) and landing.css, which shares no
-    selector with app-custom.css or pdf.css.
+    the sidebar.
 
-    Laid out after the talent-ai.io reference — near-black purple-tinted ground,
-    drifting colour blobs behind a faint grid, glass cards with a hairline border,
-    a pill label above every section heading — with that page's own class names and
-    variables kept so the two can be compared side by side.
-
-    Every block renders only when its setting is filled in; AppSetting's bankRows(),
-    socialLinks() and landingPhones() do that filtering once.
+    The content blocks come from landing/partials, shared with the simple layout, so a
+    field added on the Appearance screen appears on both looks.
 --}}
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -34,7 +33,7 @@
         rel="stylesheet">
 
     <link href="{{ asset('theme/assets/css/icons.min.css') }}" rel="stylesheet">
-    <link href="{{ asset('css/landing.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/landing-fancy.css') }}" rel="stylesheet">
 </head>
 
 <body>
@@ -45,24 +44,14 @@
                     <img src="{{ $settings->logoUrl('logo_path') }}"
                         alt="{{ $settings->firm_name ?: $settings->app_name }}">
                 @else
-                    {{-- No logo uploaded: the reference's gradient wordmark reads far
-                         better on this ground than the bundled theme placeholder. --}}
+                    {{-- No logo uploaded: a gradient wordmark reads far better on this
+                         ground than the bundled theme placeholder. --}}
                     <span class="brand-text grad-text">{{ $settings->firm_name ?: $settings->app_name }}</span>
                 @endif
             </a>
 
             <div class="nav-right">
-                @if ($settings->socialLinks() !== [])
-                    <div class="socials">
-                        @foreach ($settings->socialLinks() as $link)
-                            <a class="social social--{{ str_replace('social_', '', $link['key']) }}"
-                                href="{{ $link['url'] }}" target="_blank" rel="noopener noreferrer"
-                                title="{{ $link['label'] }}" aria-label="{{ $link['label'] }}">
-                                <i class="{{ $link['icon'] }}" aria-hidden="true"></i>
-                            </a>
-                        @endforeach
-                    </div>
-                @endif
+                @include('landing.partials._socials')
 
                 @if (($primary = $settings->landingPhones()[0] ?? null))
                     <a class="btn-glow" href="tel:{{ preg_replace('/[^0-9+]/', '', $primary) }}">
@@ -81,43 +70,24 @@
         <div class="blob blob-3" aria-hidden="true"></div>
 
         <div class="shell hero-inner">
-            @if (filled($settings->landing_announcement))
-                <p class="hero-pill">
-                    <span class="dot" aria-hidden="true"></span>
+            <p class="hero-pill">
+                <span class="dot" aria-hidden="true"></span>
+                @if (filled($settings->landing_announcement))
                     <i class="ri-megaphone-line" aria-hidden="true"></i>
                     {{ $settings->landing_announcement }}
-                </p>
-            @else
-                <p class="hero-pill">
-                    <span class="dot" aria-hidden="true"></span>
+                @else
                     Updated {{ now()->format('d M Y, h:i A') }}
-                </p>
-            @endif
-
-            <h1 class="hero-h1">
-                <span class="grad-text">Today's Rate</span>
-            </h1>
-
-            <p class="hero-p">
-                Live gold and silver rates, straight from the counter. <b>{{ now()->format('d M Y, h:i A') }}</b>
+                @endif
             </p>
 
-            <div class="rates">
-                @forelse ($rates as $i => $rate)
-                    {{-- Colour cycles through the palette by position, so the set
-                         always looks deliberate however many rates are published. --}}
-                    <article class="rate rate--{{ $i % 6 }} sr d{{ min($i + 1, 5) }}">
-                        <span class="rate-chip" aria-hidden="true">Rs</span>
-                        <p class="rate-value">
-                            {{ number_format((float) $rate['rate'], 0) }}<span
-                                class="rate-note">{{ $settings->landing_rate_note }}</span>
-                        </p>
-                        <p class="rate-label">{{ $rate['label'] }} Rate</p>
-                    </article>
-                @empty
-                    <p class="quiet">Rates will be published shortly.</p>
-                @endforelse
-            </div>
+            <h1 class="hero-h1"><span class="grad-text">Today's Rate</span></h1>
+
+            <p class="hero-p">
+                Live gold and silver rates, straight from the counter.
+                <b>{{ now()->format('d M Y, h:i A') }}</b>
+            </p>
+
+            @include('landing.partials._rates')
         </div>
     </header>
 
@@ -134,29 +104,7 @@
                         <p class="sec-p">Transfer to the account below, or scan the code with any UPI app.</p>
                     </div>
 
-                    {{-- Whichever survives takes the full width, so a shop with no QR
-                         does not get a bank panel stranded in half the page. --}}
-                    <div class="panels @if ($bank === [] || ! $qr) panels--single @endif">
-                        @if ($bank !== [])
-                            <div class="panel sr d1">
-                                <h3><i class="ri-bank-line" aria-hidden="true"></i> Bank Account Details</h3>
-                                <dl class="bank">
-                                    @foreach ($bank as $label => $value)
-                                        <dt>{{ $label }}</dt>
-                                        <dd>{{ $value }}</dd>
-                                    @endforeach
-                                </dl>
-                            </div>
-                        @endif
-
-                        @if ($qr)
-                            <div class="panel panel--qr sr d2">
-                                <h3><i class="ri-qr-code-line" aria-hidden="true"></i> Payment QR</h3>
-                                <img src="{{ $qr }}" alt="Payment QR code">
-                                <p class="quiet">Scan with any UPI app</p>
-                            </div>
-                        @endif
-                    </div>
+                    @include('landing.partials._payments')
                 </div>
             </section>
         @endif
@@ -170,15 +118,7 @@
                         <p class="sec-p">Tap a number to ring the shop.</p>
                     </div>
 
-                    <div class="call-grid">
-                        @foreach ($settings->landingPhones() as $i => $phone)
-                            <a class="call-btn call-btn--{{ $i % 3 }} sr d{{ min($i + 1, 5) }}"
-                                href="tel:{{ preg_replace('/[^0-9+]/', '', $phone) }}">
-                                <span class="call-icon" aria-hidden="true"><i class="ri-phone-fill"></i></span>
-                                <span class="call-number">{{ $phone }}</span>
-                            </a>
-                        @endforeach
-                    </div>
+                    @include('landing.partials._calls')
                 </div>
             </section>
         @endif

@@ -98,6 +98,7 @@ class AppSettingController extends Controller implements HasMiddleware
             'auto_opening_enabled',
             'firm_address',
             'landing_enabled',
+            'landing_layout',
             'landing_announcement',
             'landing_rate_note',
             'landing_phones',

@@ -27,7 +27,9 @@ class LandingController extends Controller
             return redirect()->route(auth()->check() ? 'dashboard' : 'login');
         }
 
-        return view('landing.index', [
+        // Two looks, one dataset. landingLayout() falls back to a real view name, so
+        // a stored value that is no longer served cannot 500 the public page.
+        return view('landing.'.$settings->landingLayout(), [
             'settings' => $settings,
             'rates' => $this->todaysRates(),
         ]);

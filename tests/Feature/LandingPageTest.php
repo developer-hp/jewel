@@ -236,6 +236,80 @@ it('strips punctuation out of the tel: link but not the label', function () {
         ->assertSee('079-2692 5755');
 });
 
+// --- choosing a look ---------------------------------------------------------------
+
+it('serves the fancy look by default', function () {
+    landingSettings();
+
+    expect(AppSetting::current()->landingLayout())->toBe(AppSetting::LAYOUT_FANCY);
+
+    $this->get('/')->assertOk()->assertSee('class="blob blob-1"', false);
+});
+
+it('serves the simple look when it is chosen', function () {
+    landingSettings(['landing_layout' => AppSetting::LAYOUT_SIMPLE]);
+
+    $this->get('/')
+        ->assertOk()
+        ->assertSee('landing-simple.css', false)
+        ->assertDontSee('landing-fancy.css', false)
+        // No drifting blobs and no reveal script on the plain one.
+        ->assertDontSee('class="blob blob-1"', false)
+        ->assertDontSee('IntersectionObserver', false);
+});
+
+// Both looks include the same partials, so anything configured has to appear on
+// either — that shared markup is the whole reason the partials exist.
+it('shows the same content whichever look is chosen', function (string $layout) {
+    landingSettings([
+        'landing_layout' => $layout,
+        'firm_name' => 'KR Sons',
+        'landing_announcement' => 'Free polish this week',
+        'landing_phones' => '7874655115',
+        'firm_address' => 'Satellite, Ahmedabad',
+        'bank_ac_no' => '50200011856421',
+        'social_facebook' => 'https://facebook.com/krsons',
+    ]);
+
+    landingRateFor('22K', 146210);
+
+    $this->get('/')
+        ->assertOk()
+        ->assertSee('KR Sons')
+        ->assertSee('Free polish this week')
+        ->assertSee('146,210')
+        ->assertSee('22K Rate')
+        ->assertSee('Bank Account Details')
+        ->assertSee('50200011856421')
+        ->assertSee('Touch to Call')
+        ->assertSee('7874655115')
+        ->assertSee('Satellite, Ahmedabad')
+        ->assertSee('https://facebook.com/krsons', false);
+})->with([AppSetting::LAYOUT_FANCY, AppSetting::LAYOUT_SIMPLE]);
+
+// A value left behind by a look that is no longer served must not 500 a public page.
+it('falls back to the fancy look when the stored value is unknown', function () {
+    landingSettings();
+    AppSetting::query()->update(['landing_layout' => 'neon']);
+    AppSetting::flushCache();
+
+    $this->get('/')->assertOk()->assertSee('landing-fancy.css', false);
+});
+
+it('refuses a look it does not serve', function () {
+    $this->actingAs($this->admin)->put(route('app-settings.update'), [
+        'app_name' => 'Jewel',
+        'media_disk' => 'public',
+        'angadiya_columns' => 3,
+        'angadiya_slip_height_mm' => 45,
+        'hallmark_next_lot_no' => 1,
+        'sidebar_user_bg_from' => '#0acf97',
+        'sidebar_user_bg_to' => '#39afd1',
+        'sidebar_user_text_color' => '#ffffff',
+        'landing_layout' => 'neon',
+    ])->assertSessionHasErrors('landing_layout');
+});
+
 // --- the settings screen -----------------------------------------------------------
 
 it('offers the landing tab on the appearance screen', function () {
@@ -243,7 +317,8 @@ it('offers the landing tab on the appearance screen', function () {
         ->assertOk()
         ->assertSee('Landing Page')
         ->assertSee('id="tab-landing"', false)
-        ->assertSee('name="landing_rate_purities[]"', false);
+        ->assertSee('name="landing_rate_purities[]"', false)
+        ->assertSee('name="landing_layout"', false);
 });
 
 /**
@@ -262,6 +337,7 @@ it('persists every landing field through the appearance form', function () {
         'sidebar_user_text_color' => '#ffffff',
 
         'landing_enabled' => '1',
+        'landing_layout' => 'simple',
         'landing_announcement' => 'Diwali offer',
         'landing_rate_note' => '+GST',
         'landing_phones' => "7874655115\n07926925755",
@@ -275,6 +351,7 @@ it('persists every landing field through the appearance form', function () {
     $settings = AppSetting::current();
 
     expect($settings->landing_enabled)->toBeTrue()
+        ->and($settings->landingLayout())->toBe(AppSetting::LAYOUT_SIMPLE)
         ->and($settings->landing_announcement)->toBe('Diwali offer')
         ->and($settings->landing_rate_note)->toBe('+GST')
         ->and($settings->firm_address)->toBe('Shop No.1, Satellite, Ahmedabad')
