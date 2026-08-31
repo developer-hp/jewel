@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\AnswerAjaxRedirectsWithJson;
 use App\Http\Middleware\EnforceIdleTimeout;
+use App\Http\Middleware\LogPageView;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -23,6 +24,8 @@ return Application::configure(basePath: dirname(__DIR__))
             // Turns a controller redirect into JSON for callers that asked for JSON,
             // so the listings can delete over AJAX without rewriting every destroy().
             AnswerAjaxRedirectsWithJson::class,
+            // Last, so it sees the finished response and can record the status.
+            LogPageView::class,
         ]);
 
         $middleware->alias([

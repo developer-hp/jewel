@@ -380,6 +380,12 @@ return [
                         'active' => 'permissions.*',
                         'can' => 'permission.view',
                     ],
+                    [
+                        'label' => 'Activity Log',
+                        'route' => 'activity-log.index',
+                        'active' => 'activity-log.*',
+                        'can' => 'activity_log.view',
+                    ],
                 ],
             ],
         ],

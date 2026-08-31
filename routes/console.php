@@ -25,3 +25,18 @@ Schedule::command('opening:run')
     ->dailyAt('11:30')
     ->withoutOverlapping()
     ->onOneServer();
+
+/*
+ * Move buffered activity rows out of Redis and into the log table.
+ *
+ * The activity screen also flushes a couple of batches when it is opened, so this is
+ * the bulk carrier rather than the only one — a page nobody visits for a week still
+ * has its rows written down.
+ *
+ * withoutOverlapping: a big backlog takes a while, and two flushes racing on the same
+ * list would insert the same batch twice.
+ */
+Schedule::command('activity:flush')
+    ->everyFourHours()
+    ->withoutOverlapping()
+    ->onOneServer();

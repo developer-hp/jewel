@@ -52,6 +52,9 @@ class RolePermissionSeeder extends Seeder
         'stock' => ['view', 'adjust', 'report'],
         'customer' => ['view', 'create', 'edit', 'delete'],
         'quotation' => ['view', 'create', 'edit', 'delete', 'approve', 'print'],
+        // Deliberately not in MASTER_MODULES: a log the people it watches can
+        // edit is not a log. Manager reads it; only Admin may prune it.
+        'activity_log' => ['view', 'delete'],
     ];
 
     /**
@@ -97,6 +100,8 @@ class RolePermissionSeeder extends Seeder
             $this->modulePermissions('item_lot', 'angadiya', 'hallmark', 'supplier_hisab', 'repair_form', 'order_form', 'supplier_order', 'internal_stock_entry',
                 'og_estimate', 'voucher', 'item_estimate', 'cash_entry', 'item', 'stock', 'customer'),
             ['quotation.view', 'quotation.create', 'quotation.edit', 'quotation.approve', 'quotation.print'],
+            // Read the log, but never prune it. Admin alone may delete history.
+            ['activity_log.view'],
         ));
 
         $this->syncRole('Sales', array_merge(

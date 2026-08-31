@@ -55,6 +55,13 @@ return [
     ],
 
     [
+        'key' => 'cash_drawers',
+        'label' => 'Cash Drawers',
+        'hint' => 'What each till opened with, took and paid out, and should hold now.',
+        'can' => 'cash_drawer.view',
+    ],
+
+    [
         'key' => 'internal_stock',
         'label' => 'Internal Stock',
         'hint' => 'What each internal pot is holding.',

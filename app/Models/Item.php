@@ -262,4 +262,31 @@ class Item extends Model
     {
         $this->forceFill(['sold_at' => null])->save();
     }
+
+    /**
+     * Let go of a hold whose order form has been deleted.
+     *
+     * Order forms soft-delete but their lines do not, so a deleted order leaves its
+     * held pieces still pointing at a line. Clearing sold_at alone would put such a
+     * piece back on the sold-items screen for ever and keep it out of available
+     * stock — the hold has to go with it.
+     *
+     * A live hold is left exactly as it is: that order still wants the piece.
+     */
+    public function releaseStrandedHold(): bool
+    {
+        if ($this->order_form_line_id === null) {
+            return false;
+        }
+
+        // orderForm() carries the soft-delete scope, so a null here means the order
+        // behind this hold is gone.
+        if ($this->orderFormLine?->orderForm !== null) {
+            return false;
+        }
+
+        $this->forceFill(['order_form_line_id' => null])->save();
+
+        return true;
+    }
 }

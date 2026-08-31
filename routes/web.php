@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AngadiyaController;
 use App\Http\Controllers\AngadiyaListPrintController;
 use App\Http\Controllers\AngadiyaPrintController;
@@ -97,6 +98,11 @@ Route::middleware('auth')->group(function () {
     Route::resource('users', UserController::class)->except('show');
     Route::resource('roles', RoleController::class);
     Route::resource('permissions', PermissionController::class)->except('show');
+
+    // Prune sits above the show route so `activity-log/prune` is not read as an id.
+    Route::delete('activity-log/prune', [ActivityLogController::class, 'destroy'])->name('activity-log.prune');
+    Route::get('activity-log', [ActivityLogController::class, 'index'])->name('activity-log.index');
+    Route::get('activity-log/{activityLog}', [ActivityLogController::class, 'show'])->name('activity-log.show');
 
     // --- Masters ------------------------------------------------------------
     Route::resource('metal-types', MetalTypeController::class)->except('show')

@@ -34,5 +34,9 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <!-- Off for the suite at large: 780 tests each writing activity rows would
+             slow every one of them down. ActivityLogTest turns it on for itself. -->
+        <env name="ACTIVITY_LOG_ENABLED" value="false"/>
+        <env name="ACTIVITY_LOG_BUFFER" value="off"/>
     </php>
 </phpunit>

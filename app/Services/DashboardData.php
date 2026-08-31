@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\Angadiya;
+use App\Models\CashDrawer;
+use App\Models\CashEntry;
 use App\Models\InternalStock;
 use App\Models\Item;
 use App\Models\OrderForm;
@@ -174,6 +176,47 @@ class DashboardData
             // not the full sheet.
             'rows' => $stockGroups->filter(fn ($row) => $row->pcs > 0)->values(),
             'totals' => $this->figures->totals($itemGroups, ['pcs', 'held', 'net']),
+        ];
+    }
+
+    /**
+     * Each till: what it opened with, what it took, what it paid out, and what it
+     * should hold now.
+     *
+     * Opening + in − out is closing by construction, because all three come from
+     * CashMath's own expressions — the same ones the drawer listing and the day
+     * opening use, so a drawer cannot read one figure here and another there.
+     *
+     * Two correlated subselects rather than a call per drawer. Built off
+     * CashEntry::query() and not DB::table(): the Eloquent builder carries the
+     * soft-delete scope, so a deleted entry drops out for free.
+     */
+    private function cashDrawers(): ?array
+    {
+        $drawers = CashDrawer::query()
+            // select() before the addSelects — the other order discards them.
+            ->select('cash_drawers.*')
+            ->addSelect(['cash_in' => CashEntry::query()
+                ->selectRaw('COALESCE(SUM('.CashMath::CASH_IN_SQL.'), 0)')
+                ->whereColumn('cash_drawer_id', 'cash_drawers.id'),
+            ])
+            ->addSelect(['cash_out' => CashEntry::query()
+                ->selectRaw('COALESCE(SUM('.CashMath::CASH_OUT_SQL.'), 0)')
+                ->whereColumn('cash_drawer_id', 'cash_drawers.id'),
+            ])
+            ->active()
+            ->ordered()
+            ->get();
+
+        if ($drawers->isEmpty()) {
+            return null;
+        }
+
+        return [
+            'drawers' => $drawers,
+            'opening' => (float) $drawers->sum(fn (CashDrawer $d) => (float) $d->opening_balance),
+            'in' => (float) $drawers->sum(fn (CashDrawer $d) => (float) $d->cash_in),
+            'out' => (float) $drawers->sum(fn (CashDrawer $d) => (float) $d->cash_out),
         ];
     }
 

@@ -12,12 +12,20 @@ use Illuminate\View\View;
 use Yajra\DataTables\Facades\DataTables;
 
 /**
- * The pieces that have been paid for, waiting to be written out of stock.
+ * The pieces that have left the shelf, waiting to be written out of stock.
  *
- * A piece reaches this screen by being on an item estimate that a cash entry has
- * settled — money changed hands for it, so it is almost certainly gone. Almost, not
- * certainly, which is why marking it sold is a deliberate act here and reversible
- * from the same row.
+ * Two ways in:
+ *
+ *  - **Settled.** On an item estimate that a cash entry has settled — money changed
+ *    hands for it.
+ *  - **Stranded.** Held against an order form that has since been deleted. Order
+ *    forms soft-delete but their lines do not, so a deleted order leaves its held
+ *    pieces pointing at a line whose order is gone. Such a piece is out of available
+ *    stock and nothing is holding it any more, so it would otherwise sit invisible
+ *    for ever.
+ *
+ * Either way the piece is almost certainly gone. Almost, not certainly, which is why
+ * marking it sold is a deliberate act here and reversible from the same row.
  */
 class SoldItemController extends Controller implements HasMiddleware
 {
@@ -49,6 +57,9 @@ class SoldItemController extends Controller implements HasMiddleware
             ->with([
                 'itemGroup:id,name', 'metalType:id,name', 'purity:id,name',
                 'estimateLines.itemEstimate.cashEntry',
+                // withTrashed: naming the deleted order is the whole point of the
+                // column for a stranded piece.
+                'orderFormLine.orderFormWithTrashed',
             ])
             ->when($request->string('state')->toString() === 'sold', fn ($q) => $q->sold())
             ->when($request->string('state')->toString() === 'in_stock', fn ($q) => $q->inStock());
@@ -77,6 +88,8 @@ class SoldItemController extends Controller implements HasMiddleware
         }
 
         $item->markSold();
+        // The piece is gone; a hold on a deleted order has nothing left to mean.
+        $item->releaseStrandedHold();
 
         return back()->with('success', "{$item->code} has been marked sold.");
     }
@@ -85,18 +98,30 @@ class SoldItemController extends Controller implements HasMiddleware
     {
         $item->markAvailable();
 
+        // Without this the piece is unsold but still held against an order that no
+        // longer exists — invisible in available stock, and straight back onto this
+        // screen. "Back in stock" has to mean it.
+        $item->releaseStrandedHold();
+
         return back()->with('success', "{$item->code} is back in stock.");
     }
 
     /**
-     * Items on an item estimate that a cash entry has settled.
+     * Every piece that has left the shelf: settled, or stranded by a deleted order.
      *
      * whereHas rather than a join, so the item rows stay distinct — a piece quoted
-     * on two estimates would otherwise appear twice.
+     * on two estimates would otherwise appear twice. The two reasons are OR-ed
+     * inside one closure so the grouping survives the caller's own `where`s.
      */
     private function settledItems()
     {
-        return Item::query()->whereHas('estimateLines.itemEstimate.cashEntry');
+        return Item::query()->where(function ($query) {
+            $query
+                ->whereHas('estimateLines.itemEstimate.cashEntry')
+                // orderForm() carries the soft-delete scope, so "doesn't have one"
+                // is exactly "the order behind this hold has been deleted".
+                ->orWhereHas('orderFormLine', fn ($line) => $line->whereDoesntHave('orderForm'));
+        });
     }
 
     /**
@@ -111,11 +136,27 @@ class SoldItemController extends Controller implements HasMiddleware
             ->first();
 
         if (! $entry) {
-            return '—';
+            return $this->strandedBy($item);
         }
 
         return '<strong>'.e($entry->document_reference).'</strong>'
             .'<div class="text-muted fs-12">'.e($entry->reference()).' &middot; '
             .$entry->entry_date->format('d-m-Y').'</div>';
+    }
+
+    /**
+     * The deleted order a piece is still held against, read off what was eager-loaded.
+     */
+    private function strandedBy(Item $item): string
+    {
+        $order = $item->orderFormLine?->orderFormWithTrashed;
+
+        if (! $order) {
+            return '—';
+        }
+
+        return '<span class="badge bg-warning">Order deleted</span>'
+            .'<div class="text-muted fs-12">'.e($order->reference()).' &middot; '
+            .$order->deleted_at?->format('d-m-Y').'</div>';
     }
 }

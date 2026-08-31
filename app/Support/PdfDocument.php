@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Services\ActivityRecorder;
 use Illuminate\Http\Response;
 use niklasravnsborg\LaravelPdf\Facades\Pdf;
 
@@ -131,6 +132,21 @@ class PdfDocument
 
     private static function respond(string $pdf, string $filename, string $disposition): Response
     {
+        // Every PDF in the app comes through here, so this one line records every
+        // print without a single controller having to remember to. A print is how
+        // customer data leaves the building, which is why it is worth a row.
+        app(ActivityRecorder::class)->record(
+            log: 'print',
+            description: $filename,
+            properties: array_filter([
+                'filename' => $filename,
+                'bytes' => strlen($pdf),
+                'route' => request()->route()?->getName(),
+                'ip' => request()->ip(),
+            ]),
+            event: $disposition === 'attachment' ? 'download' : 'print',
+        );
+
         return new Response($pdf, 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => $disposition.'; filename="'.$filename.'"',

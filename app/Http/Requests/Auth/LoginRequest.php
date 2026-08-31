@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Auth;
 
 use App\Models\User;
+use App\Services\ActivityRecorder;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -50,6 +51,21 @@ class LoginRequest extends FormRequest
 
         if (! Auth::validate($credentials)) {
             RateLimiter::hit($this->throttleKey());
+
+            // Recorded here rather than through Illuminate's Failed event: that only
+            // fires from Auth::attempt(), and this path uses Auth::validate() so the
+            // single-device check can run before the session is started. The event
+            // would never arrive, and a failed sign-in is the one row worth having.
+            app(ActivityRecorder::class)->record(
+                log: 'auth',
+                description: 'Sign in failed',
+                properties: array_filter([
+                    'username' => $credentials['username'],
+                    'ip' => $this->ip(),
+                    'agent' => substr((string) $this->userAgent(), 0, 255),
+                ]),
+                event: 'failed',
+            );
 
             throw ValidationException::withMessages([
                 'username' => $this->failureMessage(),

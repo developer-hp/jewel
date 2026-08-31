@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\AppSetting;
+use App\Models\CashDrawer;
+use App\Models\CashEntry;
 use App\Models\InternalStock;
 use App\Models\Item;
 use App\Models\ItemGroup;
@@ -251,6 +253,107 @@ it('agrees with the stock screens exactly', function () {
     expect($data['stock']['totals']->pcs)->toBe($expected->pcs)
         ->and($data['stock']['totals']->net)->toBe($expected->net)
         ->and($data['stock']['totals']->net)->toBe(20.5);
+});
+
+// --- cash drawers -------------------------------------------------------------------
+
+/** A drawer with an opening float, and a cash entry against it. */
+function dashDrawerEntry(float $opening, float $cash, string $event = 'in'): CashDrawer
+{
+    $drawer = CashDrawer::firstOrCreate(
+        ['name' => 'Counter 1'],
+        ['opening_balance' => $opening, 'is_active' => true],
+    );
+
+    $entry = new CashEntry([
+        'entry_date' => today(),
+        'cash_drawer_id' => $drawer->id,
+        'cash_event' => $event,
+        'cash_amount' => $cash,
+        'cheque_amount' => 0,
+    ]);
+
+    $entry->forceFill([
+        'ref_no' => CashEntry::nextRefNo(),
+        'final_amount' => $cash,
+        'document_reference' => 'X '.$entry->ref_no,
+    ])->save();
+
+    return $drawer;
+}
+
+it('shows each till opening, in, out and closing', function () {
+    dashDrawerEntry(1000, 500);
+    dashDrawerEntry(1000, 200, 'out');
+
+    showOnly(['cash_drawers']);
+
+    $html = $this->actingAs($this->admin)->get(route('dashboard'))->assertOk()->getContent();
+
+    expect($html)->toContain('Cash Drawers')
+        ->and($html)->toContain('Opening')
+        ->and($html)->toContain('Closing');
+
+    $data = app(DashboardData::class)->for(config('dashboard'));
+    $section = $data['cash_drawers'];
+
+    expect($section['opening'])->toBe(1000.0)
+        ->and($section['in'])->toBe(500.0)
+        ->and($section['out'])->toBe(200.0);
+
+    // Opening + in − out is closing, and closing is what the drawer itself reports.
+    $drawer = $section['drawers']->first();
+    $closing = (float) $drawer->opening_balance + (float) $drawer->cash_in - (float) $drawer->cash_out;
+
+    expect($closing)->toBe(1300.0)
+        ->and($closing)->toBe($drawer->balance());
+});
+
+// The drawer holds notes. A cheque and old gold settle a document but never reach it.
+it('leaves cheques and gold out of the till figures', function () {
+    $drawer = CashDrawer::create(['name' => 'Counter 1', 'opening_balance' => 1000, 'is_active' => true]);
+
+    $entry = new CashEntry([
+        'entry_date' => today(),
+        'cash_drawer_id' => $drawer->id,
+        'cash_event' => 'in',
+        'cash_amount' => 500,
+        'cheque_amount' => 2000,
+    ]);
+
+    $entry->forceFill([
+        'ref_no' => CashEntry::nextRefNo(),
+        'final_amount' => 5000,
+        'document_reference' => 'X 1',
+        'gold_amount' => 1500,
+        'gold_weight' => 10,
+    ])->save();
+
+    $section = app(DashboardData::class)->for(config('dashboard'))['cash_drawers'];
+
+    expect($section['in'])->toBe(500.0);
+});
+
+it('shows no drawer section when there are no drawers', function () {
+    showOnly(['cash_drawers']);
+
+    $this->actingAs($this->admin)->get(route('dashboard'))
+        ->assertOk()
+        // Not "Cash Drawers": the sidebar carries that too. This caption belongs to
+        // the section and nothing else.
+        ->assertDontSee('cheques and old gold settle a document');
+
+    expect(app(DashboardData::class)->for(config('dashboard')))->not->toHaveKey('cash_drawers');
+});
+
+it('keeps the till figures behind the drawer permission', function () {
+    dashDrawerEntry(1000, 500);
+
+    // Sales gets cash_drawer.view through MASTER_MODULES, so the guard is checked
+    // against a user with no role at all.
+    $this->actingAs(User::factory()->create())->get(route('dashboard'))
+        ->assertOk()
+        ->assertDontSee('cheques and old gold settle a document');
 });
 
 it('reports each internal pot at its ledger balance', function () {

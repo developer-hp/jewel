@@ -81,6 +81,19 @@ class OrderFormLine extends Model
      * The piece held against this line. Its existence is both "ready" and the
      * reservation; the unique index on items.order_form_line_id enforces the latter.
      */
+    /**
+     * The order this line belongs to, deleted or not.
+     *
+     * orderForm() applies the soft-delete scope, which is what makes
+     * `whereDoesntHave('orderForm')` mean "the order is gone". This one is for
+     * naming that gone order on screen — the reference is the only clue the counter
+     * has about where a stranded piece came from.
+     */
+    public function orderFormWithTrashed(): BelongsTo
+    {
+        return $this->belongsTo(OrderForm::class, 'order_form_id')->withTrashed();
+    }
+
     public function item(): HasOne
     {
         return $this->hasOne(Item::class);

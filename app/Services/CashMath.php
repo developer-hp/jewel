@@ -45,6 +45,17 @@ class CashMath
     public const CASH_SIGNED_SQL = self::SIGN_SQL.' * cash_amount';
 
     /**
+     * The two halves of that movement, for a screen that shows the day's takings and
+     * payouts either side of the opening figure.
+     *
+     * Stated here rather than in the dashboard so `in − out` can never drift from
+     * CASH_SIGNED_SQL: opening + in − out is closing, by construction.
+     */
+    public const CASH_IN_SQL = "(CASE WHEN cash_event = 'in' THEN cash_amount ELSE 0 END)";
+
+    public const CASH_OUT_SQL = "(CASE WHEN cash_event = 'out' THEN cash_amount ELSE 0 END)";
+
+    /**
      * What the document says is payable.
      *
      * An item estimate's is its summary total — amount plus GST, rounded to the
