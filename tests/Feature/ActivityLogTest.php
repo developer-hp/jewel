@@ -363,21 +363,30 @@ it('reads the listing without a query per row', function () {
 // --- pruning ---------------------------------------------------------------------------
 
 it('prunes only what is older than the date given', function () {
+    $cutOff = now()->subMonth();
+
     SalesPerson::create(['name' => 'Old']);
     ActivityLog::query()->update(['created_at' => now()->subMonths(6)]);
 
     SalesPerson::create(['name' => 'New']);
 
-    expect(activityRows())->toHaveCount(2);
+    // Counted by age rather than in total: the request itself writes rows — the
+    // global listener catches AppSetting::current() creating the settings row on a
+    // fresh database, which is the listener doing exactly its job.
+    $olderThan = fn () => ActivityLog::where('created_at', '<', $cutOff)->count();
+    $newerThan = fn () => ActivityLog::where('created_at', '>=', $cutOff)->count();
+
+    expect($olderThan())->toBe(1)
+        ->and($newerThan())->toBeGreaterThan(0);
+
+    $before = $newerThan();
 
     $this->actingAs($this->admin)
-        ->delete(route('activity-log.prune'), ['before' => now()->subMonth()->toDateString()])
+        ->delete(route('activity-log.prune'), ['before' => $cutOff->toDateString()])
         ->assertRedirect();
 
-    dump(activityRows()->map(fn ($r) => [$r->log_name, $r->event, $r->description, (string) $r->created_at])->all());
-
-    expect(activityRows())->toHaveCount(1)
-        ->and(activityRows()->first()->description)->toContain('SalesPerson');
+    expect($olderThan())->toBe(0)
+        ->and($newerThan())->toBeGreaterThanOrEqual($before);
 });
 
 it('refuses a prune date in the future', function () {

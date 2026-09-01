@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Services\ActivityRecorder;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -75,6 +76,37 @@ class LogPageView
             return false;
         }
 
-        return ! $request->is(...(array) config('activity-log.skip_paths', []));
+        return ! $this->matchesSkipPath($request);
+    }
+
+    /**
+     * Match against the path with the admin prefix taken off.
+     *
+     * config('activity-log.skip_paths') is written app-relative — `session/heartbeat`,
+     * not `admin/session/heartbeat` — so moving the back office under a prefix must
+     * not quietly stop the heartbeat being skipped.
+     */
+    private function matchesSkipPath(Request $request): bool
+    {
+        $paths = (array) config('activity-log.skip_paths', []);
+
+        if ($paths === []) {
+            return false;
+        }
+
+        $path = trim($request->path(), '/');
+        $prefix = trim((string) config('app.admin_prefix'), '/');
+
+        if ($prefix !== '' && str_starts_with($path, $prefix.'/')) {
+            $path = substr($path, strlen($prefix) + 1);
+        }
+
+        foreach ($paths as $pattern) {
+            if (Str::is($pattern, $path)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
