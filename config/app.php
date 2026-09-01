@@ -72,6 +72,28 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Admin Route Prefix
+    |--------------------------------------------------------------------------
+    |
+    | Every route behind the sign-in screen is registered under this, so setting
+    | ADMIN_ROUTE_PREFIX=admin turns /login into /admin/login and /dashboard into
+    | /admin/dashboard. Blank leaves every address exactly as it was.
+    |
+    | The public landing page at / is deliberately outside it — that is the address
+    | customers are given.
+    |
+    | Config rather than a database column on purpose: routes are registered while
+    | the framework boots, before a query can safely run, and `php artisan
+    | route:cache` bakes the result in. A value read from app_settings would be
+    | either too late or silently stale.
+    |
+    */
+
+    'admin_prefix' => trim((string) env('ADMIN_ROUTE_PREFIX', ''), '/'),
+
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------
     |
