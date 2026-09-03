@@ -28,6 +28,7 @@ use App\Http\Controllers\ItemPhotoController;
 use App\Http\Controllers\LabelSettingController;
 use App\Http\Controllers\LotItemEntryController;
 use App\Http\Controllers\MakingChargeController;
+use App\Http\Controllers\MenuOrderController;
 use App\Http\Controllers\MetalRateController;
 use App\Http\Controllers\MetalTypeController;
 use App\Http\Controllers\OgEstimateController;
@@ -188,6 +189,9 @@ Route::middleware('auth')->group(function () {
     Route::resource('cash-drawers', CashDrawerController::class)->except('show')
         ->parameters(['cash-drawers' => 'cash_drawer']);
 
+    Route::get('menu-order', [MenuOrderController::class, 'edit'])->name('menu-order.edit');
+    Route::put('menu-order', [MenuOrderController::class, 'update'])->name('menu-order.update');
+
     Route::get('app-settings', [AppSettingController::class, 'edit'])->name('app-settings.edit');
     Route::put('app-settings', [AppSettingController::class, 'update'])->name('app-settings.update');
 
@@ -238,6 +242,11 @@ Route::middleware('auth')->group(function () {
     Route::get('stock/daily', [StockReportController::class, 'index'])->name('stock.daily');
     Route::get('stock/daily/export', [StockReportController::class, 'export'])->name('stock.daily.export');
     Route::post('stock/daily/groups', [StockReportController::class, 'updateGroups'])->name('stock.daily.groups');
+
+    // Stock Items Report sits above other stock routes
+    Route::get('stock-items', [StockReportController::class, 'itemsIndex'])->name('stock-items.index');
+    Route::get('stock-items/data', [StockReportController::class, 'itemsData'])->name('stock-items.data');
+    Route::post('stock-items/export', [StockReportController::class, 'itemsExport'])->name('stock-items.export');
 
     // Export sits above the resource so `internal-stock-entries/export` is not read
     // as an entry id.

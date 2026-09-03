@@ -37,6 +37,7 @@ use Illuminate\Support\Facades\Storage;
     'social_whatsapp', 'social_x', 'social_linkedin',
     'bank_ac_no', 'bank_ac_name', 'bank_ifsc', 'bank_branch', 'bank_ac_type',
     'bank_name', 'bank_swift_code', 'bank_purpose_code', 'bank_upi_id',
+    'menu_order',
 ])]
 class AppSetting extends Model
 {
@@ -88,6 +89,7 @@ class AppSetting extends Model
         'landing_enabled' => false,
         'landing_layout' => self::LAYOUT_FANCY,
         'landing_rate_note' => '+GST',
+        'menu_order' => '[]',
     ];
 
     /**
@@ -98,6 +100,20 @@ class AppSetting extends Model
     public function hiddenDashboardSections(): array
     {
         return array_values((array) ($this->dashboard_hidden_sections ?? []));
+    }
+
+    /**
+     * The saved menu order: a map of scope => [key, key, …].
+     *
+     * Empty means everything is in config order. Items not listed in a scope
+     * keep their original relative order, so this is always backward-compatible:
+     * a menu entry added next year shows up correctly with zero migration.
+     *
+     * @return array<string, array<int, string>>
+     */
+    public function menuOrder(): array
+    {
+        return (array) ($this->menu_order ?? []);
     }
 
     /**
@@ -144,6 +160,7 @@ class AppSetting extends Model
             'idle_timeout_minutes' => 'integer',
             'idle_warning_seconds' => 'integer',
             'dashboard_hidden_sections' => 'array',
+            'menu_order' => 'array',
             'settings_cache_enabled' => 'boolean',
             'auto_opening_enabled' => 'boolean',
             'last_opening_at' => 'datetime',

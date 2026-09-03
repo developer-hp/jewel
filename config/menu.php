@@ -58,6 +58,12 @@ return [
                         'can' => 'stock.report',
                     ],
                     [
+                        'label' => 'Items Report',
+                        'route' => 'stock-items.index',
+                        'active' => 'stock-items.*',
+                        'can' => 'stock.report',
+                    ],
+                    [
                         'label' => 'Items',
                         // `items.*` deliberately, so it does not also match `item-groups.*`.
                         'route' => 'items.index',
@@ -313,6 +319,12 @@ return [
                         'label' => 'Appearance',
                         'route' => 'app-settings.edit',
                         'active' => 'app-settings.*',
+                        'can' => 'app_setting.view',
+                    ],
+                    [
+                        'label' => 'Menu Order',
+                        'route' => 'menu-order.edit',
+                        'active' => 'menu-order.*',
                         'can' => 'app_setting.view',
                     ],
                     [
