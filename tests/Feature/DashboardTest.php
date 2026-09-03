@@ -214,6 +214,11 @@ it('skips a section the viewer has no permission for, even when it is ticked', f
 it('gives a sales user the sections they can reach and no others', function () {
     dashItem();
 
+    // Sales does not get dashboard.view by default, and this test is about which
+    // *sections* survive the per-section permission check — so it is granted here,
+    // and the two rules are tested separately rather than tangled together.
+    $this->sales->givePermissionTo('dashboard.view');
+
     $response = $this->actingAs($this->sales)->get(route('dashboard'))->assertOk();
 
     // Sales may take repairs in and see stock, but not the daily report.
@@ -253,6 +258,57 @@ it('agrees with the stock screens exactly', function () {
     expect($data['stock']['totals']->pcs)->toBe($expected->pcs)
         ->and($data['stock']['totals']->net)->toBe($expected->net)
         ->and($data['stock']['totals']->net)->toBe(20.5);
+});
+
+// --- the overview permission -----------------------------------------------------
+
+it('shows the overview to someone who may see it', function () {
+    dashItem(9);
+    showOnly(['stock']);
+
+    $this->actingAs($this->admin)->get(route('dashboard'))
+        ->assertOk()
+        ->assertSee('Stock at a Glance')
+        ->assertDontSee('Where to next?');
+});
+
+// The dashboard is where every sign-in lands, so someone without dashboard.view gets
+// the jump-to menu rather than a 403 — a landing page that only says "forbidden"
+// leaves a counter clerk with nowhere to go.
+it('shows the jump-to menu instead when the overview is not theirs', function () {
+    dashItem(9);
+    showOnly(['stock']);
+
+    $this->actingAs($this->sales)->get(route('dashboard'))
+        ->assertOk()
+        ->assertSee('Where to next?')
+        ->assertSee('palette-item', false)
+        // Not a figure in sight.
+        ->assertDontSee('Stock at a Glance');
+});
+
+it('builds no dashboard figures at all for that viewer', function () {
+    dashItem(9);
+    showOnly(['stock']);
+
+    $queries = 0;
+    DB::listen(function () use (&$queries) {
+        $queries++;
+    });
+
+    $this->actingAs($this->sales)->get(route('dashboard'))->assertOk();
+
+    // Session, user, permissions and settings — not the stock aggregates behind a
+    // section this viewer will never be shown.
+    expect($queries)->toBeLessThan(12);
+});
+
+it('offers a menu entry only where the viewer can actually go', function () {
+    // Sales cannot reach Users; the palette is built from the sidebar, which has
+    // already dropped it.
+    $this->actingAs($this->sales)->get(route('dashboard'))
+        ->assertOk()
+        ->assertDontSee(route('users.index'), false);
 });
 
 // --- cash drawers -------------------------------------------------------------------

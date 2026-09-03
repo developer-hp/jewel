@@ -30,30 +30,7 @@
             </div>
 
             <div class="modal-body" id="commandPaletteBody">
-                @foreach ($paletteGroups as $group)
-                    <div class="palette-group" data-palette-group>
-                        <div class="palette-group-title text-{{ $group['accent'] }}">
-                            <span>{{ $group['title'] }}</span>
-                        </div>
-
-                        <div class="palette-grid">
-                            @foreach ($group['items'] as $entry)
-                                <a href="{{ $entry['url'] }}"
-                                    class="palette-item palette-{{ $group['accent'] }} {{ $entry['active'] ? 'is-current' : '' }}"
-                                    data-palette-item
-                                    data-palette-text="{{ Str::lower($entry['label'] . ' ' . $entry['hint']) }}">
-                                    <span class="palette-icon">
-                                        <i class="{{ $entry['icon'] }}"></i>
-                                    </span>
-                                    <span class="palette-text">
-                                        <span class="palette-label">{{ $entry['label'] }}</span>
-                                        <span class="palette-hint">{{ $entry['hint'] }}</span>
-                                    </span>
-                                </a>
-                            @endforeach
-                        </div>
-                    </div>
-                @endforeach
+                @include('layouts.partials._palette-groups', ['groups' => $paletteGroups, 'filter' => true])
 
                 <p class="text-muted text-center py-4 mb-0 d-none" id="commandPaletteEmpty">
                     Nothing matches that.

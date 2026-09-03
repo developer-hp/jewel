@@ -55,6 +55,10 @@ class RolePermissionSeeder extends Seeder
         // Deliberately not in MASTER_MODULES: a log the people it watches can
         // edit is not a log. Manager reads it; only Admin may prune it.
         'activity_log' => ['view', 'delete'],
+        // The dashboard overview — the figures, not the page. Without it the
+        // dashboard still loads and shows the jump-to menu instead, because a
+        // landing page nobody can use is worse than one that only navigates.
+        'dashboard' => ['view'],
     ];
 
     /**
@@ -102,6 +106,7 @@ class RolePermissionSeeder extends Seeder
             ['quotation.view', 'quotation.create', 'quotation.edit', 'quotation.approve', 'quotation.print'],
             // Read the log, but never prune it. Admin alone may delete history.
             ['activity_log.view'],
+            ['dashboard.view'],
         ));
 
         $this->syncRole('Sales', array_merge(

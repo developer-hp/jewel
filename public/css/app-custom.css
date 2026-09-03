@@ -796,11 +796,20 @@ html[data-bs-theme=dark] .table > tbody > tr.row-overdue > td {
     border-radius: 999px;
 }
 
-.command-palette .palette-group {
+/* --------------------------------------------------------------------------
+   The jump-to menu's own contents.
+
+   Deliberately NOT scoped to .command-palette: the same partial renders on the
+   dashboard of anyone without dashboard.view, where there is no modal around it.
+   Scoping these to the palette is what made that page render as bare links.
+
+   Rules above this point stay scoped, because they dress the modal itself.
+   -------------------------------------------------------------------------- */
+.palette-group {
     margin-top: 1.25rem;
 }
 
-.command-palette .palette-group-title {
+.palette-group-title {
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -812,7 +821,7 @@ html[data-bs-theme=dark] .table > tbody > tr.row-overdue > td {
 }
 
 /* The rule trailing each heading, in that heading's own colour. */
-.command-palette .palette-group-title::after {
+.palette-group-title::after {
     content: "";
     flex: 1;
     height: 1px;
@@ -820,13 +829,13 @@ html[data-bs-theme=dark] .table > tbody > tr.row-overdue > td {
     opacity: 0.25;
 }
 
-.command-palette .palette-grid {
+.palette-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
     gap: 0.625rem;
 }
 
-.command-palette .palette-item {
+.palette-item {
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -838,7 +847,7 @@ html[data-bs-theme=dark] .table > tbody > tr.row-overdue > td {
     transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
-.command-palette .palette-icon {
+.palette-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -850,13 +859,13 @@ html[data-bs-theme=dark] .table > tbody > tr.row-overdue > td {
     color: #fff;
 }
 
-.command-palette .palette-text {
+.palette-text {
     display: flex;
     flex-direction: column;
     min-width: 0;
 }
 
-.command-palette .palette-label {
+.palette-label {
     font-weight: 600;
     font-size: 0.875rem;
     line-height: 1.3;
@@ -865,7 +874,7 @@ html[data-bs-theme=dark] .table > tbody > tr.row-overdue > td {
     text-overflow: ellipsis;
 }
 
-.command-palette .palette-hint {
+.palette-hint {
     font-size: 0.75rem;
     color: var(--ct-secondary-color);
     white-space: nowrap;
@@ -875,18 +884,18 @@ html[data-bs-theme=dark] .table > tbody > tr.row-overdue > td {
 
 /* Keyboard cursor and mouse hover are the same state on purpose — arrowing down
    and moving the mouse must never leave two things looking selected. */
-.command-palette .palette-item.is-active {
+.palette-item.is-active {
     border-color: currentColor;
 }
 
 /* Where you already are. */
-.command-palette .palette-item.is-current .palette-label::after {
+.palette-item.is-current .palette-label::after {
     content: "•";
     margin-left: 0.35rem;
     opacity: 0.6;
 }
 
-.command-palette .modal-footer kbd {
+.modal-footer kbd {
     background: var(--ct-tertiary-bg);
     color: var(--ct-body-color);
     border: 1px solid var(--ct-border-color);
@@ -896,33 +905,33 @@ html[data-bs-theme=dark] .table > tbody > tr.row-overdue > td {
 }
 
 /* One rule per accent, driven by the variable the class names. */
-.command-palette .palette-primary { --palette-accent: var(--ct-primary); }
-.command-palette .palette-info { --palette-accent: var(--ct-info); }
-.command-palette .palette-purple { --palette-accent: var(--ct-purple); }
-.command-palette .palette-warning { --palette-accent: var(--ct-warning); }
-.command-palette .palette-pink { --palette-accent: var(--ct-pink); }
-.command-palette .palette-success { --palette-accent: var(--ct-success); }
-.command-palette .palette-danger { --palette-accent: var(--ct-danger); }
-.command-palette .palette-secondary { --palette-accent: var(--ct-secondary); }
+.palette-primary { --palette-accent: var(--ct-primary); }
+.palette-info { --palette-accent: var(--ct-info); }
+.palette-purple { --palette-accent: var(--ct-purple); }
+.palette-warning { --palette-accent: var(--ct-warning); }
+.palette-pink { --palette-accent: var(--ct-pink); }
+.palette-success { --palette-accent: var(--ct-success); }
+.palette-danger { --palette-accent: var(--ct-danger); }
+.palette-secondary { --palette-accent: var(--ct-secondary); }
 
-.command-palette .palette-item {
+.palette-item {
     background: color-mix(in srgb, var(--palette-accent) 8%, transparent);
 }
 
-.command-palette .palette-item .palette-icon {
+.palette-item .palette-icon {
     background: var(--palette-accent);
 }
 
-.command-palette .palette-item:hover,
-.command-palette .palette-item.is-active {
+.palette-item:hover,
+.palette-item.is-active {
     background: color-mix(in srgb, var(--palette-accent) 18%, transparent);
     border-color: var(--palette-accent);
 }
 
-.command-palette .text-purple {
+.text-purple {
     color: var(--ct-purple);
 }
 
-.command-palette .text-pink {
+.text-pink {
     color: var(--ct-pink);
 }
